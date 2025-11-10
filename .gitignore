@@ -38,3 +38,8 @@ node_modules/
 
 # Claude Code plugin testing
 .claude-test/
+
+# Test and development files
+TEST_*.md
+*_SUMMARY.md
+INSTALLATION.md

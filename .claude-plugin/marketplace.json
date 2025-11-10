@@ -1,20 +1,20 @@
 {
   "name": "duongdev-ccpm-marketplace",
   "owner": {
-    "name": "Dustin Duong",
-    "email": "me@dustin.tv",
+    "name": "Dustin Do",
+    "email": "dustin.do95@gmail.com",
     "url": "https://github.com/duongdev"
   },
   "description": "Official marketplace for CCPM (Claude Code Project Management) plugin",
   "plugins": [
     {
       "name": "ccpm",
-      "source": ".",
+      "source": "./",
       "description": "Comprehensive Project Management with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
       "version": "2.0.0",
       "author": {
-        "name": "Dustin Duong",
-        "email": "me@dustin.tv",
+        "name": "Dustin Do",
+        "email": "dustin.do95@gmail.com",
         "url": "https://github.com/duongdev"
       },
       "keywords": [
@@ -28,10 +28,7 @@
         "agents",
         "hooks"
       ],
-      "repository": {
-        "type": "git",
-        "url": "https://github.com/duongdev/ccpm"
-      },
+      "repository": "https://github.com/duongdev/ccpm",
       "license": "MIT"
     }
   ]

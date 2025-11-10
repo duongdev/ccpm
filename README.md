@@ -3,7 +3,7 @@
 **Comprehensive Project Management with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates.**
 
 Version: 2.0.0
-Author: Dustin Duong ([@duongdev](https://github.com/duongdev))
+Author: Dustin Do ([@duongdev](https://github.com/duongdev))
 License: MIT
 
 ---
@@ -12,7 +12,7 @@ License: MIT
 
 CCPM is a comprehensive Claude Code plugin that transforms your development workflow by combining:
 
-- **16+ PM commands** for complete project lifecycle management
+- **17+ PM commands** for complete project lifecycle management
 - **Smart agent auto-invocation** with context-aware scoring (0-100+)
 - **TDD enforcement** that blocks production code without tests
 - **Automatic quality gates** with code review and security audits
@@ -24,16 +24,54 @@ CCPM is a comprehensive Claude Code plugin that transforms your development work
 
 ### Installation
 
+#### Option 1: From GitHub (Recommended)
+
 ```bash
-# Add the CCPM plugin marketplace
+# Add the CCPM marketplace from GitHub
 /plugin marketplace add duongdev/ccpm
 
 # Install the CCPM plugin
-/plugin install ccpm@duongdev
+/plugin install ccpm
 
 # Verify installation
 /pm:utils:help
 ```
+
+#### Option 2: Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/duongdev/ccpm
+cd ccpm
+
+# Add local marketplace
+/plugin marketplace add ./
+
+# Install from local marketplace
+/plugin install ccpm
+
+# Verify installation
+/pm:utils:help
+```
+
+### Enable Hooks (Optional but Recommended)
+
+To enable smart agent auto-invocation, TDD enforcement, and quality gates:
+
+```bash
+# Install CCPM hooks
+./scripts/install-hooks.sh
+
+# Verify installation
+./scripts/verify-hooks.sh
+```
+
+**What Hooks Enable:**
+- 🤖 **Smart Agent Selection** - Auto-invokes best agents for every task
+- ✅ **TDD Enforcement** - Blocks code without tests
+- 🔒 **Quality Gates** - Auto code review and security audits
+
+See [INSTALL_HOOKS.md](./INSTALL_HOOKS.md) for detailed instructions.
 
 ### First Steps
 
@@ -124,7 +162,7 @@ No more "what do I do next?"
 
 ---
 
-## 📋 All Commands (16 Total)
+## 📋 All Commands (17 Total)
 
 ### Spec Management (6 commands)
 
@@ -137,12 +175,13 @@ No more "what do I do next?"
 | `/pm:spec:migrate <project-path>` | Migrate `.claude/` specs to Linear |
 | `/pm:spec:sync <doc-id-or-issue-id>` | Sync spec with implementation |
 
-### Planning (3 commands)
+### Planning (4 commands)
 
 | Command | Description |
 |---------|-------------|
 | `/pm:planning:create "<title>" <project> [jira]` | Create + plan in one step |
 | `/pm:planning:plan <issue-id> [jira]` | Populate existing issue with research |
+| `/pm:planning:update <issue-id> "<request>"` | Update plan with interactive clarification |
 | `/pm:planning:quick-plan "<desc>" <project>` | Quick planning (no external PM) |
 
 ### Implementation (3 commands)
@@ -351,15 +390,63 @@ See [SAFETY_RULES.md](./commands/SAFETY_RULES.md) for complete details.
 
 ### Required MCP Servers
 
-- **Linear** - Task tracking and spec management
-- **GitHub** - PR creation and code hosting
-- **Context7** - Latest library documentation
+CCPM requires three MCP servers to function correctly. See [MCP_INTEGRATION_GUIDE.md](./MCP_INTEGRATION_GUIDE.md) for detailed setup instructions.
+
+#### Linear MCP
+- **Purpose:** Task tracking, spec management, and project organization
+- **Installation:** `npx @lucitra/linear-mcp`
+- **Setup:** Requires Linear API key from [linear.app/settings](https://linear.app/settings)
+- **Used by:** All `/pm:*` commands, spec management, task tracking
+
+#### GitHub MCP
+- **Purpose:** PR creation, code hosting, repository operations
+- **Installation:** Remote server (recommended) or `npm install -g @modelcontextprotocol/server-github`
+- **Setup:** OAuth via VS Code or personal access token
+- **Used by:** `/pm:complete:finalize`, PR workflows, CI/CD integration
+
+#### Context7 MCP
+- **Purpose:** Fetch latest library documentation into prompts
+- **Installation:** `npx @upstash/context7-mcp`
+- **Setup:** No API key required (free service by Upstash)
+- **Usage:** Add "use context7" to prompts about libraries/frameworks
+- **IMPORTANT:** Always use Context7 for library questions per global CLAUDE.md instructions
 
 ### Optional MCP Servers
 
-- **Playwright** - Browser automation for PR checks
-- **Vercel** - Deployment integration
-- **Shadcn** - UI component integration
+These enhance CCPM capabilities but are not required:
+
+- **Playwright** - Browser automation for PR checks and visual testing
+- **Vercel** - Deployment integration and preview environment management
+- **Shadcn** - UI component integration with shadcn/ui library
+
+### Quick MCP Setup
+
+Add to your `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "@lucitra/linear-mcp"],
+      "env": {
+        "LINEAR_API_KEY": "your-linear-api-key"
+      }
+    },
+    "github": {
+      "command": "github-mcp",
+      "args": ["--remote"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}
+```
+
+For complete MCP setup, configuration, and troubleshooting, see:
+**[MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md)** ← Comprehensive documentation
 
 ---
 
@@ -452,11 +539,12 @@ Each hook adds ~2-5 seconds latency. To optimize:
 
 ## 📚 Documentation
 
+- **[MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md)** - Comprehensive MCP server setup and best practices
 - [Complete Command Reference](./commands/README.md)
 - [Spec Management Guide](./commands/SPEC_MANAGEMENT_SUMMARY.md)
 - [Safety Rules](./commands/SAFETY_RULES.md)
-- [Hooks Implementation](./hooks/README.md) (coming soon)
-- [Smart Agent Selection](./hooks/SMART_AGENT_SELECTION.md) (coming soon)
+- [Project Instructions](./CLAUDE.md) - Development guidelines and architecture
+- [Installation Test Guide](./TEST_INSTALLATION.md) - Verify plugin installation
 
 ---
 
