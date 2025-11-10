@@ -1,0 +1,133 @@
+{
+  "name": "ccpm",
+  "version": "2.0.0",
+  "description": "Comprehensive Project Management plugin with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
+  "author": {
+    "name": "Dustin Duong",
+    "email": "me@dustin.tv",
+    "url": "https://github.com/duongdev"
+  },
+  "keywords": [
+    "project-management",
+    "linear",
+    "jira",
+    "confluence",
+    "bitbucket",
+    "slack",
+    "workflow",
+    "automation",
+    "tdd",
+    "quality-gates",
+    "agents",
+    "hooks",
+    "spec-management"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/duongdev/ccpm"
+  },
+  "license": "MIT",
+  "components": {
+    "commands": "./commands",
+    "agents": "./agents",
+    "hooks": "./hooks",
+    "scripts": "./scripts"
+  },
+  "features": {
+    "spec_management": {
+      "description": "Create, write, review, and sync specs with Linear Documents",
+      "commands": [
+        "/pm:spec:create",
+        "/pm:spec:write",
+        "/pm:spec:review",
+        "/pm:spec:break-down",
+        "/pm:spec:migrate",
+        "/pm:spec:sync"
+      ]
+    },
+    "planning": {
+      "description": "Comprehensive planning with Jira, Confluence, Slack integration",
+      "commands": [
+        "/pm:planning:create",
+        "/pm:planning:plan",
+        "/pm:planning:quick-plan"
+      ]
+    },
+    "implementation": {
+      "description": "Agent-coordinated implementation with smart next-action detection",
+      "commands": [
+        "/pm:implementation:start",
+        "/pm:implementation:next",
+        "/pm:implementation:update"
+      ]
+    },
+    "verification": {
+      "description": "Quality checks, verification, and automated fixes",
+      "commands": [
+        "/pm:verification:check",
+        "/pm:verification:verify",
+        "/pm:verification:fix"
+      ]
+    },
+    "completion": {
+      "description": "Post-completion workflows with PR creation, Jira sync, Slack notifications",
+      "commands": [
+        "/pm:complete:finalize"
+      ]
+    },
+    "utilities": {
+      "description": "Status tracking, context loading, reports, insights, and more",
+      "commands": [
+        "/pm:utils:status",
+        "/pm:utils:context",
+        "/pm:utils:report",
+        "/pm:utils:insights",
+        "/pm:utils:auto-assign",
+        "/pm:utils:sync-status",
+        "/pm:utils:rollback",
+        "/pm:utils:dependencies",
+        "/pm:utils:agents",
+        "/pm:utils:help"
+      ]
+    },
+    "smart_agent_selection": {
+      "description": "Dynamic agent discovery with context-aware scoring (0-100+) and intelligent execution planning",
+      "hooks": [
+        "UserPromptSubmit"
+      ]
+    },
+    "tdd_enforcement": {
+      "description": "Enforces test-driven development by blocking production code without tests",
+      "hooks": [
+        "PreToolUse"
+      ]
+    },
+    "quality_gates": {
+      "description": "Automatic code review and security audits after implementation",
+      "hooks": [
+        "Stop"
+      ]
+    }
+  },
+  "requirements": {
+    "mcp_servers": [
+      "linear",
+      "github",
+      "context7"
+    ],
+    "optional_mcp": [
+      "playwright",
+      "vercel",
+      "shadcn"
+    ]
+  },
+  "safety": {
+    "external_writes": "require_confirmation",
+    "jira_writes": "require_confirmation",
+    "confluence_writes": "require_confirmation",
+    "bitbucket_writes": "require_confirmation",
+    "slack_writes": "require_confirmation",
+    "linear_writes": "allowed",
+    "local_writes": "allowed"
+  }
+}

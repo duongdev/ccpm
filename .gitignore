@@ -1,0 +1,40 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+dist/
+build/
+*.min.js
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Node modules (if any future dependencies added)
+node_modules/
+
+# Claude Code plugin testing
+.claude-test/
