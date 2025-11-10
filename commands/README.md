@@ -25,7 +25,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 **No more context switching!** Complete workflows in one continuous session.
 
-### New Commands (16 Total in v2.0)
+### New Commands (17 Total in v2.0)
 
 **Spec Management (6 new):**
 1. `/pm:spec:create` - Create Epic/Feature with Linear Document
@@ -35,17 +35,18 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 5. `/pm:spec:migrate` - Migrate `.claude/` specs to Linear
 6. `/pm:spec:sync` - Sync spec with implementation
 
-**Workflow Enhancements (10 new):**
+**Workflow Enhancements (11 new):**
 7. `/pm:planning:create` - Create + plan in one step
-8. `/pm:utils:report` - Project-wide progress reporting
-9. `/pm:utils:context` - Fast task context loading
-10. `/pm:implementation:next` - Smart next action detection
-11. `/pm:complete:finalize` - Post-completion workflow
-12. `/pm:utils:sync-status` - Jira sync with confirmation
-13. `/pm:utils:auto-assign` - AI-powered agent assignment
-14. `/pm:utils:rollback` - Undo planning changes
-15. `/pm:utils:dependencies` - Visualize task dependencies
-16. `/pm:utils:insights` - AI complexity & risk analysis
+8. `/pm:planning:update` - Update existing plan with interactive clarification
+9. `/pm:utils:report` - Project-wide progress reporting
+10. `/pm:utils:context` - Fast task context loading
+11. `/pm:implementation:next` - Smart next action detection
+12. `/pm:complete:finalize` - Post-completion workflow
+13. `/pm:utils:sync-status` - Jira sync with confirmation
+14. `/pm:utils:auto-assign` - AI-powered agent assignment
+15. `/pm:utils:rollback` - Undo planning changes
+16. `/pm:utils:dependencies` - Visualize task dependencies
+17. `/pm:utils:insights` - AI complexity & risk analysis
 
 ## 📋 Complete Command Reference
 
@@ -243,6 +244,32 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 ```bash
 /pm:planning:plan WORK-123 TRAIN-456
 ```
+
+#### `/pm:planning:update <linear-issue-id> "<update-request>"` 🆕
+
+**Update existing plan with interactive clarification.**
+
+- Analyzes current plan and update request
+- Asks smart clarifying questions
+- Shows impact analysis (complexity, timeline)
+- Tracks change history
+- Confirms before updating
+
+```bash
+/pm:planning:update WORK-123 "Also add email notifications"
+/pm:planning:update WORK-456 "Use Redis instead of in-memory cache"
+/pm:planning:update WORK-789 "Remove admin dashboard, just add API"
+```
+
+**What it does:**
+- Fetches current plan from Linear
+- Detects change type (scope, approach, simplification, blocker)
+- Asks targeted questions for clarification
+- Gathers additional context (codebase, Context7, external PM)
+- Generates updated plan with impact analysis
+- Shows side-by-side comparison of changes
+- Confirms before updating Linear
+- Suggests next actions after update
 
 #### `/pm:planning:quick-plan "<description>" <project>`
 
