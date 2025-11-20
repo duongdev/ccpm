@@ -7,9 +7,9 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/smart-agent-selector-optimized.prompt",
+            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/agent-selector.prompt",
             "timeout": 5000,
-            "description": "Smart agent selector: Context-aware scoring algorithm to auto-invoke optimal agents"
+            "description": "Agent selector: Analyzes requests and selects appropriate agents (static list)"
           }
         ]
       }

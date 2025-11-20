@@ -67,9 +67,9 @@ if [ ! -d "$PLUGIN_ROOT" ]; then
     exit 1
 fi
 
-# Verify hook files exist (using optimized versions from PSN-23)
+# Verify hook files exist (using working versions)
 HOOK_FILES=(
-    "$PLUGIN_ROOT/hooks/smart-agent-selector-optimized.prompt"
+    "$PLUGIN_ROOT/hooks/agent-selector.prompt"
     "$PLUGIN_ROOT/hooks/tdd-enforcer-optimized.prompt"
     "$PLUGIN_ROOT/hooks/quality-gate-optimized.prompt"
 )
@@ -122,14 +122,14 @@ jq --arg pluginRoot "$PLUGIN_ROOT" '
   # Ensure hooks object exists
   .hooks = (.hooks // {}) |
 
-  # Add UserPromptSubmit hook (optimized version from PSN-23)
+  # Add UserPromptSubmit hook (static agent list - works without script execution)
   .hooks.UserPromptSubmit = (
     (.hooks.UserPromptSubmit // []) + [{
       "hooks": [{
         "type": "prompt",
-        "prompt": "\($pluginRoot)/hooks/smart-agent-selector-optimized.prompt",
+        "prompt": "\($pluginRoot)/hooks/agent-selector.prompt",
         "timeout": 5000,
-        "description": "CCPM: Smart agent selector (optimized: 81.7% token reduction, <1s with cache)"
+        "description": "CCPM: Agent selector - analyzes requests and selects appropriate agents"
       }]
     }]
   ) |
