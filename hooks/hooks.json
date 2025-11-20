@@ -6,10 +6,10 @@
       {
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/agent-selector.prompt",
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/smart-agent-selector.sh",
             "timeout": 5000,
-            "description": "Agent selector: Analyzes requests and selects appropriate agents (static list)"
+            "description": "Smart agent selector: Dynamically discovers and scores all available agents"
           }
         ]
       }
