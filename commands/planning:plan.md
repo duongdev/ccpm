@@ -120,6 +120,23 @@ Execute the shared planning workflow to handle all planning steps systematically
    - Show research added
    - Provide Linear issue URL
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:plan WORK-123
+```
+
+**Benefits:**
+- Same functionality, simpler syntax
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 ## Output Format
 
 Provide a summary like:

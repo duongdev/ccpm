@@ -6,6 +6,24 @@ argument-hint: <linear-issue-id>
 
 # Next Action for: $1
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:work [issue-id]
+```
+
+**Benefits:**
+- Auto-detects issue from git branch if not provided
+- Auto-detects mode (start vs resume)
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 Analyzing task **$1** to suggest the optimal next action.
 
 ## 🚨 CRITICAL: Safety Rules

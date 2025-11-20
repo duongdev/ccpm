@@ -334,6 +334,24 @@ Context:       /ccpm:utils:context [WORK-123]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:plan "task title" [project] [jira-ticket]
+```
+
+**Benefits:**
+- Same functionality, simpler syntax
+- Part of the 6-command natural workflow
+- Auto-detects project if configured
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 ## Notes
 
 ### This Command Combines

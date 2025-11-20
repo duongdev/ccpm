@@ -6,6 +6,24 @@ argument-hint: <linear-issue-id>
 
 # Quality Check for: $1
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:verify [issue-id]
+```
+
+**Benefits:**
+- Auto-detects issue from git branch if not provided
+- Runs both quality checks AND final verification in sequence
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 Running comprehensive quality checks before verification.
 
 ## 🚨 CRITICAL: Safety Rules

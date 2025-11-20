@@ -6,6 +6,23 @@ argument-hint: <linear-issue-id> "<update-request>"
 
 # Updating Plan: $1
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:plan WORK-123 "your changes here"
+```
+
+**Benefits:**
+- Same functionality, simpler syntax
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 You are updating the existing plan for Linear issue **$1** based on the update request: **$2**
 
 ## 🚨 CRITICAL: Safety Rules
