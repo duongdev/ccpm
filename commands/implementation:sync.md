@@ -28,7 +28,7 @@ Syncing all implementation progress, code changes, technical findings, and block
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, or update anything to Jira, Confluence, BitBucket, or Slack without explicit user confirmation.
 

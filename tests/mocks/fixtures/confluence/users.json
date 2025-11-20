@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "accountId": "test-user-1",
+      "accountType": "atlassian",
+      "displayName": "Test User",
+      "email": "test.user@example.com",
+      "publicName": "Test User",
+      "profilePicture": {
+        "path": "/avatar/test-user-1",
+        "width": 48,
+        "height": 48,
+        "isDefault": false
+      },
+      "type": "known"
+    },
+    {
+      "accountId": "test-user-2",
+      "accountType": "atlassian",
+      "displayName": "Another Test User",
+      "email": "another.test@example.com",
+      "publicName": "Another Test User",
+      "profilePicture": {
+        "path": "/avatar/test-user-2",
+        "width": 48,
+        "height": 48,
+        "isDefault": false
+      },
+      "type": "known"
+    },
+    {
+      "accountId": "reviewer-1",
+      "accountType": "atlassian",
+      "displayName": "Code Reviewer",
+      "email": "reviewer@example.com",
+      "publicName": "Code Reviewer",
+      "profilePicture": {
+        "path": "/avatar/reviewer-1",
+        "width": 48,
+        "height": 48,
+        "isDefault": true
+      },
+      "type": "known"
+    }
+  ]
+}

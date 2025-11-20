@@ -1,7 +1,7 @@
 {
   "name": "ccpm",
-  "version": "2.0.0",
-  "description": "Enterprise-grade Project Management plugin for Claude Code. Features: 45 PM commands covering complete project lifecycle, 10 auto-activating Agent Skills with context-aware selection, hook-based automation (TDD enforcement, quality gates, smart agent selection), Linear integration with spec management, multi-system workflows (Jira, Confluence, BitBucket, Slack), monorepo support with auto-detection, safety-first design with confirmation for external writes. Built with 2025 best practices for optimal agent auto-activation and workflow automation.",
+  "version": "2.3.0-beta.1",
+  "description": "Enterprise-grade Project Management plugin for Claude Code. v2.3 BETA: 50% faster with optimized /ccpm:plan, /ccpm:work, /ccpm:sync, /ccpm:commit, /ccpm:verify, /ccpm:done commands + Linear subagent. Features: 49 PM commands (45 original + 6 new optimized), smart agent auto-invocation, TDD enforcement, quality gates, Linear integration with spec management, multi-system workflows (Jira, Confluence, BitBucket, Slack), monorepo support, safety-first design. Phase 6: Beta testing with 50-100 power users. Backward compatible with all v2.2.x commands.",
   "author": {
     "name": "Dustin Do",
     "email": "dustin.do95@gmail.com",

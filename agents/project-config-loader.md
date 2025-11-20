@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Efficiently load project configuration from `~/.claude/ccpm-config.yaml` with validation and structured output. Reduces token usage by centralizing config loading logic.
+Efficiently load project configuration from `$CCPM_CONFIG_FILE` (typically `~/.claude/ccpm-config.yaml`) with validation and structured output. Reduces token usage by centralizing config loading logic.
 
 ## Expertise
 
@@ -21,7 +21,7 @@ Efficiently load project configuration from `~/.claude/ccpm-config.yaml` with va
 Read and parse the CCPM configuration file.
 
 **Process**:
-1. Locate config file (`~/.claude/ccpm-config.yaml`)
+1. Locate config file (`$CCPM_CONFIG_FILE` or `~/.claude/ccpm-config.yaml`)
 2. Parse YAML content
 3. Validate schema structure
 4. Return parsed configuration
@@ -269,7 +269,7 @@ error:
 error:
   code: CONFIG_NOT_FOUND
   message: "CCPM configuration file not found"
-  expected_path: ~/.claude/ccpm-config.yaml
+  expected_path: $CCPM_CONFIG_FILE (typically ~/.claude/ccpm-config.yaml)
   actions:
     - "Create configuration: /ccpm:project:add <project-id>"
     - "See setup guide: docs/guides/project-setup.md"
@@ -285,7 +285,7 @@ error:
   column: 15
   actions:
     - "Fix YAML syntax errors"
-    - "Validate with: python -c 'import yaml; yaml.safe_load(open(\"~/.claude/ccpm-config.yaml\"))'"
+    - "Validate with: python -c 'import yaml; yaml.safe_load(open(os.path.expanduser(\"$CCPM_CONFIG_FILE\")))'"
 ```
 
 ### MISSING_REQUIRED_FIELD

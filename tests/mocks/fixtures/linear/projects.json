@@ -1,0 +1,37 @@
+{
+  "projects": [
+    {
+      "id": "test-project-1",
+      "name": "Test Project Alpha",
+      "key": "TPA",
+      "description": "Primary test project",
+      "teamId": "test-team-1",
+      "state": "started",
+      "startDate": "2025-01-01",
+      "targetDate": "2025-12-31",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "test-project-2",
+      "name": "Test Project Beta",
+      "key": "TPB",
+      "description": "Secondary test project",
+      "teamId": "test-team-1",
+      "state": "planned",
+      "startDate": "2025-06-01",
+      "targetDate": "2025-12-31",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "test-project-3",
+      "name": "Test Project Gamma",
+      "key": "TPG",
+      "description": "Multi-team test project",
+      "teamId": "test-team-2",
+      "state": "started",
+      "startDate": "2025-01-01",
+      "targetDate": "2025-06-30",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

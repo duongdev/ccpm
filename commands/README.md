@@ -975,7 +975,7 @@ Done → Suggest: New Task/Report
 ## 📁 Directory Structure
 
 ```
-/Users/duongdev/.claude/commands/pm/
+`$CCPM_COMMANDS_DIR/`
 ├── README.md (this file)
 ├── SAFETY_RULES.md
 ├── spec/ (NEW - Spec Management)

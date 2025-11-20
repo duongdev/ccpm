@@ -1,0 +1,58 @@
+{
+  "states": [
+    {
+      "id": "state-backlog",
+      "name": "Backlog",
+      "type": "backlog",
+      "teamId": "test-team-1",
+      "position": 1,
+      "color": "#bec2c8",
+      "description": "Not yet prioritized"
+    },
+    {
+      "id": "state-todo",
+      "name": "Todo",
+      "type": "unstarted",
+      "teamId": "test-team-1",
+      "position": 2,
+      "color": "#e2e2e2",
+      "description": "Ready to start"
+    },
+    {
+      "id": "state-in-progress",
+      "name": "In Progress",
+      "type": "started",
+      "teamId": "test-team-1",
+      "position": 3,
+      "color": "#f2c94c",
+      "description": "Currently being worked on"
+    },
+    {
+      "id": "state-in-review",
+      "name": "In Review",
+      "type": "started",
+      "teamId": "test-team-1",
+      "position": 4,
+      "color": "#5e6ad2",
+      "description": "Under review"
+    },
+    {
+      "id": "state-done",
+      "name": "Done",
+      "type": "completed",
+      "teamId": "test-team-1",
+      "position": 5,
+      "color": "#5e6ad2",
+      "description": "Completed"
+    },
+    {
+      "id": "state-canceled",
+      "name": "Canceled",
+      "type": "canceled",
+      "teamId": "test-team-1",
+      "position": 6,
+      "color": "#95a2b3",
+      "description": "Canceled or won't do"
+    }
+  ]
+}

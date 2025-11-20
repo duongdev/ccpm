@@ -1,0 +1,275 @@
+{
+  "version": 1,
+  "metadata": {
+    "description": "CCPM Feature Flags for Phase 6 Rollout",
+    "last_updated": "2025-11-21",
+    "rollout_start_date": "2025-12-09",
+    "rollout_end_date": "2026-01-17"
+  },
+  "flags": {
+    "optimized_workflow_commands": {
+      "enabled": true,
+      "rollout_percentage": 0,
+      "description": "Use optimized /ccpm:plan, /ccpm:work, /ccpm:sync, /ccpm:commit, /ccpm:verify, /ccpm:done commands (Phase 1-3 optimizations)",
+      "deprecated": false,
+      "min_version": "2.3.0-beta.1",
+      "stages": {
+        "beta": {
+          "percentage": 10,
+          "audience": "beta_testers",
+          "date": "2025-12-09"
+        },
+        "early_access": {
+          "percentage": 30,
+          "audience": "early_access",
+          "date": "2025-12-21"
+        },
+        "ga": {
+          "percentage": 100,
+          "audience": "all",
+          "date": "2026-01-06"
+        }
+      },
+      "variants": {
+        "control": {
+          "use_old_commands": true,
+          "percentage": 0
+        },
+        "treatment": {
+          "use_old_commands": false,
+          "percentage": 100
+        }
+      }
+    },
+    "linear_subagent_enabled": {
+      "enabled": true,
+      "rollout_percentage": 0,
+      "description": "Use Linear operations subagent for improved caching and token reduction (Phase 4 optimization)",
+      "deprecated": false,
+      "min_version": "2.3.0-beta.1",
+      "stages": {
+        "beta": {
+          "percentage": 10,
+          "audience": "beta_testers",
+          "date": "2025-12-09"
+        },
+        "early_access": {
+          "percentage": 30,
+          "audience": "early_access",
+          "date": "2025-12-21"
+        },
+        "ga": {
+          "percentage": 100,
+          "audience": "all",
+          "date": "2026-01-06"
+        }
+      },
+      "variants": {
+        "control": {
+          "use_direct_mcp": true,
+          "percentage": 0
+        },
+        "treatment": {
+          "use_subagent": true,
+          "percentage": 100
+        }
+      }
+    },
+    "auto_detect_from_branch": {
+      "enabled": true,
+      "rollout_percentage": 0,
+      "description": "Auto-detect issue from git branch name in /ccpm:work, /ccpm:sync, /ccpm:verify, /ccpm:done (Phase 2 optimization)",
+      "deprecated": false,
+      "min_version": "2.3.0-beta.1",
+      "stages": {
+        "beta": {
+          "percentage": 10,
+          "audience": "beta_testers",
+          "date": "2025-12-09"
+        },
+        "early_access": {
+          "percentage": 30,
+          "audience": "early_access",
+          "date": "2025-12-21"
+        },
+        "ga": {
+          "percentage": 100,
+          "audience": "all",
+          "date": "2026-01-06"
+        }
+      },
+      "variants": {
+        "control": {
+          "require_issue_id": true,
+          "percentage": 0
+        },
+        "treatment": {
+          "auto_detect": true,
+          "percentage": 100
+        }
+      }
+    },
+    "shared_linear_helpers": {
+      "enabled": true,
+      "rollout_percentage": 0,
+      "description": "Use shared Linear helper functions for label management and state validation (Phase 4 optimization)",
+      "deprecated": false,
+      "min_version": "2.3.0-beta.1",
+      "stages": {
+        "beta": {
+          "percentage": 10,
+          "audience": "beta_testers",
+          "date": "2025-12-09"
+        },
+        "early_access": {
+          "percentage": 30,
+          "audience": "early_access",
+          "date": "2025-12-21"
+        },
+        "ga": {
+          "percentage": 100,
+          "audience": "all",
+          "date": "2026-01-06"
+        }
+      }
+    },
+    "legacy_command_support": {
+      "enabled": true,
+      "rollout_percentage": 100,
+      "description": "Keep old commands functional with deprecation hints (backward compatibility)",
+      "deprecated": false,
+      "min_version": "1.0.0",
+      "sunset_date": "2026-08-01",
+      "variants": {
+        "with_hints": {
+          "show_migration_hints": true,
+          "percentage": 100
+        }
+      }
+    },
+    "monitoring_collection": {
+      "enabled": true,
+      "rollout_percentage": 100,
+      "description": "Enable metrics collection for Phase 6 monitoring dashboard",
+      "deprecated": false,
+      "min_version": "2.3.0-beta.1"
+    },
+    "always_ask_policy": {
+      "enabled": true,
+      "rollout_percentage": 100,
+      "description": "Always ask before writing to external PM systems (safety-first policy)",
+      "deprecated": false,
+      "min_version": "2.3.0-beta.1"
+    }
+  },
+  "rollout_schedule": [
+    {
+      "date": "2025-12-09",
+      "stage": "beta",
+      "description": "Beta release to 50-100 power users",
+      "changes": [
+        {
+          "flag": "optimized_workflow_commands",
+          "rollout_percentage": 10,
+          "audience": "beta_testers"
+        },
+        {
+          "flag": "linear_subagent_enabled",
+          "rollout_percentage": 10,
+          "audience": "beta_testers"
+        },
+        {
+          "flag": "auto_detect_from_branch",
+          "rollout_percentage": 10,
+          "audience": "beta_testers"
+        },
+        {
+          "flag": "shared_linear_helpers",
+          "rollout_percentage": 10,
+          "audience": "beta_testers"
+        }
+      ]
+    },
+    {
+      "date": "2025-12-21",
+      "stage": "early_access",
+      "description": "Early access release to 500-1,000 users",
+      "changes": [
+        {
+          "flag": "optimized_workflow_commands",
+          "rollout_percentage": 30,
+          "audience": "early_access"
+        },
+        {
+          "flag": "linear_subagent_enabled",
+          "rollout_percentage": 30,
+          "audience": "early_access"
+        },
+        {
+          "flag": "auto_detect_from_branch",
+          "rollout_percentage": 30,
+          "audience": "early_access"
+        },
+        {
+          "flag": "shared_linear_helpers",
+          "rollout_percentage": 30,
+          "audience": "early_access"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-06",
+      "stage": "general_availability",
+      "description": "General availability to all users",
+      "changes": [
+        {
+          "flag": "optimized_workflow_commands",
+          "rollout_percentage": 100,
+          "audience": "all"
+        },
+        {
+          "flag": "linear_subagent_enabled",
+          "rollout_percentage": 100,
+          "audience": "all"
+        },
+        {
+          "flag": "auto_detect_from_branch",
+          "rollout_percentage": 100,
+          "audience": "all"
+        },
+        {
+          "flag": "shared_linear_helpers",
+          "rollout_percentage": 100,
+          "audience": "all"
+        }
+      ]
+    }
+  ],
+  "thresholds": {
+    "error_rate": {
+      "warning": 0.02,
+      "critical": 0.05,
+      "action": "automatic_rollback_at_critical"
+    },
+    "token_reduction": {
+      "warning": 0.20,
+      "critical": 0.30,
+      "direction": "below_target"
+    },
+    "rollback_rate": {
+      "warning": 0.05,
+      "critical": 0.10,
+      "action": "pause_rollout_at_critical"
+    },
+    "support_tickets": {
+      "warning": 50,
+      "critical": 100,
+      "action": "scale_support_at_critical"
+    },
+    "nps_score": {
+      "warning": 50,
+      "critical": 40,
+      "action": "pause_rollout_at_critical"
+    }
+  }
+}

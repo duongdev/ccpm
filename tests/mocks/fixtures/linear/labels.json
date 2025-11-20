@@ -1,0 +1,68 @@
+{
+  "labels": [
+    {
+      "id": "label-planning",
+      "name": "planning",
+      "color": "#f7c8c1",
+      "description": "Planning and research phase",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-implementation",
+      "name": "implementation",
+      "color": "#26b5ce",
+      "description": "Implementation and coding",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-verification",
+      "name": "verification",
+      "color": "#f2c94c",
+      "description": "Testing and verification",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-bug",
+      "name": "bug",
+      "color": "#eb5757",
+      "description": "Bug fix",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-feature",
+      "name": "feature",
+      "color": "#bb87fc",
+      "description": "New feature development",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-enhancement",
+      "name": "enhancement",
+      "color": "#4ea7fc",
+      "description": "Enhancement to existing feature",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-documentation",
+      "name": "documentation",
+      "color": "#95a2b3",
+      "description": "Documentation updates",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "label-refactor",
+      "name": "refactor",
+      "color": "#f59e0b",
+      "description": "Code refactoring",
+      "teamId": "test-team-1",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

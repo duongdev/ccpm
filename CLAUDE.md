@@ -784,12 +784,12 @@ All documentation is accessible from `docs/README.md`:
 ## Resources
 
 - [Documentation Hub](./docs/README.md)
-- [Installation Guide](./docs/guides/installation.md)
+- [Installation Guide](./docs/guides/getting-started/installation.md)
 - [Complete Command Reference](./commands/README.md)
 - [Safety Rules](./commands/SAFETY_RULES.md)
 - [Spec Management Guide](./commands/SPEC_MANAGEMENT_SUMMARY.md)
-- [Skills Catalog](./docs/reference/skills-catalog.md)
+- [Skills Catalog](./docs/reference/skills/catalog.md)
 - [Hooks Implementation](./docs/research/hooks/implementation-summary.md)
 - [Smart Agent Selection](./hooks/SMART_AGENT_SELECTION.md)
-- [Linear Subagent Architecture](./docs/architecture/linear-subagent-architecture.md) (v2.3+)
-- [Linear Subagent Migration Guide](./docs/guides/LINEAR_SUBAGENT_MIGRATION.md) (v2.3+)
+- [Linear Subagent Architecture](./docs/architecture/decisions/002-linear-subagent.md) (v2.3+)
+- [Linear Subagent Migration Guide](./docs/guides/migration/linear-subagent-migration.md) (v2.3+)

@@ -1,0 +1,55 @@
+{
+  "spaces": [
+    {
+      "id": 123456,
+      "key": "TEST",
+      "name": "Test Space",
+      "type": "global",
+      "status": "current",
+      "description": {
+        "plain": {
+          "value": "Test space for CCPM integration testing",
+          "representation": "plain"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/TEST",
+        "self": "https://confluence.test.com/rest/api/space/TEST"
+      }
+    },
+    {
+      "id": 123457,
+      "key": "CCPM",
+      "name": "CCPM Documentation",
+      "type": "global",
+      "status": "current",
+      "description": {
+        "plain": {
+          "value": "Documentation space for CCPM plugin",
+          "representation": "plain"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/CCPM",
+        "self": "https://confluence.test.com/rest/api/space/CCPM"
+      }
+    },
+    {
+      "id": 123458,
+      "key": "PROJ",
+      "name": "Project Knowledge Base",
+      "type": "knowledge_base",
+      "status": "current",
+      "description": {
+        "plain": {
+          "value": "Project documentation and knowledge base",
+          "representation": "plain"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/PROJ",
+        "self": "https://confluence.test.com/rest/api/space/PROJ"
+      }
+    }
+  ]
+}

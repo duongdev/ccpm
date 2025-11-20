@@ -10,7 +10,7 @@ argument-hint: <pr-number-or-url> [project-id]
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, comment, or modify anything on BitBucket or SonarQube without explicit user confirmation.
 

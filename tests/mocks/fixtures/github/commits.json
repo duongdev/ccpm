@@ -1,0 +1,116 @@
+{
+  "commits": [
+    {
+      "sha": "abc123def456789",
+      "commit": {
+        "author": {
+          "name": "Test User",
+          "email": "test@example.com",
+          "date": "2025-01-20T10:00:00Z"
+        },
+        "committer": {
+          "name": "Test User",
+          "email": "test@example.com",
+          "date": "2025-01-20T10:00:00Z"
+        },
+        "message": "feat(auth): implement JWT authentication\n\nAdds JWT-based authentication middleware and endpoints.\n\nIssue: TEST-2",
+        "tree": {
+          "sha": "tree-sha-123"
+        },
+        "verification": {
+          "verified": true,
+          "reason": "valid"
+        }
+      },
+      "author": {
+        "login": "test-user",
+        "id": 11111111
+      },
+      "committer": {
+        "login": "test-user",
+        "id": 11111111
+      },
+      "parents": [
+        {
+          "sha": "parent-sha-123"
+        }
+      ],
+      "html_url": "https://github.com/test-org/ccpm/commit/abc123def456789",
+      "stats": {
+        "total": 287,
+        "additions": 245,
+        "deletions": 42
+      },
+      "files": [
+        {
+          "filename": "src/middleware/auth.js",
+          "status": "added",
+          "additions": 85,
+          "deletions": 0,
+          "changes": 85
+        },
+        {
+          "filename": "src/routes/auth.js",
+          "status": "added",
+          "additions": 120,
+          "deletions": 0,
+          "changes": 120
+        },
+        {
+          "filename": "src/models/user.js",
+          "status": "modified",
+          "additions": 40,
+          "deletions": 42,
+          "changes": 82
+        }
+      ]
+    },
+    {
+      "sha": "def456abc789012",
+      "commit": {
+        "author": {
+          "name": "Test User",
+          "email": "test@example.com",
+          "date": "2025-01-18T09:00:00Z"
+        },
+        "committer": {
+          "name": "Test User",
+          "email": "test@example.com",
+          "date": "2025-01-18T09:00:00Z"
+        },
+        "message": "fix(auth): resolve token expiration bug\n\nFixes issue with token validation logic.\n\nIssue: TEST-3",
+        "tree": {
+          "sha": "tree-sha-456"
+        }
+      },
+      "author": {
+        "login": "test-user",
+        "id": 11111111
+      },
+      "committer": {
+        "login": "test-user",
+        "id": 11111111
+      },
+      "parents": [
+        {
+          "sha": "abc123def456789"
+        }
+      ],
+      "html_url": "https://github.com/test-org/ccpm/commit/def456abc789012",
+      "stats": {
+        "total": 57,
+        "additions": 45,
+        "deletions": 12
+      },
+      "files": [
+        {
+          "filename": "src/middleware/auth.js",
+          "status": "modified",
+          "additions": 45,
+          "deletions": 12,
+          "changes": 57
+        }
+      ]
+    }
+  ]
+}

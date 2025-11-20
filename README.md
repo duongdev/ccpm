@@ -6,7 +6,7 @@ Version: 2.1.0
 Author: Dustin Do ([@duongdev](https://github.com/duongdev))
 License: MIT
 
-> **🎉 NEW in v2.0**: Dynamic multi-project configuration! Manage all your projects from `~/.claude/ccpm-config.yaml`. See [Migration Guide](./MIGRATION_TO_DYNAMIC_CONFIG.md) for details.
+> **🎉 NEW in v2.0**: Dynamic multi-project configuration! Manage all your projects from `~/.claude/ccpm-config.yaml`. See [Migration Guide](./MIGRATION.md) for details.
 >
 > **✨ NEW in v2.1**: Monorepo subdirectory support! Auto-detect subprojects in monorepos with pattern-based matching. Includes 4 new management commands and agent-based architecture for 80% token reduction!
 
@@ -112,7 +112,7 @@ After installation, verify CCPM is working correctly:
 "use context7 to explain React hooks"
 ```
 
-If any MCP servers fail, see [MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md) for detailed setup.
+If any MCP servers fail, see [MCP Integration Guide](./docs/guides/features/mcp-integration.md) for detailed setup.
 
 #### 4. Verify Hook Execution (Optional)
 
@@ -153,7 +153,7 @@ To enable smart agent auto-invocation, TDD enforcement, and quality gates:
 - ✅ **TDD Enforcement** - Blocks code without tests
 - 🔒 **Quality Gates** - Auto code review and security audits
 
-See [INSTALL_HOOKS.md](./INSTALL_HOOKS.md) for detailed instructions.
+See [Hooks Setup Guide](./docs/guides/features/hooks-setup.md) for detailed instructions.
 
 ### Configure Your Projects
 
@@ -264,7 +264,7 @@ projects:
 /ccpm:project:set auto                # Enable auto-detection
 ```
 
-See [Project Setup Guide](./docs/guides/project-setup.md) for complete documentation.
+See [Project Setup Guide](./docs/guides/getting-started/project-setup.md) for complete documentation.
 
 ### 3. Monorepo Subdirectory Support (NEW!)
 
@@ -344,7 +344,7 @@ cd ~/my-monorepo/apps/frontend
 - ✅ Subproject labels automatically added to Linear issues
 - ✅ Works with Nx, Turborepo, Lerna, pnpm workspaces, and custom setups
 
-See [Monorepo Setup Guide](./docs/guides/monorepo-setup.md) for complete documentation.
+See [Monorepo Workflow Guide](./docs/guides/workflows/monorepo-workflow.md) for complete documentation.
 
 ### 4. Smart Agent Auto-Invocation
 
@@ -662,7 +662,7 @@ See [SAFETY_RULES.md](./commands/SAFETY_RULES.md) for complete details.
 
 ### Required MCP Servers
 
-CCPM requires three MCP servers to function correctly. See [MCP_INTEGRATION_GUIDE.md](./MCP_INTEGRATION_GUIDE.md) for detailed setup instructions.
+CCPM requires three MCP servers to function correctly. See [MCP Integration Guide](./docs/guides/features/mcp-integration.md) for detailed setup instructions.
 
 #### Linear MCP
 - **Purpose:** Task tracking, spec management, and project organization
@@ -718,7 +718,7 @@ Add to your `~/.claude/settings.json`:
 ```
 
 For complete MCP setup, configuration, and troubleshooting, see:
-**[MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md)** ← Comprehensive documentation
+**[MCP Integration Guide](./docs/guides/features/mcp-integration.md)** ← Comprehensive documentation
 
 ---
 
@@ -859,7 +859,7 @@ echo "use context7 to explain React" | claude
 # Kill existing sessions and restart Claude Code
 
 # 5. See detailed MCP setup guide
-# [MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md)
+# [MCP Integration Guide](./docs/guides/features/mcp-integration.md)
 ```
 
 ### Linear Integration Problems
@@ -1117,10 +1117,10 @@ If issues persist:
 ## 📚 Documentation
 
 ### User Guides
-- **[Project Setup Guide](./docs/guides/project-setup.md)** - Complete guide to configuring and managing projects ⭐ NEW
-- **[MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md)** - Comprehensive MCP server setup and best practices
-- [Installation Guide](./INSTALL_HOOKS.md) - Install CCPM with hooks
-- [Installation Test Guide](./TEST_INSTALLATION.md) - Verify plugin installation
+- **[Project Setup Guide](./docs/guides/getting-started/project-setup.md)** - Complete guide to configuring and managing projects
+- **[MCP Integration Guide](./docs/guides/features/mcp-integration.md)** - Comprehensive MCP server setup and best practices
+- **[Installation Guide](./docs/guides/getting-started/installation.md)** - Install CCPM with all features
+- **[Hooks Setup Guide](./docs/guides/features/hooks-setup.md)** - Enable automation with hooks
 
 ### Reference Documentation
 - [Complete Command Reference](./commands/README.md) - All 27+ commands
@@ -1129,7 +1129,7 @@ If issues persist:
 
 ### Architecture & Development
 - [CLAUDE.md](./CLAUDE.md) - Project instructions for development
-- [Dynamic Project Configuration](./docs/architecture/dynamic-project-configuration.md) - Architecture deep-dive ⭐ NEW
+- [Dynamic Project Configuration](./docs/architecture/patterns/dynamic-configuration.md) - Architecture deep-dive
 - [Documentation Hub](./docs/README.md) - Complete documentation index
 
 ---
