@@ -22,26 +22,75 @@ When in doubt, ASK before posting anything externally.
 
 ## Project Configuration
 
-**IMPORTANT**: This command uses dynamic project configuration from `~/.claude/ccpm-config.yaml`.
+**IMPORTANT**: This command uses CCPM agents for efficient project detection and configuration loading.
 
-See [Project Setup Guide](../docs/guides/project-setup.md) for configuration details.
+### Auto-Activate Skills
 
-### Load Project Configuration
-
-```bash
-# Set project argument (from command: /ccpm:planning:create "title" <project> <jira-id>)
-PROJECT_ARG="$2"
+```markdown
+Skill(project-detection): Auto-activates for project context
+Skill(project-operations): Provides workflow guidance
 ```
 
-**LOAD PROJECT CONFIG**: Follow instructions in `commands/_shared-project-config-loader.md`
+### Load Project Configuration with Agents
 
-After loading, these variables are available:
-- `${PROJECT_ID}`, `${PROJECT_NAME}`
-- `${LINEAR_TEAM}`, `${LINEAR_PROJECT}`, `${LINEAR_DEFAULT_LABELS}`
-- `${EXTERNAL_PM_ENABLED}`, `${EXTERNAL_PM_TYPE}`
-- `${JIRA_ENABLED}`, `${JIRA_BASE_URL}`, `${JIRA_PROJECT_KEY}`
-- `${CONFLUENCE_ENABLED}`, `${SLACK_ENABLED}`
-- And more... (see shared loader for complete list)
+Use project agents to detect and load configuration:
+
+```javascript
+// Step 1: Detect or get project from argument
+const projectArg = "$2"  // Optional project argument
+
+let projectContext
+
+if (projectArg && projectArg !== "") {
+  // User specified project, load it
+  projectContext = Task(project-context-manager): `
+  Get context for project: ${projectArg}
+  Format: standard
+  Include all sections: true
+  `
+} else {
+  // Auto-detect from current directory
+  projectContext = Task(project-context-manager): `
+  Get active project context
+  Format: standard
+  Include all sections: true
+  `
+}
+
+if (projectContext.error) {
+  console.error(`❌ ${projectContext.error.message}`)
+  projectContext.error.suggestions?.forEach(s => console.log(`  - ${s}`))
+  exit(1)
+}
+
+// Now we have all project configuration in structured format:
+const PROJECT_ID = projectContext.detected.project_id
+const PROJECT_NAME = projectContext.config.project_name
+const SUBPROJECT = projectContext.detected.subproject  // NEW: for monorepos
+
+const LINEAR_TEAM = projectContext.config.linear.team
+const LINEAR_PROJECT = projectContext.config.linear.project
+const LINEAR_DEFAULT_LABELS = projectContext.config.linear.default_labels
+
+const EXTERNAL_PM_ENABLED = projectContext.config.external_pm.enabled
+const EXTERNAL_PM_TYPE = projectContext.config.external_pm.type
+const JIRA_CONFIG = projectContext.config.external_pm.jira
+const CONFLUENCE_CONFIG = projectContext.config.external_pm.confluence
+
+const TECH_STACK = SUBPROJECT
+  ? projectContext.config.subproject?.tech_stack
+  : projectContext.config.tech_stack
+
+// Display context
+console.log(projectContext.display.title)  // e.g., "My Monorepo › frontend"
+```
+
+**Benefits of Agent-Based Approach**:
+- ~80% token reduction vs inline logic
+- Automatic subdirectory detection for monorepos
+- Consistent error handling
+- Structured, validated output
+- Tech stack awareness (overall or per-subproject)
 
 ## Workflow
 
@@ -53,7 +102,27 @@ Use **Linear MCP** to create a new issue using loaded configuration:
 **Team**: ${LINEAR_TEAM} (from config)
 **Project**: ${LINEAR_PROJECT} (from config)
 **Status**: Backlog
-**Labels**: ${DEFAULT_LABELS} (from config)
+**Labels**: ${LINEAR_DEFAULT_LABELS} + subproject label (if in monorepo)
+
+```javascript
+// Build labels array
+const labels = [...LINEAR_DEFAULT_LABELS]
+
+// Add subproject label for monorepo context
+if (SUBPROJECT) {
+  labels.push(SUBPROJECT)
+  console.log(`📁 Subproject context: ${SUBPROJECT}`)
+}
+
+// Create issue
+const issue = linear_create_issue({
+  title: "$1",
+  team: LINEAR_TEAM,
+  project: LINEAR_PROJECT,
+  state: "Backlog",
+  labels: labels
+})
+```
 
 **Initial Description**:
 

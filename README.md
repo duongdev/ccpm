@@ -2,11 +2,13 @@
 
 **Comprehensive Project Management with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates.**
 
-Version: 2.0.0
+Version: 2.1.0
 Author: Dustin Do ([@duongdev](https://github.com/duongdev))
 License: MIT
 
 > **🎉 NEW in v2.0**: Dynamic multi-project configuration! Manage all your projects from `~/.claude/ccpm-config.yaml`. See [Migration Guide](./MIGRATION_TO_DYNAMIC_CONFIG.md) for details.
+>
+> **✨ NEW in v2.1**: Monorepo subdirectory support! Auto-detect subprojects in monorepos with pattern-based matching. Includes 4 new management commands and agent-based architecture for 80% token reduction!
 
 ---
 
@@ -14,8 +16,10 @@ License: MIT
 
 CCPM is a comprehensive Claude Code plugin that transforms your development workflow by combining:
 
-- **27+ PM commands** for complete project lifecycle management
+- **31+ PM commands** for complete project lifecycle management
 - **Dynamic project configuration** - Multi-project support with auto-detection
+- **Monorepo subdirectory support** - Auto-detect subprojects with pattern matching (NEW!)
+- **Agent-based architecture** - 80% token reduction with specialized agents (NEW!)
 - **Smart agent auto-invocation** with context-aware scoring (0-100+)
 - **TDD enforcement** that blocks production code without tests
 - **Automatic quality gates** with code review and security audits
@@ -148,7 +152,87 @@ projects:
 
 See [Project Setup Guide](./docs/guides/project-setup.md) for complete documentation.
 
-### 2. Smart Agent Auto-Invocation
+### 2. Monorepo Subdirectory Support (NEW!)
+
+**Work seamlessly in monorepos with multiple subprojects.** CCPM automatically detects which subproject you're in:
+
+- **Pattern-based detection**: Configure glob patterns for each subproject
+- **Auto-detection**: Automatically switches subproject based on working directory
+- **Priority-based matching**: Handle nested subdirectories with priority rules
+- **Per-subproject tech stacks**: Different tech stacks for each subproject
+- **Subproject-aware commands**: All commands understand subproject context
+
+**Configuration:**
+```yaml
+# ~/.claude/ccpm-config.yaml
+projects:
+  my-monorepo:
+    repository:
+      local_path: "/Users/dev/my-monorepo"
+
+    # Auto-detection for subdirectories
+    context:
+      detection:
+        subdirectories:
+          - subproject: "frontend"
+            match_pattern: "*/apps/frontend/*"
+            priority: 10
+          - subproject: "backend"
+            match_pattern: "*/apps/backend/*"
+            priority: 10
+
+    # Subproject metadata
+    code_repository:
+      subprojects:
+        - name: "frontend"
+          path: "apps/frontend"
+          tech_stack:
+            languages: [typescript]
+            frameworks:
+              frontend: [react, nextjs]
+        - name: "backend"
+          path: "apps/backend"
+          tech_stack:
+            languages: [python]
+            frameworks:
+              backend: [fastapi]
+```
+
+**Usage:**
+```bash
+# Navigate to a subproject
+cd ~/my-monorepo/apps/frontend
+
+# Commands automatically detect you're in "frontend"
+/ccpm:planning:create "Add dark mode"
+# → Creates issue with labels: [my-monorepo, frontend, planning]
+# → Uses frontend tech stack (React, Next.js)
+
+# View all subprojects
+/ccpm:project:subdir:list my-monorepo
+
+# Add new subproject
+/ccpm:project:subdir:add my-monorepo mobile apps/mobile
+
+# Update subproject
+/ccpm:project:subdir:update my-monorepo frontend --field tech_stack
+```
+
+**Commands:**
+- `/ccpm:project:subdir:add` - Add subdirectory configuration
+- `/ccpm:project:subdir:list` - List all subdirectories
+- `/ccpm:project:subdir:update` - Update subdirectory details
+- `/ccpm:project:subdir:remove` - Remove subdirectory
+
+**Benefits:**
+- ✅ Automatic context switching as you navigate subdirectories
+- ✅ Correct tech stack for agent selection per subproject
+- ✅ Subproject labels automatically added to Linear issues
+- ✅ Works with Nx, Turborepo, Lerna, pnpm workspaces, and custom setups
+
+See [Monorepo Setup Guide](./docs/guides/monorepo-setup.md) for complete documentation.
+
+### 3. Smart Agent Auto-Invocation
 
 **Never forget to invoke the right agent again.** CCPM automatically:
 
