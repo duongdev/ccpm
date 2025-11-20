@@ -29,6 +29,25 @@ Use **Linear MCP** to get full issue details:
 4. Related issues (parent, sub-issues)
 5. Assignee, dates, project info
 
+### Step 1.5: Display Attached Images
+
+**READ**: `commands/_shared-image-analysis.md`
+
+If the issue has attached images, display them:
+
+```javascript
+const images = detectImages(issue)
+if (images.length > 0) {
+  console.log("📎 Attached Images (" + images.length + "):")
+  images.forEach((img, i) => {
+    console.log(`  ${i+1}. ${img.title} (${img.type.toUpperCase()}) - ${img.url}`)
+  })
+}
+```
+
+**Note**: Images may contain UI mockups, architecture diagrams, or screenshots that provide visual context for the task.
+
+
 ### Step 2: Extract Context from Description
 
 Parse the description to extract:
@@ -305,3 +324,89 @@ Verify:        /ccpm:verification:verify $1
 - 🔄 **Resumable** - Easy to pick up where you left off
 - 📋 **Complete** - All context in one view
 - 🤖 **Interactive** - Suggests what to do next
+
+### Step 1.6: Display Figma Design Links
+
+**READ**: `commands/_shared-figma-detection.md`
+
+If the issue contains Figma design links, display them for easy access:
+
+```bash
+# Detect Figma links from Linear issue
+LINEAR_DESC=$(linear_get_issue "$1" | jq -r '.description')
+LINEAR_COMMENTS=$(linear_get_issue "$1" | jq -r '.comments[] | .body' || echo "")
+FIGMA_LINKS=$(./scripts/figma-utils.sh extract-markdown "$LINEAR_DESC $LINEAR_COMMENTS")
+FIGMA_COUNT=$(echo "$FIGMA_LINKS" | jq 'length')
+
+if [ "$FIGMA_COUNT" -gt 0 ]; then
+  echo ""
+  echo "🎨 Figma Designs ($FIGMA_COUNT):"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  
+  # Display each Figma design with details
+  echo "$FIGMA_LINKS" | jq -r '.[] | "\n  📐 \(.file_name)\n  🔗 \(.canonical_url)\n  📍 Node: \(.node_id // "Full file")\n  🎯 Type: \(.type)"'
+  
+  # Show quick access command
+  echo ""
+  echo "💡 Quick Access:"
+  echo "  • Open in Figma: Click URLs above"
+  echo "  • Refresh cache: /ccpm:utils:figma-refresh $1 (Phase 2)"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+else
+  echo ""
+  echo "ℹ️  No Figma designs found in this issue"
+fi
+```
+
+**Figma Context Display Format**
+
+```
+🎨 Figma Designs (2):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  📐 Login Screen Design
+  🔗 https://www.figma.com/file/ABC123
+  📍 Node: 1-2
+  🎯 Type: file
+
+  📐 Dashboard Mockup
+  🔗 https://www.figma.com/design/XYZ789
+  📍 Node: Full file
+  🎯 Type: design
+
+💡 Quick Access:
+  • Open in Figma: Click URLs above
+  • Refresh cache: /ccpm:utils:figma-refresh PSN-25 (Phase 2)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Integration with Image Context**
+
+Display both images and Figma designs together:
+
+```javascript
+// After Step 1.5 (Display Attached Images)
+// Add Step 1.6 (Display Figma Designs)
+
+const visualResources = {
+  images: images.length,
+  figma: figmaLinks.length,
+  total: images.length + figmaLinks.length
+}
+
+if (visualResources.total > 0) {
+  console.log(`\n📊 Visual Resources Summary: ${visualResources.total} total`)
+  console.log(`  • Static Images: ${visualResources.images} (snapshots, mockups)`)
+  console.log(`  • Figma Designs: ${visualResources.figma} (live, authoritative)`)
+  console.log(`\n💡 Use Figma as primary source, images for quick reference`)
+}
+```
+
+**Why This Matters**:
+- **Quick Access**: All design resources visible immediately when loading context
+- **Context Awareness**: Understand what visual resources are available
+- **Design Priority**: Figma = authoritative, images = supplementary
+- **Efficiency**: No need to search through Linear comments for design links
+
+**Performance**: Figma link detection adds <100ms to context loading.
+

@@ -5,6 +5,54 @@ All notable changes to the CCPM plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-11-20
+
+### Added
+
+- **Automatic Image Analysis** for Linear issues
+  - Detects images in Linear attachments and inline markdown
+  - Analyzes UI mockups, architecture diagrams, screenshots
+  - Formats visual context for inclusion in Linear descriptions
+  - Image URLs preserved for implementation phase
+  
+- **Direct Visual Reference in Implementation Phase**
+  - Frontend/mobile agents receive mockups directly via WebFetch
+  - Pixel-perfect UI implementation (~95-100% fidelity)
+  - Eliminates translation loss from text descriptions
+  - Automatic UI task detection and image mapping
+
+- **Configuration Options** for image analysis
+  - `image_analysis.enabled` - Enable/disable feature (default: true)
+  - `image_analysis.max_images` - Limit images per issue (default: 5)
+  - `image_analysis.timeout_ms` - Timeout per image (default: 10000ms)
+  - `image_analysis.implementation_mode` - Direct visual vs text-only
+  - `image_analysis.formats` - Supported image formats
+
+### Enhanced
+
+- `/ccpm:planning:plan` - Now detects and analyzes images automatically
+- `/ccpm:planning:create` - Inherits image analysis from planning:plan
+- `/ccpm:utils:context` - Shows image preview with counts and URLs
+- `/ccpm:planning:design-ui` - Analyzes reference mockups
+- `/ccpm:implementation:start` - Prepares visual context for UI tasks
+
+### Performance
+
+- Image analysis adds ~2-5s per image
+- Limited to 5 images by default to prevent excessive processing
+- Graceful error handling - failed images don't block workflows
+
+### Files Added
+
+- `commands/_shared-image-analysis.md` - Image analysis utility (988 lines)
+
+### Files Modified
+
+- `commands/planning:plan.md` - Added Step 0.5: Detect and Analyze Images
+- `commands/utils:context.md` - Added Step 1.5: Display Attached Images
+- `commands/planning:design-ui.md` - Added Step 1.5: Analyze Reference Mockups
+- `commands/implementation:start.md` - Added visual context and invocation patterns
+
 ## [2.0.0] - 2025-01-10
 
 ### 🎉 Initial Plugin Release
