@@ -6,6 +6,24 @@ argument-hint: <linear-issue-id>
 
 # Finalizing Task: $1
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:done [issue-id]
+```
+
+**Benefits:**
+- Auto-detects issue from git branch if not provided
+- Includes pre-flight safety checks (uncommitted changes, branch pushed, etc.)
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 ## 🚨 CRITICAL: Safety Rules
 
 **READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`

@@ -172,6 +172,24 @@ if (hasFigmaContext && uiTasks.length > 0) {
 **Fallback**: If no Figma context, agents use static images + text descriptions.
 
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:work [issue-id]
+```
+
+**Benefits:**
+- Auto-detects issue from git branch if not provided
+- Auto-detects mode (start vs resume)
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 ### Step 2: List Available Subagents
 
 Read the **CLAUDE.md** file in the project root to get subagent definitions.

@@ -207,6 +207,55 @@ Skills can be installed globally or per-project using the Claude Code skills sys
 
 ## Common Use Cases
 
+### Natural Workflow Commands (v2.2+)
+
+CCPM provides 6 verb-based commands that cover the complete workflow:
+
+```bash
+# Complete workflow example
+/ccpm:plan "Add user authentication" my-app          # Create + plan
+/ccpm:work                                           # Start (auto-detects issue from branch)
+/ccpm:sync "Implemented JWT endpoints"               # Save progress
+/ccpm:commit                                         # Git commit (conventional format)
+/ccpm:verify                                         # Quality checks + verification
+/ccpm:done                                           # Create PR + finalize
+```
+
+**Command Details:**
+
+1. **`/ccpm:plan`** - Smart planning
+   - Mode 1: `plan "title"` → creates new task (routes to planning:create)
+   - Mode 2: `plan WORK-123` → plans existing (routes to planning:plan)
+   - Mode 3: `plan WORK-123 "changes"` → updates plan (routes to planning:update)
+
+2. **`/ccpm:work`** - Smart work
+   - Auto-detects: Not started → start, In progress → resume
+   - Can detect issue from git branch name
+   - Routes to implementation:start or implementation:next
+
+3. **`/ccpm:sync`** - Save progress
+   - Auto-detects issue from git branch
+   - Shows git changes summary
+   - Routes to implementation:sync
+
+4. **`/ccpm:commit`** - Git integration (**NEW**)
+   - Conventional commits format automatic
+   - Links commits to Linear issues
+   - Auto-generates commit messages from context
+   - Smart commit type detection (feat/fix/docs/etc)
+
+5. **`/ccpm:verify`** - Quality checks
+   - Sequential: quality checks → final verification
+   - Auto-detects issue from branch
+   - Fails fast if checks don't pass
+
+6. **`/ccpm:done`** - Finalize
+   - Pre-flight safety checks
+   - Auto-detects issue from branch
+   - Routes to complete:finalize
+
+**Migration**: All old commands still work. New commands show as preferred in hints.
+
 ### Updating an Existing Plan
 
 When requirements change or clarification is needed during planning/implementation:

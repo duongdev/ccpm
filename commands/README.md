@@ -2,6 +2,121 @@
 
 Project Management commands with **Interactive Mode** for seamless workflow automation across Jira, Confluence, BitBucket, Slack, and Linear.
 
+## ⚡ Quick Start - Natural Workflow Commands
+
+**Learn 6 commands, master your workflow.**
+
+CCPM now provides natural, verb-based commands that map to your actual workflow. These commands intelligently route to the right underlying operations based on context.
+
+### The 6-Command Workflow
+
+```bash
+# 1. PLAN - Create or update tasks
+/ccpm:plan "Add user authentication"              # Create new task
+/ccpm:plan WORK-123                                # Plan existing task
+/ccpm:plan WORK-123 "Also add 2FA"                 # Update plan
+
+# 2. WORK - Start or continue work
+/ccpm:work WORK-123                                # Auto-detects: start or resume
+/ccpm:work                                         # Auto-detects issue from branch
+
+# 3. SYNC - Save progress (anytime)
+/ccpm:sync                                         # Auto-detects issue from branch
+/ccpm:sync "Completed auth endpoints"              # With custom summary
+
+# 4. COMMIT - Git integration
+/ccpm:commit                                       # Auto-generates conventional commit
+/ccpm:commit "Finished login screen"               # Custom message (auto-formatted)
+
+# 5. VERIFY - Quality checks + verification
+/ccpm:verify                                       # Runs checks, then verification
+/ccpm:verify WORK-123                              # Explicit issue ID
+
+# 6. DONE - Finalize (PR + sync + complete)
+/ccpm:done                                         # Auto-detects, creates PR, syncs
+```
+
+### Complete Example Workflow
+
+```bash
+# Start a new task
+/ccpm:plan "Add JWT authentication" my-app
+
+# System creates Linear issue WORK-123, plans it
+# Suggests: Start work? → Yes
+
+# Begin implementation (creates branch, loads context)
+/ccpm:work WORK-123
+
+# ... make changes, implement features ...
+
+# Save progress periodically
+/ccpm:sync "Implemented token validation"
+
+# Commit your work (conventional commits format)
+/ccpm:commit "Completed auth middleware"
+
+# Continue working...
+/ccpm:work
+
+# ... finish all subtasks ...
+
+# Verify quality
+/ccpm:verify
+
+# System runs linting, tests, code review
+# All pass → Suggests: Finalize?
+
+# Complete and create PR
+/ccpm:done
+
+# System creates PR, syncs to Jira, marks complete
+# Total: 6 commands for complete workflow!
+```
+
+### Key Features
+
+✅ **Smart Auto-Detection**
+- Issue ID from git branch name
+- Mode from arguments (create vs plan vs update)
+- Status to determine start vs resume
+
+✅ **Conventional Commits**
+- Automatic formatting
+- Links to Linear issues
+- Smart type detection (feat/fix/docs)
+
+✅ **Workflow State Detection**
+- Warns about uncommitted changes
+- Detects stale syncs (>2h)
+- Checks task completion
+- Validates branch pushed
+
+✅ **Smart Suggestions**
+- Context-aware next actions
+- Time-based recommendations
+- Status-based routing
+
+### Migration from Old Commands
+
+These commands **replace** (but don't break) the existing workflow:
+
+| Old Command | New Command | Benefit |
+|------------|-------------|---------|
+| `/ccpm:planning:create` | `/ccpm:plan "title"` | Natural syntax |
+| `/ccpm:planning:plan` | `/ccpm:plan WORK-123` | Shorter |
+| `/ccpm:planning:update` | `/ccpm:plan WORK-123 "changes"` | One command for all |
+| `/ccpm:implementation:start` | `/ccpm:work` | Auto-detects mode |
+| `/ccpm:implementation:next` | `/ccpm:work` | Same command |
+| `/ccpm:implementation:sync` | `/ccpm:sync` | Auto-detects issue |
+| *(manual git)* | `/ccpm:commit` | **NEW** - Built-in |
+| `/ccpm:verification:check` + `:verify` | `/ccpm:verify` | Sequential flow |
+| `/ccpm:complete:finalize` | `/ccpm:done` | Safety checks |
+
+**All old commands still work** - they now show hints to use the new workflow commands.
+
+---
+
 ## 🚨 Critical Safety Notice
 
 **All PM commands enforce strict safety rules to prevent accidental external system modifications.**

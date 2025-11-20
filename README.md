@@ -16,8 +16,12 @@ License: MIT
 
 CCPM is a comprehensive Claude Code plugin that transforms your development workflow by combining **2025 best practices** with intelligent automation:
 
-- **45 PM commands** for complete project lifecycle management
+- **Natural workflow commands** - 6 verb-based commands for your entire workflow (plan/work/sync/commit/verify/done)
+- **53 total commands** - Complete project lifecycle management (6 primary + 47 advanced)
 - **10 Agent Skills** with auto-activation based on context
+- **Git integration** - Built-in conventional commits with Linear linking
+- **Smart auto-detection** - Issue IDs from branches, modes from context
+- **Workflow state detection** - Warns about uncommitted changes, stale syncs
 - **Dynamic project configuration** - Multi-project support with auto-detection
 - **Monorepo subdirectory support** - Auto-detect subprojects with pattern matching
 - **Hook-based automation** - Smart agent selection, TDD enforcement, quality gates
@@ -28,6 +32,7 @@ CCPM is a comprehensive Claude Code plugin that transforms your development work
 - **Interactive mode** for continuous workflow without context switching
 
 **Built for 2025:**
+- ⚡ **NEW**: Natural workflow commands - Learn 6 commands, master everything
 - ✨ Agent Skills auto-activation (no manual invocation)
 - ✨ Hook-driven workflow automation
 - ✨ Spec-to-implementation pipeline
@@ -166,19 +171,46 @@ See [INSTALL_HOOKS.md](./INSTALL_HOOKS.md) for detailed instructions.
 /ccpm:project:set auto
 ```
 
-### Create Your First Task
+### Your First Workflow - Natural Commands
+
+⚡ **Learn 6 commands, master your workflow:**
 
 ```bash
-# Create task with full planning (uses active project)
-/ccpm:planning:create "Add user authentication"
+# 1. PLAN - Create and plan your task
+/ccpm:plan "Add user authentication" my-app
 
-# Or with explicit project
+# 2. WORK - Start implementation
+/ccpm:work
+
+# 3. SYNC - Save progress
+/ccpm:sync "Implemented JWT endpoints"
+
+# 4. COMMIT - Commit your work
+/ccpm:commit
+
+# 5. VERIFY - Run quality checks
+/ccpm:verify
+
+# 6. DONE - Finalize and create PR
+/ccpm:done
+
+# That's it! Complete workflow in 6 commands.
+```
+
+**Key Benefits:**
+- ✅ Git integration built-in (conventional commits)
+- ✅ Auto-detects issue from branch name
+- ✅ Smart suggestions after each command
+- ✅ Workflow state warnings (uncommitted changes, etc.)
+
+📚 **See full examples**: `/ccpm:utils:cheatsheet` or [Command Reference](./commands/README.md)
+
+**Alternative: Classic commands still work**
+```bash
+# Classic workflow (47 commands available)
 /ccpm:planning:create "Add user authentication" my-app JIRA-123
-
-# Or start with a spec-first approach
-/ccpm:spec:create epic "User Management System"
-
-# Follow the interactive prompts - CCPM will guide you!
+/ccpm:implementation:start WORK-123
+# ... etc
 ```
 
 ---
