@@ -19,6 +19,104 @@ Running comprehensive quality checks before verification.
 
 ## Quality Check Workflow
 
+### Step 0: Check Implementation Checklist Completion
+
+**BEFORE running quality checks**, verify the Implementation Checklist is complete:
+
+**A) Fetch Linear Issue**
+
+Use **Linear MCP** to get issue: $1
+
+**B) Parse Checklist from Description**
+
+Look for checklist using markers:
+```markdown
+<!-- ccpm-checklist-start -->
+- [ ] Task 1
+- [x] Task 2
+<!-- ccpm-checklist-end -->
+```
+
+Or find "## ✅ Implementation Checklist" header.
+
+**C) Calculate Completion Percentage**
+
+Count total items vs. checked items:
+- Total items: Count all `- [ ]` and `- [x]` lines
+- Checked items: Count `- [x]` lines only
+- Percentage: (checked / total) × 100
+
+**D) Display Checklist Status**
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Implementation Checklist Status
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Progress: X% (Y/Z completed)
+
+[If < 100%]
+⚠️  Checklist is not complete!
+
+Remaining Items:
+ - [ ] Task 3: Description
+ - [ ] Task 5: Description
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**E) Prompt User if Incomplete**
+
+If completion < 100%, use **AskUserQuestion**:
+
+```javascript
+{
+  questions: [
+    {
+      question: "Checklist shows X% complete. What would you like to do?",
+      header: "Checklist",
+      multiSelect: false,
+      options: [
+        {
+          label: "Update checklist first",
+          description: "Mark completed items before verification"
+        },
+        {
+          label: "Continue anyway",
+          description: "Run quality checks with incomplete checklist (warning will be logged)"
+        },
+        {
+          label: "Cancel",
+          description: "Go back and complete remaining items"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**If "Update checklist first" selected:**
+- Display unchecked items
+- Use **AskUserQuestion** multi-select to let user mark items complete
+- Update description with changes
+- Then proceed to quality checks
+
+**If "Continue anyway" selected:**
+- Log warning in Linear comment:
+  ```markdown
+  ⚠️ Quality checks run with incomplete checklist (X% complete)
+  ```
+- Add "incomplete-checklist" label
+- Proceed to quality checks
+
+**If "Cancel" selected:**
+- Display message: "Complete remaining checklist items, then run /ccpm:verification:check $1 again"
+- Exit without running checks
+
+**If 100% complete:**
+- Display: ✅ Checklist complete! Proceeding with quality checks...
+- Continue to Step 1
+
 ### Step 1: IDE Warnings & Errors
 
 Check and resolve:
