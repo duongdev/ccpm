@@ -38,7 +38,7 @@ This skill activates when user mentions workflow-related keywords and provides c
 
 3. **Quick internal task** → `/ccpm:planning:quick-plan "<task-description>" <project>`
    - Lightweight planning without external PM
-   - Ideal for NV Internal or quick fixes
+   - Ideal for quick fixes or quick fixes
 
 4. **Requirements changed** → `/ccpm:planning:update <linear-issue-id> "<update-request>"`
    - Modifies existing plan

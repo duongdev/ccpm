@@ -65,7 +65,7 @@ CCPM provides three powerful hooks that automate your development workflow:
 Run the installation script:
 
 ```bash
-/Users/duongdev/personal/ccpm/scripts/install-hooks.sh
+~/.claude/plugins/ccpm/personal/ccpm/scripts/install-hooks.sh
 ```
 
 This will:
@@ -117,7 +117,7 @@ Open `~/.claude/settings.json` and add the following to the `"hooks"` section:
         "hooks": [
           {
             "type": "prompt",
-            "promptFile": "/Users/duongdev/personal/ccpm/hooks/smart-agent-selector.prompt",
+            "promptFile": "~/.claude/plugins/ccpm/personal/ccpm/hooks/smart-agent-selector.prompt",
             "timeout": 20000,
             "description": "CCPM: Smart agent discovery and selection with context-aware scoring"
           }
@@ -130,7 +130,7 @@ Open `~/.claude/settings.json` and add the following to the `"hooks"` section:
         "hooks": [
           {
             "type": "prompt",
-            "promptFile": "/Users/duongdev/personal/ccpm/hooks/tdd-enforcer.prompt",
+            "promptFile": "~/.claude/plugins/ccpm/personal/ccpm/hooks/tdd-enforcer.prompt",
             "timeout": 10000,
             "description": "CCPM: TDD enforcement - blocks code without tests"
           }
@@ -142,7 +142,7 @@ Open `~/.claude/settings.json` and add the following to the `"hooks"` section:
         "hooks": [
           {
             "type": "prompt",
-            "promptFile": "/Users/duongdev/personal/ccpm/hooks/quality-gate.prompt",
+            "promptFile": "~/.claude/plugins/ccpm/personal/ccpm/hooks/quality-gate.prompt",
             "timeout": 15000,
             "description": "CCPM: Quality gate - auto code review and security audit"
           }
@@ -175,7 +175,7 @@ After installation, verify everything is working:
 ### Run Verification Script
 
 ```bash
-/Users/duongdev/personal/ccpm/scripts/verify-hooks.sh
+~/.claude/plugins/ccpm/personal/ccpm/scripts/verify-hooks.sh
 ```
 
 **Expected Output:**
@@ -188,11 +188,11 @@ After installation, verify everything is working:
 ✓ jq is installed: jq-1.7
 
 [2/8] Checking settings.json...
-✓ Settings file exists: /Users/duongdev/.claude/settings.json
+✓ Settings file exists: ~/.claude/plugins/ccpm/.claude/settings.json
 ✓ Settings file is valid JSON
 
 [3/8] Checking plugin installation...
-✓ Plugin directory exists: /Users/duongdev/personal/ccpm
+✓ Plugin directory exists: ~/.claude/plugins/ccpm/personal/ccpm
 
 [4/8] Checking hook files...
 ✓ smart-agent-selector.prompt (12807 bytes)
@@ -220,9 +220,9 @@ After installation, verify everything is working:
   • Project agents: 0
 
 [8/8] Verifying hook file paths...
-✓ Path exists: /Users/duongdev/personal/ccpm/hooks/smart-agent-selector.prompt
-✓ Path exists: /Users/duongdev/personal/ccpm/hooks/tdd-enforcer.prompt
-✓ Path exists: /Users/duongdev/personal/ccpm/hooks/quality-gate.prompt
+✓ Path exists: ~/.claude/plugins/ccpm/personal/ccpm/hooks/smart-agent-selector.prompt
+✓ Path exists: ~/.claude/plugins/ccpm/personal/ccpm/hooks/tdd-enforcer.prompt
+✓ Path exists: ~/.claude/plugins/ccpm/personal/ccpm/hooks/quality-gate.prompt
 ✓ All hook paths are valid
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -237,7 +237,7 @@ After installation, verify everything is working:
 #### 1. Test Agent Discovery
 
 ```bash
-/Users/duongdev/personal/ccpm/scripts/discover-agents.sh | jq 'length'
+~/.claude/plugins/ccpm/personal/ccpm/scripts/discover-agents.sh | jq 'length'
 ```
 
 **Expected**: `24` (or more)
@@ -256,7 +256,7 @@ Then type:
 **Expected Output** (in verbose logs):
 ```
 Hook: UserPromptSubmit
-Executing: /Users/duongdev/personal/ccpm/hooks/smart-agent-selector.prompt
+Executing: ~/.claude/plugins/ccpm/personal/ccpm/hooks/smart-agent-selector.prompt
 Discovering agents...
 Found 24 agents
 Scoring agents:
@@ -319,7 +319,7 @@ To enable hooks only for specific projects, use `.claude/settings.json` in the p
 ### Automated Uninstallation (Recommended)
 
 ```bash
-/Users/duongdev/personal/ccpm/scripts/uninstall-hooks.sh
+~/.claude/plugins/ccpm/personal/ccpm/scripts/uninstall-hooks.sh
 ```
 
 This will:
@@ -355,7 +355,7 @@ This will:
 
 3. Re-run installation:
    ```bash
-   /Users/duongdev/personal/ccpm/scripts/install-hooks.sh
+   ~/.claude/plugins/ccpm/personal/ccpm/scripts/install-hooks.sh
    ```
 
 ### Problem: "jq: command not found"
@@ -369,7 +369,7 @@ brew install jq
 
 **Solution**: Make scripts executable
 ```bash
-chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
+chmod +x ~/.claude/plugins/ccpm/personal/ccpm/scripts/*.sh
 ```
 
 ### Problem: Agent Discovery Returns 0 Agents
@@ -384,7 +384,7 @@ chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
 
 2. Test script manually:
    ```bash
-   /Users/duongdev/personal/ccpm/scripts/discover-agents.sh
+   ~/.claude/plugins/ccpm/personal/ccpm/scripts/discover-agents.sh
    ```
 
 3. Check for error messages in the output
@@ -410,7 +410,7 @@ chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
 
 2. Use verification script to identify issues:
    ```bash
-   /Users/duongdev/personal/ccpm/scripts/verify-hooks.sh
+   ~/.claude/plugins/ccpm/personal/ccpm/scripts/verify-hooks.sh
    ```
 
 ---
@@ -440,7 +440,7 @@ chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
 
 7. **Update Plugin**: When updating CCPM, re-run verification to ensure hooks still work:
    ```bash
-   /Users/duongdev/personal/ccpm/scripts/verify-hooks.sh
+   ~/.claude/plugins/ccpm/personal/ccpm/scripts/verify-hooks.sh
    ```
 
 ---
@@ -449,16 +449,16 @@ chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
 
 ```bash
 # Install hooks
-/Users/duongdev/personal/ccpm/scripts/install-hooks.sh
+~/.claude/plugins/ccpm/personal/ccpm/scripts/install-hooks.sh
 
 # Verify installation
-/Users/duongdev/personal/ccpm/scripts/verify-hooks.sh
+~/.claude/plugins/ccpm/personal/ccpm/scripts/verify-hooks.sh
 
 # Test agent discovery
-/Users/duongdev/personal/ccpm/scripts/discover-agents.sh | jq 'length'
+~/.claude/plugins/ccpm/personal/ccpm/scripts/discover-agents.sh | jq 'length'
 
 # Uninstall hooks
-/Users/duongdev/personal/ccpm/scripts/uninstall-hooks.sh
+~/.claude/plugins/ccpm/personal/ccpm/scripts/uninstall-hooks.sh
 
 # View settings
 cat ~/.claude/settings.json | jq '.hooks'
@@ -467,7 +467,7 @@ cat ~/.claude/settings.json | jq '.hooks'
 claude --verbose
 
 # Make scripts executable (if needed)
-chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
+chmod +x ~/.claude/plugins/ccpm/personal/ccpm/scripts/*.sh
 ```
 
 ---

@@ -1,0 +1,116 @@
+# CCPM Multi-Project Configuration
+# Location: ~/.claude/ccpm-config.yaml
+#
+# This file manages all your CCPM projects in one centralized location.
+# Each project can have its own configuration.
+
+# ============================================================================
+# Global Settings (applied to all projects unless overridden)
+# ============================================================================
+global:
+  # Default Linear team
+  linear_team: "Work"
+
+  # Default workflow states
+  workflow_states:
+    backlog: "Backlog"
+    planning: "Planning"
+    in_progress: "In Progress"
+    in_review: "In Review"
+    done: "Done"
+    canceled: "Canceled"
+
+  # Default labels
+  default_labels:
+    - planning
+    - auto-created
+
+  # TDD enforcement
+  tdd:
+    enabled: true
+    enforce_tests_first: true
+
+  # Code review automation
+  code_review:
+    auto_invoke_reviewer: true
+    security_scan: true
+
+  # Notification defaults
+  notifications:
+    enabled: true
+
+# ============================================================================
+# Projects Configuration
+# ============================================================================
+projects:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Add your projects here using /ccpm:project:add
+  # Or copy one of the templates below and customize
+  # ──────────────────────────────────────────────────────────────────────────
+
+# ============================================================================
+# Project Templates (for quick project creation)
+# ============================================================================
+templates:
+  # Template for projects with full Jira/Confluence/Slack integration
+  fullstack-with-jira:
+    external_pm:
+      enabled: true
+      type: jira
+      jira:
+        enabled: true
+      confluence:
+        enabled: true
+      slack:
+        enabled: true
+
+    quality:
+      sonarqube:
+        enabled: true
+      code_review:
+        auto_invoke_reviewer: true
+
+  # Template for simple Linear-only projects
+  simple-linear:
+    external_pm:
+      enabled: false
+      type: linear-only
+
+    workflow:
+      tdd:
+        enabled: false
+
+  # Template for open-source projects
+  open-source:
+    external_pm:
+      enabled: false
+
+    code_repository:
+      type: github
+
+    workflow:
+      tdd:
+        enabled: true
+
+# ============================================================================
+# Active Project Context (auto-detected or manually set)
+# ============================================================================
+context:
+  # Current project (can be auto-detected from git remote or cwd)
+  current_project: null  # null = auto-detect
+
+  # Project detection rules
+  detection:
+    # Detect by git remote URL
+    by_git_remote: true
+
+    # Detect by current working directory
+    by_cwd: true
+
+    # Custom detection patterns (add your own)
+    patterns:
+      # Example:
+      # - pattern: "*/my-app*"
+      #   project: my-app
+      # - pattern: "*username/project*"
+      #   project: my-project

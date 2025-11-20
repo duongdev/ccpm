@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SETTINGS_FILE=~/.claude/settings.json
-PLUGIN_ROOT="/Users/duongdev/personal/ccpm"
+PLUGIN_ROOT="~/.claude/plugins/ccpm"
 BACKUP_DIR=~/.claude/backups
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 

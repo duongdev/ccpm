@@ -53,27 +53,26 @@ const typeMapping = {
 - If type is `feature` and no parent provided → Ask user to select parent epic
 - If type is `epic` or `initiative` → No parent needed
 
-### Step 2: Determine Project Mapping
+### Step 2: Load Project Configuration
 
-**Project Detection:**
-```javascript
-// Detect from current directory or ask user
-const projectMapping = {
-  'trainer-guru': { team: 'Work', project: 'Trainer Guru' },
-  'repeat': { team: 'Work', project: 'Repeat' },
-  'nv-internal': { team: 'Personal', project: 'NV Internal' }
-}
+**IMPORTANT**: Uses dynamic project configuration from `~/.claude/ccpm-config.yaml`.
 
-// Check if in project directory
-const cwd = process.cwd()
-let project = 'nv-internal' // default
-
-if (cwd.includes('trainer-guru')) project = 'trainer-guru'
-else if (cwd.includes('repeat')) project = 'repeat'
-else if (cwd.includes('nv-internal')) project = 'nv-internal'
+```bash
+# Try to use active project or auto-detect
+PROJECT_ARG=""  # Will be auto-detected or prompted
 ```
 
-If cannot detect, use **AskUserQuestion** to select project.
+**LOAD PROJECT CONFIG**: Follow instructions in `commands/_shared-project-config-loader.md`
+
+This will:
+1. Try to use active project from config
+2. Try auto-detection (git remote, directory patterns)
+3. If neither works, list available projects and prompt user
+
+After loading, you'll have:
+- `${PROJECT_ID}` - Selected project
+- `${LINEAR_TEAM}`, `${LINEAR_PROJECT}` - For creating Linear entities
+- All other project settings
 
 ### Step 3: Create Linear Entity
 

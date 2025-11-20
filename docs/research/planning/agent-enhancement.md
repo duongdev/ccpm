@@ -246,7 +246,7 @@ Linear issues now contain:
 Just use planning commands as before:
 ```bash
 # Create and plan
-/ccpm:planning:create "Add user notifications" trainer-guru JIRA-123
+/ccpm:planning:create "Add user notifications" my-app PROJ-123
 
 # Plan existing issue
 /ccpm:planning:plan WORK-456 JIRA-789

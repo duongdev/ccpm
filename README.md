@@ -6,13 +6,16 @@ Version: 2.0.0
 Author: Dustin Do ([@duongdev](https://github.com/duongdev))
 License: MIT
 
+> **🎉 NEW in v2.0**: Dynamic multi-project configuration! Manage all your projects from `~/.claude/ccpm-config.yaml`. See [Migration Guide](./MIGRATION_TO_DYNAMIC_CONFIG.md) for details.
+
 ---
 
 ## 🎯 What is CCPM?
 
 CCPM is a comprehensive Claude Code plugin that transforms your development workflow by combining:
 
-- **17+ PM commands** for complete project lifecycle management
+- **27+ PM commands** for complete project lifecycle management
+- **Dynamic project configuration** - Multi-project support with auto-detection
 - **Smart agent auto-invocation** with context-aware scoring (0-100+)
 - **TDD enforcement** that blocks production code without tests
 - **Automatic quality gates** with code review and security audits
@@ -28,7 +31,7 @@ CCPM is a comprehensive Claude Code plugin that transforms your development work
 
 ```bash
 # Add the CCPM marketplace from GitHub
-/plugin marketplace add duongdev/ccpm
+/plugin marketplace add your-org/ccpm
 
 # Install the CCPM plugin
 /plugin install ccpm
@@ -41,7 +44,7 @@ CCPM is a comprehensive Claude Code plugin that transforms your development work
 
 ```bash
 # Clone the repository
-git clone https://github.com/duongdev/ccpm
+git clone https://github.com/your-org/ccpm
 cd ccpm
 
 # Add local marketplace
@@ -73,14 +76,33 @@ To enable smart agent auto-invocation, TDD enforcement, and quality gates:
 
 See [INSTALL_HOOKS.md](./INSTALL_HOOKS.md) for detailed instructions.
 
-### First Steps
+### Configure Your Projects
 
 ```bash
-# Create your first task with full planning
-/pm:planning:create "Add user authentication" your-project JIRA-123
+# Add your first project (interactive)
+/ccpm:project:add my-app
+
+# Or use a template for quick setup
+/ccpm:project:add my-app --template fullstack-with-jira
+
+# Set as active project
+/ccpm:project:set my-app
+
+# Or enable auto-detection
+/ccpm:project:set auto
+```
+
+### Create Your First Task
+
+```bash
+# Create task with full planning (uses active project)
+/ccpm:planning:create "Add user authentication"
+
+# Or with explicit project
+/ccpm:planning:create "Add user authentication" my-app JIRA-123
 
 # Or start with a spec-first approach
-/pm:spec:create epic "User Management System"
+/ccpm:spec:create epic "User Management System"
 
 # Follow the interactive prompts - CCPM will guide you!
 ```
@@ -89,7 +111,44 @@ See [INSTALL_HOOKS.md](./INSTALL_HOOKS.md) for detailed instructions.
 
 ## ✨ Key Features
 
-### 1. Smart Agent Auto-Invocation
+### 1. Dynamic Multi-Project Configuration
+
+**Manage all your projects from one place.** CCPM's new dynamic configuration system:
+
+- **Centralized configuration**: All projects in `~/.claude/ccpm-config.yaml`
+- **Auto-detection**: Automatically switches projects based on directory/git remote
+- **Project templates**: Quick setup with pre-configured templates
+- **Interactive management**: Add/update/delete projects via commands
+- **No code changes needed**: Add new projects without editing command files
+
+**Configuration:**
+```yaml
+# ~/.claude/ccpm-config.yaml
+projects:
+  my-app:
+    name: "My Application"
+    linear:
+      team: "Work"
+      project: "My Application"
+    external_pm:
+      enabled: true
+      type: jira
+    # ... and more
+```
+
+**Commands:**
+```bash
+/ccpm:project:add my-app              # Add new project
+/ccpm:project:list                    # List all projects
+/ccpm:project:show my-app             # Show project details
+/ccpm:project:update my-app           # Update configuration
+/ccpm:project:set my-app              # Set as active
+/ccpm:project:set auto                # Enable auto-detection
+```
+
+See [Project Setup Guide](./docs/guides/project-setup.md) for complete documentation.
+
+### 2. Smart Agent Auto-Invocation
 
 **Never forget to invoke the right agent again.** CCPM automatically:
 
@@ -162,7 +221,18 @@ No more "what do I do next?"
 
 ---
 
-## 📋 All Commands (17 Total)
+## 📋 All Commands (27+ Total)
+
+### Project Management (6 commands)
+
+| Command | Description |
+|---------|-------------|
+| `/ccpm:project:add <project-id> [--template T]` | Add new project interactively |
+| `/ccpm:project:list` | List all configured projects |
+| `/ccpm:project:show <project-id>` | Show complete project configuration |
+| `/ccpm:project:update <project-id> [--field F]` | Update project configuration |
+| `/ccpm:project:delete <project-id> [--force]` | Delete project (with backup) |
+| `/ccpm:project:set <project-id\|auto\|none>` | Set active project or enable auto-detection |
 
 ### Spec Management (6 commands)
 
@@ -539,12 +609,21 @@ Each hook adds ~2-5 seconds latency. To optimize:
 
 ## 📚 Documentation
 
+### User Guides
+- **[Project Setup Guide](./docs/guides/project-setup.md)** - Complete guide to configuring and managing projects ⭐ NEW
 - **[MCP Integration Guide](./MCP_INTEGRATION_GUIDE.md)** - Comprehensive MCP server setup and best practices
-- [Complete Command Reference](./commands/README.md)
-- [Spec Management Guide](./commands/SPEC_MANAGEMENT_SUMMARY.md)
-- [Safety Rules](./commands/SAFETY_RULES.md)
-- [Project Instructions](./CLAUDE.md) - Development guidelines and architecture
+- [Installation Guide](./INSTALL_HOOKS.md) - Install CCPM with hooks
 - [Installation Test Guide](./TEST_INSTALLATION.md) - Verify plugin installation
+
+### Reference Documentation
+- [Complete Command Reference](./commands/README.md) - All 27+ commands
+- [Spec Management Guide](./commands/SPEC_MANAGEMENT_SUMMARY.md) - Spec-first development
+- [Safety Rules](./commands/SAFETY_RULES.md) - External PM safety guidelines
+
+### Architecture & Development
+- [CLAUDE.md](./CLAUDE.md) - Project instructions for development
+- [Dynamic Project Configuration](./docs/architecture/dynamic-project-configuration.md) - Architecture deep-dive ⭐ NEW
+- [Documentation Hub](./docs/README.md) - Complete documentation index
 
 ---
 
@@ -576,12 +655,12 @@ Built with:
 
 ## 📞 Support
 
-- Issues: [GitHub Issues](https://github.com/duongdev/ccpm/issues)
+- Issues: [GitHub Issues](https://github.com/your-org/ccpm/issues)
 - Author: [@duongdev](https://github.com/duongdev)
-- Email: me@dustin.tv
+- Email: support@example.com
 
 ---
 
 **CCPM - Transform your development workflow with intelligent automation.**
 
-🚀 Get started: `/plugin install ccpm@duongdev`
+🚀 Get started: `/plugin install ccpm@your-marketplace`

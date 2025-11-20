@@ -348,4 +348,4 @@ Logged to: .claude/audit-log.json
 
 ## Reference
 
-For complete safety rules, see: `/Users/duongdev/personal/ccpm/commands/SAFETY_RULES.md`
+For complete safety rules, see: `~/.claude/plugins/ccpm/commands/SAFETY_RULES.md`

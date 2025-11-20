@@ -289,7 +289,7 @@ While CCPM doesn't have automated tests yet, contributions to add testing infras
 - **Documentation** - Check README.md and command docs
 - **Issues** - Search existing issues
 - **Discussions** - Start a GitHub Discussion
-- **Contact** - Email me@dustin.tv
+- **Contact** - Email support@example.com
 
 ## 📜 License
 

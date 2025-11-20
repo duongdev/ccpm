@@ -95,7 +95,7 @@ ${context.hasSubtasks ? `✅ Subtasks: ${context.progress.completed}/${context.p
 /ccpm:spec:migrate <project-path> [category]
   Migrate .claude/ markdown specs to Linear
   Categories: docs, plans, enhancements, tasks, all
-  Example: /ccpm:spec:migrate ~/personal/nv-internal
+  Example: /ccpm:spec:migrate ~/personal/personal-project
 
 /ccpm:spec:sync <doc-id-or-issue-id>
   Sync spec with implementation (detect drift)
@@ -107,8 +107,8 @@ ${context.hasSubtasks ? `✅ Subtasks: ${context.progress.completed}/${context.p
 
 /ccpm:planning:create "<title>" <project> [jira-id]
   Create + plan Linear issue in one step
-  Projects: trainer-guru, repeat, nv-internal
-  Example: /ccpm:planning:create "Add JWT auth" nv-internal
+  Projects: my-app, my-project, personal-project
+  Example: /ccpm:planning:create "Add JWT auth" personal-project
 
 /ccpm:planning:plan <linear-issue-id> [jira-id]
   Populate existing issue with research
@@ -116,7 +116,7 @@ ${context.hasSubtasks ? `✅ Subtasks: ${context.progress.completed}/${context.p
 
 /ccpm:planning:quick-plan "<description>" <project>
   Quick planning (no Jira)
-  Example: /ccpm:planning:quick-plan "Add dark mode" nv-internal
+  Example: /ccpm:planning:quick-plan "Add dark mode" personal-project
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -178,7 +178,7 @@ ${context.hasSubtasks ? `✅ Subtasks: ${context.progress.completed}/${context.p
 
 /ccpm:utils:report <project>
   Project-wide progress report
-  Example: /ccpm:utils:report nv-internal
+  Example: /ccpm:utils:report personal-project
 
 /ccpm:utils:insights <linear-issue-id>
   AI complexity & risk analysis

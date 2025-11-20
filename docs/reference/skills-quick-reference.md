@@ -310,7 +310,7 @@ ccpm/skills/
 - **This Guide**: `SKILLS_QUICK_REFERENCE.md` (You are here)
 
 - **ClaudeKit Repo**: https://github.com/mrgoonie/claudekit-skills
-- **CCPM Current**: `/Users/duongdev/personal/ccpm/`
+- **CCPM Current**: `~/.claude/plugins/ccpm/`
 
 ---
 

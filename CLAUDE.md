@@ -25,7 +25,7 @@ ccpm/
 │   ├── pm:implementation:*.md  # Implementation commands (3 commands)
 │   ├── pm:verification:*.md    # Verification commands (3 commands)
 │   ├── pm:complete:*.md    # Completion commands (1 command)
-│   ├── pm:repeat:*.md      # Project-specific commands (1 command)
+│   ├── pm:my-project:*.md      # Project-specific commands (1 command)
 │   └── pm:utils:*.md       # Utility commands (10 commands)
 ├── hooks/                  # Hook implementations for automation
 │   ├── smart-agent-selector.prompt  # Intelligent agent selection with scoring
