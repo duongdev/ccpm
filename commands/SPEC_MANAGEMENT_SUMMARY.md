@@ -16,7 +16,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ### 6 New Spec Management Commands
 
-#### 1. `/pm:spec:create <type> "<title>" [parent-id]`
+#### 1. `/ccpm:spec:create <type> "<title>" [parent-id]`
 **Purpose**: Create Epic/Feature with Linear Document
 
 **Features**:
@@ -30,7 +30,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 - **Epic Spec Template**: Vision, User Research, Architecture, Features Breakdown, Timeline, Security
 - **Feature Design Template**: Requirements, UX, Technical Design, Testing, Implementation Plan, Risks
 
-#### 2. `/pm:spec:write <doc-id> <section>`
+#### 2. `/ccpm:spec:write <doc-id> <section>`
 **Purpose**: AI-assisted spec writing with codebase analysis
 
 **Sections**:
@@ -50,7 +50,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 - Follows project conventions
 - Generates specific, testable content
 
-#### 3. `/pm:spec:review <doc-id>`
+#### 3. `/ccpm:spec:review <doc-id>`
 **Purpose**: AI-powered spec validation
 
 **Analysis**:
@@ -65,7 +65,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 - Best practices checklist
 - Missing sections identified
 
-#### 4. `/pm:spec:break-down <epic-or-feature-id>`
+#### 4. `/ccpm:spec:break-down <epic-or-feature-id>`
 **Purpose**: Generate implementation items from spec
 
 **Breakdown Logic**:
@@ -81,7 +81,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 - Shows preview before creation
 - Requires user confirmation
 
-#### 5. `/pm:spec:migrate <project-path> [category]`
+#### 5. `/ccpm:spec:migrate <project-path> [category]`
 **Purpose**: Migrate existing markdown specs to Linear
 
 **Discovery**:
@@ -106,7 +106,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 - ✅ Can rollback from `.claude/migrated/`
 - ✅ Preserves full content in Linear Documents
 
-#### 6. `/pm:spec:sync <doc-id-or-issue-id>`
+#### 6. `/ccpm:spec:sync <doc-id-or-issue-id>`
 **Purpose**: Sync spec with implementation reality
 
 **Drift Detection**:
@@ -125,7 +125,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ### 1 New Help Command
 
-#### 7. `/pm:utils:help [issue-id]`
+#### 7. `/ccpm:utils:help [issue-id]`
 **Purpose**: Context-aware help and command suggestions
 
 **Features**:
@@ -181,73 +181,73 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 #### Option 1: Spec-First Workflow (Recommended for NV Internal)
 ```
-1. /pm:spec:create epic "User Auth"
-2. /pm:spec:write DOC-123 all
-3. /pm:spec:review DOC-123
-4. /pm:spec:break-down WORK-100    ← Creates Features
-5. /pm:spec:write DOC-124 all       ← For each feature
-6. /pm:spec:break-down WORK-101    ← Creates Tasks
-7. /pm:implementation:start WORK-201
-8. /pm:spec:sync WORK-101          ← Keep in sync
-9. /pm:verification:check WORK-201
-10. /pm:complete:finalize WORK-201
+1. /ccpm:spec:create epic "User Auth"
+2. /ccpm:spec:write DOC-123 all
+3. /ccpm:spec:review DOC-123
+4. /ccpm:spec:break-down WORK-100    ← Creates Features
+5. /ccpm:spec:write DOC-124 all       ← For each feature
+6. /ccpm:spec:break-down WORK-101    ← Creates Tasks
+7. /ccpm:implementation:start WORK-201
+8. /ccpm:spec:sync WORK-101          ← Keep in sync
+9. /ccpm:verification:check WORK-201
+10. /ccpm:complete:finalize WORK-201
 ```
 
 #### Option 2: Task-First Workflow (Quick tasks)
 ```
-1. /pm:planning:create "Add dark mode" nv-internal
-2. /pm:implementation:start WORK-300
-3. /pm:verification:check WORK-300
-4. /pm:complete:finalize WORK-300
+1. /ccpm:planning:create "Add dark mode" nv-internal
+2. /ccpm:implementation:start WORK-300
+3. /ccpm:verification:check WORK-300
+4. /ccpm:complete:finalize WORK-300
 ```
 
 #### Option 3: Migrate Existing → Spec Workflow
 ```
-1. /pm:spec:migrate ~/personal/nv-internal
+1. /ccpm:spec:migrate ~/personal/nv-internal
 2. Review migrated items in Linear
-3. /pm:spec:sync DOC-XXX            ← Sync with codebase
+3. /ccpm:spec:sync DOC-XXX            ← Sync with codebase
 4. Continue with spec-first workflow
 ```
 
 ### All PM Commands (25 Total)
 
 **Spec Management (6):**
-- `/pm:spec:create`
-- `/pm:spec:write`
-- `/pm:spec:review`
-- `/pm:spec:break-down`
-- `/pm:spec:migrate`
-- `/pm:spec:sync`
+- `/ccpm:spec:create`
+- `/ccpm:spec:write`
+- `/ccpm:spec:review`
+- `/ccpm:spec:break-down`
+- `/ccpm:spec:migrate`
+- `/ccpm:spec:sync`
 
 **Planning (3):**
-- `/pm:planning:create`
-- `/pm:planning:plan`
-- `/pm:planning:quick-plan`
+- `/ccpm:planning:create`
+- `/ccpm:planning:plan`
+- `/ccpm:planning:quick-plan`
 
 **Implementation (3):**
-- `/pm:implementation:start`
-- `/pm:implementation:next`
-- `/pm:implementation:update`
+- `/ccpm:implementation:start`
+- `/ccpm:implementation:next`
+- `/ccpm:implementation:update`
 
 **Verification (3):**
-- `/pm:verification:check`
-- `/pm:verification:verify`
-- `/pm:verification:fix`
+- `/ccpm:verification:check`
+- `/ccpm:verification:verify`
+- `/ccpm:verification:fix`
 
 **Completion (1):**
-- `/pm:complete:finalize`
+- `/ccpm:complete:finalize`
 
 **Utilities (9):**
-- `/pm:utils:status`
-- `/pm:utils:context`
-- `/pm:utils:report`
-- `/pm:utils:insights`
-- `/pm:utils:auto-assign`
-- `/pm:utils:sync-status`
-- `/pm:utils:rollback`
-- `/pm:utils:dependencies`
-- `/pm:utils:agents`
-- `/pm:utils:help` ← NEW
+- `/ccpm:utils:status`
+- `/ccpm:utils:context`
+- `/ccpm:utils:report`
+- `/ccpm:utils:insights`
+- `/ccpm:utils:auto-assign`
+- `/ccpm:utils:sync-status`
+- `/ccpm:utils:rollback`
+- `/ccpm:utils:dependencies`
+- `/ccpm:utils:agents`
+- `/ccpm:utils:help` ← NEW
 
 ---
 
@@ -259,30 +259,30 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ```bash
 # 1. Create Feature with Spec
-/pm:spec:create feature "Task Comments System"
+/ccpm:spec:create feature "Task Comments System"
 # Creates: WORK-100 + DOC-123
 
 # 2. Write Comprehensive Spec
-/pm:spec:write DOC-123 requirements
-/pm:spec:write DOC-123 api-design
-/pm:spec:write DOC-123 data-model
-/pm:spec:write DOC-123 testing
+/ccpm:spec:write DOC-123 requirements
+/ccpm:spec:write DOC-123 api-design
+/ccpm:spec:write DOC-123 data-model
+/ccpm:spec:write DOC-123 testing
 # AI generates detailed specs based on codebase
 
 # 3. Review & Validate
-/pm:spec:review DOC-123
+/ccpm:spec:review DOC-123
 # Output: Grade A (92%) - Ready for approval
 
 # 4. Break Down into Tasks
-/pm:spec:break-down WORK-100
+/ccpm:spec:break-down WORK-100
 # Creates: WORK-101, WORK-102, WORK-103 (subtasks)
 
 # 5. Implement
-/pm:implementation:start WORK-101
+/ccpm:implementation:start WORK-101
 # Works on first subtask
 
 # 6. Keep Spec in Sync
-/pm:spec:sync WORK-100
+/ccpm:spec:sync WORK-100
 # Detects: API added optional field not in spec
 # Updates spec to match reality
 ```
@@ -293,7 +293,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ```bash
 # 1. Run Migration
-/pm:spec:migrate ~/personal/nv-internal
+/ccpm:spec:migrate ~/personal/nv-internal
 
 # Output: Detailed preview for ALL 45 files
 # - 2 Epics → Linear Initiatives + Spec Docs
@@ -305,41 +305,41 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 # → Creates all items in Linear
 
 # 3. Review in Linear
-/pm:utils:report nv-internal
+/ccpm:utils:report nv-internal
 # Shows all migrated items organized
 
 # 4. Continue with spec workflow
-/pm:spec:sync WORK-102
-/pm:spec:break-down WORK-103
+/ccpm:spec:sync WORK-102
+/ccpm:spec:break-down WORK-103
 ```
 
 ### Use Case 3: Daily Development
 
 **Morning:**
 ```bash
-/pm:utils:report nv-internal
+/ccpm:utils:report nv-internal
 # Shows: 5 active tasks, 2 blocked, 3 in verification
 
-/pm:utils:help WORK-150
-# Suggests: Continue with /pm:implementation:next WORK-150
+/ccpm:utils:help WORK-150
+# Suggests: Continue with /ccpm:implementation:next WORK-150
 ```
 
 **During Work:**
 ```bash
-/pm:implementation:next WORK-150
+/ccpm:implementation:next WORK-150
 # AI: Next task is Task 3 (no dependencies, ready)
 
-/pm:spec:sync WORK-150
+/ccpm:spec:sync WORK-150
 # Drift Score: 15% (minor - API signature changed)
 # Updates spec to match
 ```
 
 **End of Day:**
 ```bash
-/pm:verification:check WORK-150
+/ccpm:verification:check WORK-150
 # All checks pass
 
-/pm:complete:finalize WORK-150
+/ccpm:complete:finalize WORK-150
 # Creates PR, updates Jira (with confirmation)
 ```
 
@@ -383,49 +383,49 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 1. **Migrate Existing Specs** (if you have any):
    ```bash
-   /pm:spec:migrate ~/personal/nv-internal
+   /ccpm:spec:migrate ~/personal/nv-internal
    ```
 
 2. **Create First Epic with Spec**:
    ```bash
-   /pm:spec:create epic "Your Epic Name"
-   /pm:spec:write DOC-XXX all
-   /pm:spec:review DOC-XXX
+   /ccpm:spec:create epic "Your Epic Name"
+   /ccpm:spec:write DOC-XXX all
+   /ccpm:spec:review DOC-XXX
    ```
 
 3. **Break Down into Features**:
    ```bash
-   /pm:spec:break-down WORK-XXX
+   /ccpm:spec:break-down WORK-XXX
    ```
 
 4. **Start Implementation**:
    ```bash
-   /pm:implementation:start WORK-YYY
+   /ccpm:implementation:start WORK-YYY
    ```
 
 5. **Keep Spec in Sync**:
    ```bash
-   /pm:spec:sync WORK-XXX
+   /ccpm:spec:sync WORK-XXX
    ```
 
 ### Daily Workflow
 
 **Morning:**
 ```bash
-/pm:utils:report nv-internal
-/pm:utils:help WORK-XXX  # Get context-aware suggestions
+/ccpm:utils:report nv-internal
+/ccpm:utils:help WORK-XXX  # Get context-aware suggestions
 ```
 
 **During Work:**
 ```bash
-/pm:implementation:next WORK-XXX
-/pm:spec:sync WORK-XXX  # Periodically
+/ccpm:implementation:next WORK-XXX
+/ccpm:spec:sync WORK-XXX  # Periodically
 ```
 
 **End of Day:**
 ```bash
-/pm:verification:check WORK-XXX
-/pm:complete:finalize WORK-XXX
+/ccpm:verification:check WORK-XXX
+/ccpm:complete:finalize WORK-XXX
 ```
 
 ---
@@ -440,8 +440,8 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 **Help Command**:
 ```bash
-/pm:utils:help           # General help
-/pm:utils:help WORK-123  # Context-aware help
+/ccpm:utils:help           # General help
+/ccpm:utils:help WORK-123  # Context-aware help
 ```
 
 ---

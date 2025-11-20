@@ -100,12 +100,12 @@ const stats = {
 1. [WORK-123]: [Title]
    Status: [Status]
    Blocked: [Duration]
-   Action: /pm:verification:fix WORK-123
+   Action: /ccpm:verification:fix WORK-123
 
 2. [WORK-124]: [Title]
    Status: [Status]
    Blocked: [Duration]
-   Action: /pm:verification:fix WORK-124
+   Action: /ccpm:verification:fix WORK-124
 
 [Or if none:]
 ✅ No blocked issues!
@@ -119,12 +119,12 @@ const stats = {
 1. [WORK-125]: [Title]
    Progress: [X/Y] subtasks ([%]%)
    Time in progress: [Duration]
-   Next: /pm:implementation:next WORK-125
+   Next: /ccpm:implementation:next WORK-125
 
 2. [WORK-126]: [Title]
    Progress: [X/Y] subtasks ([%]%)
    Time in progress: [Duration]
-   Next: /pm:implementation:next WORK-126
+   Next: /ccpm:implementation:next WORK-126
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📝 Planning Issues (Ready to Start)
@@ -134,11 +134,11 @@ const stats = {
 
 1. [WORK-127]: [Title]
    Checklist: [N] subtasks
-   Ready: /pm:implementation:start WORK-127
+   Ready: /ccpm:implementation:start WORK-127
 
 2. [WORK-128]: [Title]
    Checklist: [N] subtasks
-   Ready: /pm:implementation:start WORK-128
+   Ready: /ccpm:implementation:start WORK-128
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔍 Verification Issues (Almost Done!)
@@ -148,7 +148,7 @@ const stats = {
 
 1. [WORK-129]: [Title]
    Time in verification: [Duration]
-   Next: /pm:verification:verify WORK-129
+   Next: /ccpm:verification:verify WORK-129
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Recently Completed (Last 7 Days)
@@ -203,7 +203,7 @@ Use **AskUserQuestion** tool:
       },
       {
         label: "Create New Issue",
-        description: "Create and plan a new task (/pm:planning:create)"
+        description: "Create and plan a new task (/ccpm:planning:create)"
       }
     ]
   }]
@@ -215,7 +215,7 @@ Use **AskUserQuestion** tool:
 - If "Work on Blocked Issues" → Show blocked issues and ask which to fix
 - If "Continue In-Progress" → Show in-progress issues and ask which to work on
 - If "Start New Task" → Show planning issues and ask which to start
-- If "Create New Issue" → Prompt for title and run `/pm:planning:create`
+- If "Create New Issue" → Prompt for title and run `/ccpm:planning:create`
 - If "Other" → Show quick commands and exit
 
 ```
@@ -223,10 +223,10 @@ Use **AskUserQuestion** tool:
 📝 Quick Commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Create Task:   /pm:planning:create "<title>" $1
-View Task:     /pm:utils:status <issue-id>
-Context:       /pm:utils:context <issue-id>
-Refresh:       /pm:utils:report $1
+Create Task:   /ccpm:planning:create "<title>" $1
+View Task:     /ccpm:utils:status <issue-id>
+Context:       /ccpm:utils:context <issue-id>
+Refresh:       /ccpm:utils:report $1
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -244,11 +244,11 @@ Refresh:       /pm:utils:report $1
 
 ```bash
 # For external PM projects
-/pm:utils:report trainer-guru
-/pm:utils:report repeat
+/ccpm:utils:report trainer-guru
+/ccpm:utils:report repeat
 
 # For internal projects
-/pm:utils:report nv-internal
+/ccpm:utils:report nv-internal
 ```
 
 ### Refresh Frequency

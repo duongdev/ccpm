@@ -25,34 +25,36 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 **No more context switching!** Complete workflows in one continuous session.
 
-### New Commands (17 Total in v2.0)
+### New Commands (18 Total in v2.0)
 
 **Spec Management (6 new):**
-1. `/pm:spec:create` - Create Epic/Feature with Linear Document
-2. `/pm:spec:write` - AI-assisted spec writing
-3. `/pm:spec:review` - Spec validation & grading
-4. `/pm:spec:break-down` - Epic→Features, Feature→Tasks
-5. `/pm:spec:migrate` - Migrate `.claude/` specs to Linear
-6. `/pm:spec:sync` - Sync spec with implementation
+1. `/ccpm:spec:create` - Create Epic/Feature with Linear Document
+2. `/ccpm:spec:write` - AI-assisted spec writing
+3. `/ccpm:spec:review` - Spec validation & grading
+4. `/ccpm:spec:break-down` - Epic→Features, Feature→Tasks
+5. `/ccpm:spec:migrate` - Migrate `.claude/` specs to Linear
+6. `/ccpm:spec:sync` - Sync spec with implementation
 
-**Workflow Enhancements (11 new):**
-7. `/pm:planning:create` - Create + plan in one step
-8. `/pm:planning:update` - Update existing plan with interactive clarification
-9. `/pm:utils:report` - Project-wide progress reporting
-10. `/pm:utils:context` - Fast task context loading
-11. `/pm:implementation:next` - Smart next action detection
-12. `/pm:complete:finalize` - Post-completion workflow
-13. `/pm:utils:sync-status` - Jira sync with confirmation
-14. `/pm:utils:auto-assign` - AI-powered agent assignment
-15. `/pm:utils:rollback` - Undo planning changes
-16. `/pm:utils:dependencies` - Visualize task dependencies
-17. `/pm:utils:insights` - AI complexity & risk analysis
+**Workflow Enhancements (13 new):**
+7. `/ccpm:planning:create` - Create + plan in one step
+8. `/ccpm:planning:update` - Update existing plan with interactive clarification
+9. `/ccpm:utils:report` - Project-wide progress reporting
+10. `/ccpm:utils:context` - Fast task context loading
+11. `/ccpm:utils:search` - Search tasks by text query 🔍
+12. `/ccpm:implementation:next` - Smart next action detection
+13. `/ccpm:implementation:sync` - Sync progress, findings & changes to Linear
+14. `/ccpm:complete:finalize` - Post-completion workflow
+15. `/ccpm:utils:sync-status` - Jira sync with confirmation
+16. `/ccpm:utils:auto-assign` - AI-powered agent assignment
+17. `/ccpm:utils:rollback` - Undo planning changes
+18. `/ccpm:utils:dependencies` - Visualize task dependencies
+19. `/ccpm:utils:insights` - AI complexity & risk analysis
 
 ## 📋 Complete Command Reference
 
 ### Spec Management Commands 🆕
 
-#### `/pm:spec:create <type> "<title>" [parent-id]`
+#### `/ccpm:spec:create <type> "<title>" [parent-id]`
 
 **Create Epic/Feature/Initiative with Linear Document for comprehensive spec management.**
 
@@ -68,13 +70,13 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # Create Epic with spec document
-/pm:spec:create epic "User Authentication System"
+/ccpm:spec:create epic "User Authentication System"
 
 # Create Feature under an epic
-/pm:spec:create feature "JWT Auth" WORK-100
+/ccpm:spec:create feature "JWT Auth" WORK-100
 ```
 
-#### `/pm:spec:write <doc-id> <section>`
+#### `/ccpm:spec:write <doc-id> <section>`
 
 **AI-assisted spec document writing with codebase analysis.**
 
@@ -88,16 +90,16 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # Write specific section
-/pm:spec:write DOC-123 requirements
+/ccpm:spec:write DOC-123 requirements
 
 # Write API design with examples
-/pm:spec:write DOC-123 api-design
+/ccpm:spec:write DOC-123 api-design
 
 # Write all sections at once
-/pm:spec:write DOC-123 all
+/ccpm:spec:write DOC-123 all
 ```
 
-#### `/pm:spec:review <doc-id>`
+#### `/ccpm:spec:review <doc-id>`
 
 **AI-powered spec review for completeness and quality.**
 
@@ -109,7 +111,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Suggests improvements
 
 ```bash
-/pm:spec:review DOC-123
+/ccpm:spec:review DOC-123
 ```
 
 **Output:**
@@ -119,7 +121,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Actionable recommendations
 - Best practices checklist
 
-#### `/pm:spec:break-down <epic-or-feature-id>`
+#### `/ccpm:spec:break-down <epic-or-feature-id>`
 
 **Break down Epic into Features or Feature into Tasks based on spec.**
 
@@ -132,10 +134,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # Break Epic into Features
-/pm:spec:break-down WORK-100
+/ccpm:spec:break-down WORK-100
 
 # Break Feature into Tasks
-/pm:spec:break-down WORK-101
+/ccpm:spec:break-down WORK-101
 ```
 
 **Features:**
@@ -145,7 +147,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Maps priorities (P0=Urgent, P1=High, etc.)
 - Converts estimates to Linear points
 
-#### `/pm:spec:migrate <project-path> [category]`
+#### `/ccpm:spec:migrate <project-path> [category]`
 
 **Migrate existing markdown specs from `.claude/` to Linear Documents.**
 
@@ -160,13 +162,13 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # Migrate from current directory (most common)
-/pm:spec:migrate .
+/ccpm:spec:migrate .
 
 # Migrate from specific project path
-/pm:spec:migrate ~/personal/nv-internal
+/ccpm:spec:migrate ~/personal/nv-internal
 
 # Migrate only specific category (skip selection)
-/pm:spec:migrate . enhancements
+/ccpm:spec:migrate . enhancements
 ```
 
 **Interactive Selection:**
@@ -190,7 +192,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Breadcrumb files created for reference
 - Can rollback from `.claude/migrated/` if needed
 
-#### `/pm:spec:sync <doc-id-or-issue-id>`
+#### `/ccpm:spec:sync <doc-id-or-issue-id>`
 
 **Sync spec document with implementation reality.**
 
@@ -202,9 +204,9 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Offers to update spec or create implementation tasks
 
 ```bash
-/pm:spec:sync DOC-123
+/ccpm:spec:sync DOC-123
 # or
-/pm:spec:sync WORK-123
+/ccpm:spec:sync WORK-123
 ```
 
 **Drift Detection:**
@@ -221,7 +223,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ### Planning Commands
 
-#### `/pm:planning:create "<title>" <project> [jira-ticket-id]` 🆕
+#### `/ccpm:planning:create "<title>" <project> [jira-ticket-id]` 🆕
 
 **Create Linear issue + run full planning in one step.**
 
@@ -230,10 +232,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Interactive next action prompts
 
 ```bash
-/pm:planning:create "Add JWT authentication" trainer-guru TRAIN-456
+/ccpm:planning:create "Add JWT authentication" trainer-guru TRAIN-456
 ```
 
-#### `/pm:planning:plan <linear-issue-id> [jira-ticket-id]`
+#### `/ccpm:planning:plan <linear-issue-id> [jira-ticket-id]`
 
 **Populate existing Linear issue with comprehensive research.**
 
@@ -242,10 +244,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Supports with/without Jira
 
 ```bash
-/pm:planning:plan WORK-123 TRAIN-456
+/ccpm:planning:plan WORK-123 TRAIN-456
 ```
 
-#### `/pm:planning:update <linear-issue-id> "<update-request>"` 🆕
+#### `/ccpm:planning:update <linear-issue-id> "<update-request>"` 🆕
 
 **Update existing plan with interactive clarification.**
 
@@ -256,9 +258,9 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Confirms before updating
 
 ```bash
-/pm:planning:update WORK-123 "Also add email notifications"
-/pm:planning:update WORK-456 "Use Redis instead of in-memory cache"
-/pm:planning:update WORK-789 "Remove admin dashboard, just add API"
+/ccpm:planning:update WORK-123 "Also add email notifications"
+/ccpm:planning:update WORK-456 "Use Redis instead of in-memory cache"
+/ccpm:planning:update WORK-789 "Remove admin dashboard, just add API"
 ```
 
 **What it does:**
@@ -271,17 +273,17 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Confirms before updating Linear
 - Suggests next actions after update
 
-#### `/pm:planning:quick-plan "<description>" <project>`
+#### `/ccpm:planning:quick-plan "<description>" <project>`
 
 **Quick planning for NV Internal (no external PM).**
 
 ```bash
-/pm:planning:quick-plan "Add dark mode" nv-internal
+/ccpm:planning:quick-plan "Add dark mode" nv-internal
 ```
 
 ### Implementation Commands
 
-#### `/pm:implementation:start <linear-issue-id>`
+#### `/ccpm:implementation:start <linear-issue-id>`
 
 **Start implementation with agent coordination.**
 
@@ -290,10 +292,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Begins execution
 
 ```bash
-/pm:implementation:start WORK-123
+/ccpm:implementation:start WORK-123
 ```
 
-#### `/pm:implementation:next <linear-issue-id>` 🆕
+#### `/ccpm:implementation:next <linear-issue-id>` 🆕
 
 **Smart next action detection based on status & dependencies.**
 
@@ -302,20 +304,65 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - One-click execution
 
 ```bash
-/pm:implementation:next WORK-123
+/ccpm:implementation:next WORK-123
 ```
 
-#### `/pm:implementation:update <linear-issue-id> <idx> <status> "<msg>"`
+#### `/ccpm:implementation:update <linear-issue-id> <idx> <status> "<msg>"`
 
 **Update subtask progress.**
 
 ```bash
-/pm:implementation:update WORK-123 0 completed "Added auth endpoints"
+/ccpm:implementation:update WORK-123 0 completed "Added auth endpoints"
 ```
+
+#### `/ccpm:implementation:sync <linear-issue-id> [summary]` 🆕
+
+**Sync implementation progress, findings, and code changes to Linear for full context resume.**
+
+**Auto-detects:**
+- Git changes (files modified/created/deleted)
+- Code diffs and statistics
+- TODO/FIXME comments
+- New dependencies
+
+**Interactive prompts for:**
+- Technical decisions & findings
+- Blockers & challenges (resolved/active)
+- Test results & quality metrics
+
+**Updates Linear with:**
+- Detailed progress comment with all changes
+- "Implementation Notes" section in description
+- Automatic checklist updates
+- Relevant labels (blocked, needs-review)
+
+```bash
+# Full interactive mode with git detection
+/ccpm:implementation:sync WORK-123
+
+# Quick manual sync with summary
+/ccpm:implementation:sync WORK-123 "Completed auth impl, all tests passing"
+
+# Sync with blocker
+/ccpm:implementation:sync WORK-123 "Blocked: Need backend API deployed"
+```
+
+**Use Cases:**
+- End of work session → Save progress before stopping
+- After major milestone → Document completion
+- When blocked → Record blocker for team awareness
+- Before task switching → Save state before context switch
+- Mid-day checkpoints → Track progress on long tasks
+
+**Benefits:**
+- 🎯 Capture full implementation context for easy resume
+- 📊 Give team/stakeholders real-time progress visibility
+- 🧠 Document technical decisions as they're made
+- ⚡ Auto-detect changes from git (no manual entry)
 
 ### Verification Commands
 
-#### `/pm:verification:check <linear-issue-id>`
+#### `/ccpm:verification:check <linear-issue-id>`
 
 **Run quality checks before verification.**
 
@@ -325,10 +372,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Updates to Verification status if all pass
 
 ```bash
-/pm:verification:check WORK-123
+/ccpm:verification:check WORK-123
 ```
 
-#### `/pm:verification:verify <linear-issue-id>`
+#### `/ccpm:verification:verify <linear-issue-id>`
 
 **Final verification with verification-agent.**
 
@@ -337,10 +384,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Marks as Done if passes
 
 ```bash
-/pm:verification:verify WORK-123
+/ccpm:verification:verify WORK-123
 ```
 
-#### `/pm:verification:fix <linear-issue-id>`
+#### `/ccpm:verification:fix <linear-issue-id>`
 
 **Fix verification failures with agent coordination.**
 
@@ -349,12 +396,12 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Parallel fixes
 
 ```bash
-/pm:verification:fix WORK-123
+/ccpm:verification:fix WORK-123
 ```
 
 ### Completion Commands
 
-#### `/pm:complete:finalize <linear-issue-id>` 🆕
+#### `/ccpm:complete:finalize <linear-issue-id>` 🆕
 
 **Post-completion workflow with confirmations.**
 
@@ -364,20 +411,20 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Archive and clean up
 
 ```bash
-/pm:complete:finalize WORK-123
+/ccpm:complete:finalize WORK-123
 ```
 
 ### Utility Commands
 
-#### `/pm:utils:status <linear-issue-id>`
+#### `/ccpm:utils:status <linear-issue-id>`
 
 **Show detailed task status with next actions.**
 
 ```bash
-/pm:utils:status WORK-123
+/ccpm:utils:status WORK-123
 ```
 
-#### `/pm:utils:context <linear-issue-id>` 🆕
+#### `/ccpm:utils:context <linear-issue-id>` 🆕
 
 **Load full task context for quick resume.**
 
@@ -387,10 +434,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Suggests next actions
 
 ```bash
-/pm:utils:context WORK-123
+/ccpm:utils:context WORK-123
 ```
 
-#### `/pm:utils:report <project>` 🆕
+#### `/ccpm:utils:report <project>` 🆕
 
 **Project-wide progress report.**
 
@@ -400,10 +447,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Interactive next actions
 
 ```bash
-/pm:utils:report trainer-guru
+/ccpm:utils:report trainer-guru
 ```
 
-#### `/pm:utils:insights <linear-issue-id>` 🆕
+#### `/ccpm:utils:insights <linear-issue-id>` 🆕
 
 **AI-powered complexity & risk analysis.**
 
@@ -413,10 +460,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Optimization recommendations
 
 ```bash
-/pm:utils:insights WORK-123
+/ccpm:utils:insights WORK-123
 ```
 
-#### `/pm:utils:auto-assign <linear-issue-id>` 🆕
+#### `/ccpm:utils:auto-assign <linear-issue-id>` 🆕
 
 **AI-powered agent assignment.**
 
@@ -426,10 +473,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Creates execution plan
 
 ```bash
-/pm:utils:auto-assign WORK-123
+/ccpm:utils:auto-assign WORK-123
 ```
 
-#### `/pm:utils:sync-status <linear-issue-id>` 🆕
+#### `/ccpm:utils:sync-status <linear-issue-id>` 🆕
 
 **Sync Linear status to Jira (with confirmation).**
 
@@ -438,10 +485,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Updates Jira
 
 ```bash
-/pm:utils:sync-status WORK-123
+/ccpm:utils:sync-status WORK-123
 ```
 
-#### `/pm:utils:rollback <linear-issue-id>` 🆕
+#### `/ccpm:utils:rollback <linear-issue-id>` 🆕
 
 **Rollback planning to previous version.**
 
@@ -450,10 +497,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Confirmation required
 
 ```bash
-/pm:utils:rollback WORK-123
+/ccpm:utils:rollback WORK-123
 ```
 
-#### `/pm:utils:dependencies <linear-issue-id>` 🆕
+#### `/ccpm:utils:dependencies <linear-issue-id>` 🆕
 
 **Visualize subtask dependencies.**
 
@@ -462,18 +509,47 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Execution order
 
 ```bash
-/pm:utils:dependencies WORK-123
+/ccpm:utils:dependencies WORK-123
 ```
 
-#### `/pm:utils:agents`
+#### `/ccpm:utils:search <project> <search-query>` 🆕
+
+**Search and list tasks from a project by text query.**
+
+**What it does:**
+- Searches issue titles and descriptions
+- Filters by project
+- Shows status, progress, and metadata
+- Provides quick action links
+- Interactive next action menu
+
+```bash
+# Search for authentication tasks
+/ccpm:utils:search trainer-guru "authentication"
+
+# Search for UI components
+/ccpm:utils:search repeat "button component"
+
+# Search all projects (use empty string)
+/ccpm:utils:search "" "Redis"
+```
+
+**Features:**
+- Fast text search via Linear API
+- Up to 50 results, ordered by update time
+- Shows progress percentages
+- Quick actions for each result
+- Excludes archived by default
+
+#### `/ccpm:utils:agents`
 
 **List all available subagents.**
 
 ```bash
-/pm:utils:agents
+/ccpm:utils:agents
 ```
 
-#### `/pm:utils:help [issue-id]` 🆕
+#### `/ccpm:utils:help [issue-id]` 🆕
 
 **Context-aware help and command suggestions.**
 
@@ -485,10 +561,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # General help
-/pm:utils:help
+/ccpm:utils:help
 
 # Context-aware help with suggestions
-/pm:utils:help WORK-123
+/ccpm:utils:help WORK-123
 ```
 
 **Features:**
@@ -497,11 +573,32 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Workflow quick reference
 - Interactive action menu
 
+#### `/ccpm:utils:cheatsheet` 🆕
+
+**Visual workflow cheatsheet with decision trees and quick reference.**
+
+**What it shows:**
+- Complete workflow diagrams (Spec-First and Task-First)
+- Decision trees to find the right command
+- Quick syntax reference for all commands
+- Common workflow patterns
+- Pro tips and best practices
+
+```bash
+/ccpm:utils:cheatsheet
+```
+
+**Perfect for:**
+- New users learning CCPM
+- Quick command lookup
+- Understanding workflow patterns
+- Finding the right command for your situation
+
 ## 🔄 Interactive Workflow Example
 
 ```bash
 # 1. Create & Plan
-/pm:planning:create "Add JWT auth" trainer-guru TRAIN-456
+/ccpm:planning:create "Add JWT auth" trainer-guru TRAIN-456
 
 📋 Issue Created: WORK-123
 ✅ Planning Complete!
@@ -573,12 +670,12 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 **For new features or major projects:**
 
-1. **Create Epic/Feature with Spec** → `/pm:spec:create`
-2. **Write Comprehensive Spec** → `/pm:spec:write` (all sections)
-3. **Review & Validate** → `/pm:spec:review`
-4. **Break Down into Tasks** → `/pm:spec:break-down`
-5. **Implement Tasks** → `/pm:implementation:start`
-6. **Keep Spec in Sync** → `/pm:spec:sync` (periodically)
+1. **Create Epic/Feature with Spec** → `/ccpm:spec:create`
+2. **Write Comprehensive Spec** → `/ccpm:spec:write` (all sections)
+3. **Review & Validate** → `/ccpm:spec:review`
+4. **Break Down into Tasks** → `/ccpm:spec:break-down`
+5. **Implement Tasks** → `/ccpm:implementation:start`
+6. **Keep Spec in Sync** → `/ccpm:spec:sync` (periodically)
 
 **Benefits:**
 - Clear requirements before coding
@@ -589,12 +686,12 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ### Task-First Workflow (For smaller tasks)
 
-1. **Start with `/pm:planning:create`** - One command to create + plan
-2. **Use `/pm:utils:context`** when resuming work
-3. **Run `/pm:implementation:next`** when unsure what's next
-4. **Check `/pm:utils:report`** daily for project overview
-5. **Get `/pm:utils:insights`** early for complex tasks
-6. **Always `/pm:verification:check`** before `/pm:verification:verify`
+1. **Start with `/ccpm:planning:create`** - One command to create + plan
+2. **Use `/ccpm:utils:context`** when resuming work
+3. **Run `/ccpm:implementation:next`** when unsure what's next
+4. **Check `/ccpm:utils:report`** daily for project overview
+5. **Get `/ccpm:utils:insights`** early for complex tasks
+6. **Always `/ccpm:verification:check`** before `/ccpm:verification:verify`
 7. **Trust interactive prompts** - They know the workflow
 8. **Let it flow** - Each command suggests the next
 
@@ -602,7 +699,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 **If you have existing markdown specs in `.claude/`:**
 
-1. **Run Migration** → `/pm:spec:migrate ~/personal/nv-internal`
+1. **Run Migration** → `/ccpm:spec:migrate ~/personal/nv-internal`
 2. **Review in Linear** - Check migrated items
 3. **Organize Hierarchy** - Link features to epics
 4. **Continue with Spec Workflow** - Use spec commands going forward
@@ -612,13 +709,13 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 ### Spec-First Workflow
 
 ```
-Create Epic/Feature (/pm:spec:create)
+Create Epic/Feature (/ccpm:spec:create)
   ↓
-Write Spec (/pm:spec:write)
+Write Spec (/ccpm:spec:write)
   ↓
-Review Spec (/pm:spec:review)
+Review Spec (/ccpm:spec:review)
   ↓
-Break Down (/pm:spec:break-down) → Creates Tasks
+Break Down (/ccpm:spec:break-down) → Creates Tasks
   ↓
 [Continue with Task-First Workflow below]
 ```
@@ -626,34 +723,34 @@ Break Down (/pm:spec:break-down) → Creates Tasks
 ### Task-First Workflow
 
 ```
-Create Task (/pm:planning:create)
+Create Task (/ccpm:planning:create)
   ↓
 Planning Complete → Suggest: Start/Insights/Auto-Assign
   ↓
-Start Implementation (/pm:implementation:start)
+Start Implementation (/ccpm:implementation:start)
   ↓
-Work on Subtasks → Auto-suggest next (/pm:implementation:next)
+Work on Subtasks → Auto-suggest next (/ccpm:implementation:next)
   ↓
 All Complete → Suggest: Quality Checks
   ↓
-Quality Checks (/pm:verification:check)
+Quality Checks (/ccpm:verification:check)
   ↓
 Checks Pass → Suggest: Verification
   ↓
-Verification (/pm:verification:verify)
+Verification (/ccpm:verification:verify)
   ↓
 Passes → Suggest: Finalize
   ↓
-Finalize (/pm:complete:finalize)
+Finalize (/ccpm:complete:finalize)
   ↓
 Done → Suggest: New Task/Report
 
 [At any point]:
-- /pm:utils:context - Resume quickly
-- /pm:utils:status - Check status
-- /pm:utils:report - Project overview
-- /pm:utils:insights - Get AI analysis
-- /pm:spec:sync - Keep spec in sync with reality
+- /ccpm:utils:context - Resume quickly
+- /ccpm:utils:status - Check status
+- /ccpm:utils:report - Project overview
+- /ccpm:utils:insights - Get AI analysis
+- /ccpm:spec:sync - Keep spec in sync with reality
 ```
 
 ## 🚀 Quick Start
@@ -662,7 +759,7 @@ Done → Suggest: New Task/Report
 
 ```bash
 # Day 1: Create your first task
-/pm:planning:create "Your task title" your-project JIRA-123
+/ccpm:planning:create "Your task title" your-project JIRA-123
 
 # Follow interactive prompts - it will guide you through everything!
 ```
@@ -671,10 +768,10 @@ Done → Suggest: New Task/Report
 
 ```bash
 # Morning: Check project status
-/pm:utils:report your-project
+/ccpm:utils:report your-project
 
 # Pick a task and load context
-/pm:utils:context WORK-123
+/ccpm:utils:context WORK-123
 
 # Let interactive mode guide you from there!
 ```
@@ -683,18 +780,18 @@ Done → Suggest: New Task/Report
 
 ```bash
 # What should I do next?
-/pm:implementation:next WORK-123
+/ccpm:implementation:next WORK-123
 
 # What's the full picture?
-/pm:utils:context WORK-123
+/ccpm:utils:context WORK-123
 
 # How complex is this really?
-/pm:utils:insights WORK-123
+/ccpm:utils:insights WORK-123
 ```
 
 ### Project-Specific Commands
 
-#### `/pm:repeat:check-pr <pr-number-or-url>` 🆕
+#### `/ccpm:repeat:check-pr <pr-number-or-url>` 🆕
 
 **Comprehensive BitBucket PR analysis for Repeat project.**
 
@@ -712,10 +809,10 @@ Done → Suggest: New Task/Report
 
 ```bash
 # Check PR by number
-/pm:repeat:check-pr 123
+/ccpm:repeat:check-pr 123
 
 # Check PR by full URL
-/pm:repeat:check-pr https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/456
+/ccpm:repeat:check-pr https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/456
 ```
 
 **Features:**
@@ -773,6 +870,8 @@ Done → Suggest: New Task/Report
     ├── sync-status.md (NEW)
     ├── rollback.md (NEW)
     ├── dependencies.md (NEW)
+    ├── help.md (NEW)
+    ├── cheatsheet.md (NEW)
     └── agents.md
 ```
 
@@ -791,7 +890,7 @@ To:
 
 **Try it now:**
 ```bash
-/pm:planning:create "Your next big feature" your-project
+/ccpm:planning:create "Your next big feature" your-project
 ```
 
 Let interactive mode guide you to completion! 🚀

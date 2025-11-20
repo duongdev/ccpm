@@ -6,10 +6,10 @@
       {
         "hooks": [
           {
-            "type": "prompt",
-            "promptFile": "./hooks/smart-agent-selector.prompt",
-            "timeout": 20000,
-            "description": "SMART agent selector: Dynamically discovers all agents (global, plugins, project) and selects best matches using scoring algorithm"
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/test-hook.sh \"{{userMessage}}\"",
+            "timeout": 2000,
+            "description": "CCPM Test Hook - Verifies plugin hooks are working"
           }
         ]
       }
@@ -20,9 +20,9 @@
         "hooks": [
           {
             "type": "prompt",
-            "promptFile": "./hooks/tdd-enforcer.prompt",
-            "timeout": 10000,
-            "description": "Enforces TDD: Tests must be written before production code"
+            "prompt": "CCPM TDD Enforcer is temporarily disabled. Please ensure tests are written before production code.",
+            "timeout": 10,
+            "description": "Enforces TDD: Tests must be written before production code [TEMPORARILY DISABLED]"
           }
         ]
       }
@@ -32,9 +32,9 @@
         "hooks": [
           {
             "type": "prompt",
-            "promptFile": "./hooks/quality-gate.prompt",
-            "timeout": 15000,
-            "description": "Quality gate: Automatically invokes code review and security agents after implementation"
+            "prompt": "CCPM Quality Gate is temporarily disabled. Please manually run code reviews after implementation.",
+            "timeout": 15,
+            "description": "Quality gate: Automatically invokes code review and security agents after implementation [TEMPORARILY DISABLED]"
           }
         ]
       }

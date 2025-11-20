@@ -10,7 +10,7 @@
     {
       "name": "ccpm",
       "source": "./",
-      "description": "Comprehensive Project Management with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
+      "description": "Comprehensive Project Management with Linear integration, smart agent auto-invocation, TDD enforcement, quality gates, and UI design planning. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
       "version": "2.0.0",
       "author": {
         "name": "Dustin Do",
@@ -26,7 +26,11 @@
         "tdd",
         "quality-gates",
         "agents",
-        "hooks"
+        "hooks",
+        "ui-design",
+        "design-systems",
+        "tailwind",
+        "shadcn-ui"
       ],
       "repository": "https://github.com/duongdev/ccpm",
       "license": "MIT"

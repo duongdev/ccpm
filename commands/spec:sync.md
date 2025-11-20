@@ -513,7 +513,7 @@ const implementationPlan = {
 // Show plan and ask if user wants to create Linear tasks for fixes
 const tasks = generateFixTasks(implementationPlan)
 
-// Offer to create tasks via /pm:spec:break-down or manually
+// Offer to create tasks via /ccpm:spec:break-down or manually
 ```
 
 #### If "Hybrid Approach":
@@ -591,11 +591,11 @@ for (const item of allDriftItems) {
       },
       {
         label: "Review Spec",
-        description: "Run /pm:spec:review to validate updated spec"
+        description: "Run /ccpm:spec:review to validate updated spec"
       },
       {
         label: "View Project Status",
-        description: "Check overall project status (/pm:utils:status)"
+        description: "Check overall project status (/ccpm:utils:status)"
       },
       {
         label: "Done",

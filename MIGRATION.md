@@ -63,9 +63,9 @@ All commands retained their original slash command syntax:
 
 | Old File Path | New File Path | Slash Command |
 |--------------|---------------|---------------|
-| `commands/spec/create.md` | `commands/pm:spec:create.md` | `/pm:spec:create` |
-| `commands/utils/help.md` | `commands/pm:utils:help.md` | `/pm:utils:help` |
-| `commands/planning/create.md` | `commands/pm:planning:create.md` | `/pm:planning:create` |
+| `commands/spec/create.md` | `commands/ccpm:spec:create.md` | `/ccpm:spec:create` |
+| `commands/utils/help.md` | `commands/ccpm:utils:help.md` | `/ccpm:utils:help` |
+| `commands/planning/create.md` | `commands/ccpm:planning:create.md` | `/ccpm:planning:create` |
 
 **Total commands migrated:** 27
 
@@ -78,9 +78,9 @@ After migration, commands should be discoverable:
 /plugin install ccpm@~/personal/ccpm
 
 # Test command discovery
-/pm:utils:help
-/pm:spec:create
-/pm:planning:create
+/ccpm:utils:help
+/ccpm:spec:create
+/ccpm:planning:create
 ```
 
 ## For Plugin Developers

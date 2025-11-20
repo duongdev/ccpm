@@ -108,6 +108,153 @@ If $2 (Jira ticket ID) is not provided:
    - External service integrations
    - Database schema impacts
 
+### Step 2.5: Invoke Engineer Agents for Deep Technical Analysis
+
+**CRITICAL**: After gathering all context and analyzing the codebase, invoke specialized engineer agents to provide deeper insights and validate the approach.
+
+**Determine which agents to invoke based on the task type:**
+
+1. **For Backend/API tasks** → Invoke `backend-architect`:
+   ```
+   Task(backend-architect): "Analyze the implementation approach for [task description].
+
+   Context:
+   - Jira requirements: [key requirements from Step 1]
+   - Current architecture: [findings from Step 2]
+   - Best practices: [Context7 findings]
+
+   Please provide:
+   1. Recommended architecture approach
+   2. API design considerations
+   3. Database schema changes (if any)
+   4. Performance implications
+   5. Security considerations
+   6. Potential pitfalls to avoid
+   7. Testing strategy recommendations"
+   ```
+
+2. **For Frontend/UI tasks** → Invoke `frontend-developer`:
+   ```
+   Task(frontend-developer): "Analyze the implementation approach for [task description].
+
+   Context:
+   - Requirements: [key requirements from Step 1]
+   - Current component structure: [findings from Step 2]
+   - UI patterns used: [patterns found in codebase]
+
+   Please provide:
+   1. Component architecture recommendations
+   2. State management approach
+   3. Reusable components to leverage
+   4. Styling approach (Tailwind/NativeWind patterns)
+   5. Accessibility considerations
+   6. Performance optimizations
+   7. Testing strategy for components"
+   ```
+
+3. **For Mobile-specific tasks** → Invoke `mobile-developer`:
+   ```
+   Task(mobile-developer): "Analyze the implementation approach for [task description].
+
+   Context:
+   - Requirements: [key requirements from Step 1]
+   - React Native version and constraints: [from package.json]
+   - Current navigation patterns: [findings from Step 2]
+
+   Please provide:
+   1. Platform-specific considerations (iOS/Android)
+   2. Navigation flow recommendations
+   3. Offline sync strategy (if applicable)
+   4. Native module requirements (if any)
+   5. Performance optimizations for mobile
+   6. Cross-platform compatibility notes
+   7. Testing on different devices"
+   ```
+
+4. **For Full-Stack tasks** → Invoke both `backend-architect` AND `frontend-developer` **in parallel**:
+   ```
+   # Use single message with multiple Task calls
+   Task(backend-architect): "[backend-specific analysis as above]"
+   Task(frontend-developer): "[frontend-specific analysis as above]"
+   ```
+
+5. **For Database/Data modeling tasks** → Invoke `backend-architect` (data modeling skill):
+   ```
+   Task(backend-architect): "Design the data model for [task description].
+
+   Context:
+   - Current schema: [existing tables/models]
+   - Requirements: [data requirements from Step 1]
+   - Access patterns: [how data will be queried]
+
+   Please provide:
+   1. Schema design recommendations
+   2. Indexing strategy
+   3. Migration approach
+   4. Data validation rules
+   5. Relationships and constraints
+   6. Performance considerations
+   7. Backward compatibility plan"
+   ```
+
+6. **For Security-critical tasks** → Invoke `security-auditor` (in addition to primary agent):
+   ```
+   Task(security-auditor): "Review the security implications of [task description].
+
+   Context:
+   - Proposed approach: [from primary agent analysis]
+   - Authentication/authorization requirements: [from Step 1]
+
+   Please provide:
+   1. Security vulnerabilities to address
+   2. OWASP compliance checklist
+   3. Authentication/authorization recommendations
+   4. Data protection requirements
+   5. Input validation strategy
+   6. Secure coding practices to follow"
+   ```
+
+**Agent Invocation Strategy:**
+
+- **Invoke agents sequentially** when one depends on another (e.g., backend design → security review)
+- **Invoke agents in parallel** when they analyze independent aspects (e.g., backend + frontend for full-stack tasks)
+- **ALWAYS wait for agent responses** before proceeding to Step 3
+- **Incorporate agent insights** into the Linear issue description
+
+**Capture Agent Insights:**
+
+After agents respond, extract and organize their insights:
+
+1. **Architecture recommendations** → Use in "Implementation Plan" section
+2. **Technical considerations** → Add to "Technical Constraints" section
+3. **Security/Performance notes** → Include in "Best Practices" section
+4. **Testing strategy** → Inform checklist subtasks
+5. **Pitfalls to avoid** → Document in "Considerations" section
+
+**Example Agent Output Integration:**
+
+```markdown
+## 🤖 Engineer Agent Analysis
+
+### Backend Architecture (backend-architect)
+- **Recommended Approach**: [Agent's recommendation]
+- **API Design**: [Agent's API design suggestions]
+- **Database Changes**: [Agent's schema recommendations]
+- **Performance**: [Agent's performance notes]
+- **Security**: [Agent's security considerations]
+
+### Frontend Architecture (frontend-developer)
+- **Component Strategy**: [Agent's component recommendations]
+- **State Management**: [Agent's state management approach]
+- **Reusable Components**: [Components agent identified]
+- **Styling Approach**: [Agent's styling recommendations]
+
+### Security Review (security-auditor)
+- **Vulnerabilities**: [Agent's identified risks]
+- **Mitigation Strategy**: [Agent's recommendations]
+- **Compliance**: [Agent's compliance notes]
+```
+
 ### Step 3: Update Linear Issue with Research
 
 Use **Linear MCP** to update issue $1 with comprehensive research:
@@ -218,6 +365,105 @@ When mentioning Jira tickets, Confluence pages, or related issues, create proper
 - [Performance considerations]
 - [Security considerations]
 
+## 🤖 Engineer Agent Analysis
+
+### Backend Architecture (backend-architect)
+
+**Recommended Approach**:
+- [Agent's recommended architecture approach]
+
+**API Design Considerations**:
+- [Agent's API design suggestions]
+- [Endpoint structure recommendations]
+
+**Database Changes**:
+- [Agent's schema recommendations]
+- [Migration strategy]
+
+**Performance Implications**:
+- [Agent's performance analysis]
+- [Optimization opportunities]
+
+**Security Considerations**:
+- [Agent's security recommendations]
+- [OWASP compliance notes]
+
+**Potential Pitfalls**:
+- [Agent's warnings about common mistakes]
+- [Edge cases to handle]
+
+**Testing Strategy**:
+- [Agent's recommended testing approach]
+- [Key test scenarios]
+
+### Frontend Architecture (frontend-developer)
+
+*(Include only if frontend work is involved)*
+
+**Component Architecture**:
+- [Agent's component structure recommendations]
+- [Component breakdown]
+
+**State Management**:
+- [Agent's state management approach]
+- [Data flow patterns]
+
+**Reusable Components**:
+- [Existing components to leverage]
+- [New reusable components to create]
+
+**Styling Approach**:
+- [Tailwind/NativeWind patterns to use]
+- [Design system integration]
+
+**Accessibility**:
+- [A11y requirements]
+- [WCAG compliance notes]
+
+**Performance**:
+- [Rendering optimizations]
+- [Memoization strategies]
+
+### Mobile-Specific Considerations (mobile-developer)
+
+*(Include only if React Native work is involved)*
+
+**Platform Differences**:
+- **iOS**: [iOS-specific considerations]
+- **Android**: [Android-specific considerations]
+
+**Navigation**:
+- [Navigation flow recommendations]
+- [Screen transition patterns]
+
+**Offline Sync**:
+- [Offline data strategy if applicable]
+
+**Native Modules**:
+- [Required native modules if any]
+
+**Performance**:
+- [Mobile performance optimizations]
+
+**Testing**:
+- [Device-specific testing requirements]
+
+### Security Review (security-auditor)
+
+*(Include only if security-critical)*
+
+**Identified Risks**:
+- [Agent's security vulnerability analysis]
+
+**Mitigation Strategy**:
+- [Recommended security controls]
+
+**Compliance Requirements**:
+- [OWASP, GDPR, or other compliance notes]
+
+**Secure Coding Practices**:
+- [Agent's secure coding recommendations]
+
 ### Cross-Repository Dependencies
 
 [If applicable]:
@@ -277,7 +523,7 @@ Provide a summary like:
 
 ✅ Checklist: [X] subtasks created/updated
 
-🚀 Ready for implementation! Run: /pm:implementation:start $1
+🚀 Ready for implementation! Run: /ccpm:implementation:start $1
 ```
 
 ## Notes

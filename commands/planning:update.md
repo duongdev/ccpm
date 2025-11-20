@@ -215,6 +215,131 @@ Based on clarifications and change type, gather additional context:
    - Find related PRs in BitBucket
    - Review team decisions
 
+### Step 4.5: Invoke Engineer Agents for Technical Validation
+
+**CRITICAL**: Before generating the updated plan, invoke specialized engineer agents to validate the changes and provide technical insights.
+
+**Determine which agents to invoke based on the change type:**
+
+1. **For Scope/Approach Changes** → Invoke relevant technical agents:
+
+   **Backend changes** → `backend-architect`:
+   ```
+   Task(backend-architect): "Review the proposed plan update for [task description].
+
+   Original Plan:
+   [Current checklist and approach from Step 1]
+
+   Proposed Changes:
+   [Update request: $2]
+   [User clarifications from Step 3]
+
+   Please validate:
+   1. Is the new approach technically sound?
+   2. What are the implications of this change?
+   3. Are there better alternatives?
+   4. What new risks are introduced?
+   5. What additional subtasks are needed?
+   6. Updated complexity estimate"
+   ```
+
+   **Frontend changes** → `frontend-developer`:
+   ```
+   Task(frontend-developer): "Review the proposed plan update for [task description].
+
+   Original Plan:
+   [Current checklist and approach]
+
+   Proposed Changes:
+   [Update request and clarifications]
+
+   Please validate:
+   1. Component architecture impact
+   2. State management changes needed
+   3. UI/UX implications
+   4. Performance considerations
+   5. Testing strategy updates
+   6. Accessibility impact"
+   ```
+
+2. **For Architecture Changes** → Invoke `backend-architect` + `security-auditor` sequentially:
+   ```
+   Step 1: Task(backend-architect): "Analyze architecture change..."
+
+   Step 2: Task(security-auditor): "Review security implications of [architect's recommendations]..."
+   ```
+
+3. **For Technical Blockers** → Invoke `debugger` first, then relevant architect:
+   ```
+   Task(debugger): "Analyze the reported blocker: [user's blocker description].
+
+   Current implementation: [from codebase analysis]
+   Error/Issue: [blocker details]
+
+   Please provide:
+   1. Root cause analysis
+   2. Potential workarounds
+   3. Recommended solutions
+   4. Implementation complexity"
+
+   # Then based on debugger's findings:
+   Task(backend-architect or frontend-developer): "Implement solution for [debugger's recommendation]..."
+   ```
+
+4. **For Simplification Requests** → Quick architecture validation:
+   ```
+   Task(backend-architect OR frontend-developer): "Validate simplification request.
+
+   Original scope: [current plan]
+   Proposed removal: [what user wants to remove/simplify]
+
+   Please confirm:
+   1. Can we safely remove this?
+   2. Any dependencies that break?
+   3. What testing is still needed?
+   4. Reduced complexity estimate"
+   ```
+
+**Agent Response Integration:**
+
+After agents respond:
+
+1. **Extract key insights**:
+   - Technical validation (thumbs up/down)
+   - New risks identified
+   - Recommended additional subtasks
+   - Updated complexity/timeline estimate
+
+2. **Update plan sections**:
+   - Modify checklist based on agent recommendations
+   - Add agent insights to "Research Findings"
+   - Update complexity estimate
+   - Document new risks/considerations
+
+**Example Agent Integration in Updated Plan:**
+
+```markdown
+## 🔄 Plan Update Analysis
+
+### Change Requested
+$2
+
+### Engineer Agent Validation
+
+**Backend Architect Review**:
+- ✅ Technically sound approach
+- ⚠️  Identified new dependency on [X]
+- 💡 Recommended adding subtask for [Y]
+- 📊 Complexity: Medium → High
+
+**Security Auditor Review** (if applicable):
+- ⚠️  New security consideration: [Z]
+- 💡 Recommended mitigation: [approach]
+
+### Updated Approach
+[Incorporate agent recommendations here]
+```
+
 ### Step 5: Generate Updated Plan
 
 Based on gathered context and clarifications, generate updated plan:
@@ -441,19 +566,19 @@ Use **AskUserQuestion**:
     options: [
       {
         label: "Review Updated Plan",
-        description: "Review the updated plan details (/pm:utils:status)"
+        description: "Review the updated plan details (/ccpm:utils:status)"
       },
       {
         label: "Get Fresh Insights",
-        description: "Get AI analysis of updated plan (/pm:utils:insights)"
+        description: "Get AI analysis of updated plan (/ccpm:utils:insights)"
       },
       {
         label: "Start/Resume Work",
-        description: "Begin or continue implementation (/pm:implementation:start or /pm:implementation:next)"
+        description: "Begin or continue implementation (/ccpm:implementation:start or /ccpm:implementation:next)"
       },
       {
         label: "Sync External Systems",
-        description: "Update Jira status if needed (/pm:utils:sync-status)"
+        description: "Update Jira status if needed (/ccpm:utils:sync-status)"
       }
     ]
   }]
@@ -462,10 +587,10 @@ Use **AskUserQuestion**:
 
 **Execute chosen action:**
 
-- If "Review Updated Plan" → Run `/pm:utils:status $1`
-- If "Get Fresh Insights" → Run `/pm:utils:insights $1`
-- If "Start/Resume Work" → Determine if should run `/pm:implementation:start $1` or `/pm:implementation:next $1` based on current status
-- If "Sync External Systems" → Run `/pm:utils:sync-status $1`
+- If "Review Updated Plan" → Run `/ccpm:utils:status $1`
+- If "Get Fresh Insights" → Run `/ccpm:utils:insights $1`
+- If "Start/Resume Work" → Determine if should run `/ccpm:implementation:start $1` or `/ccpm:implementation:next $1` based on current status
+- If "Sync External Systems" → Run `/ccpm:utils:sync-status $1`
 - If "Other" → Show quick commands
 
 ```
@@ -473,11 +598,11 @@ Use **AskUserQuestion**:
 📝 Quick Commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Status:        /pm:utils:status $1
-Insights:      /pm:utils:insights $1
-Start:         /pm:implementation:start $1
-Next:          /pm:implementation:next $1
-Update Again:  /pm:planning:update $1 "<new request>"
+Status:        /ccpm:utils:status $1
+Insights:      /ccpm:utils:insights $1
+Start:         /ccpm:implementation:start $1
+Next:          /ccpm:implementation:next $1
+Update Again:  /ccpm:planning:update $1 "<new request>"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -528,7 +653,7 @@ If user selects "Needs Adjustment", continue refining:
 ### Scenario 1: Adding Scope
 
 ```bash
-/pm:planning:update WORK-123 "Also add email notifications"
+/ccpm:planning:update WORK-123 "Also add email notifications"
 
 → Analyzes current plan
 → Asks: "Should we use existing email service or integrate new one?"
@@ -543,7 +668,7 @@ If user selects "Needs Adjustment", continue refining:
 ### Scenario 2: Changing Approach
 
 ```bash
-/pm:planning:update WORK-456 "Use Redis caching instead of in-memory"
+/ccpm:planning:update WORK-456 "Use Redis caching instead of in-memory"
 
 → Analyzes: Architecture change
 → Asks: "What's the reason for switching to Redis?"
@@ -561,7 +686,7 @@ If user selects "Needs Adjustment", continue refining:
 ### Scenario 3: Simplification
 
 ```bash
-/pm:planning:update WORK-789 "Remove the admin dashboard, just add an API"
+/ccpm:planning:update WORK-789 "Remove the admin dashboard, just add an API"
 
 → Analyzes: Scope reduction
 → Asks: "Keep any of the admin dashboard work?"
@@ -574,7 +699,7 @@ If user selects "Needs Adjustment", continue refining:
 ### Scenario 4: Blocker Resolution
 
 ```bash
-/pm:planning:update WORK-321 "Library X doesn't support Node 20, need alternative"
+/ccpm:planning:update WORK-321 "Library X doesn't support Node 20, need alternative"
 
 → Analyzes: Technical constraint
 → Asks: "Researched alternatives yet?"
@@ -611,7 +736,7 @@ If user selects "Needs Adjustment", continue refining:
 
 ### Integration with Other Commands
 
-- **After `/pm:planning:plan`**: Update if initial plan needs refinement
-- **During `/pm:implementation:*`**: Update if scope/approach changes
-- **With `/pm:utils:insights`**: Get AI analysis after updating
-- **Before `/pm:verification:check`**: Ensure plan reflects actual work
+- **After `/ccpm:planning:plan`**: Update if initial plan needs refinement
+- **During `/ccpm:implementation:*`**: Update if scope/approach changes
+- **With `/ccpm:utils:insights`**: Get AI analysis after updating
+- **Before `/ccpm:verification:check`**: Ensure plan reflects actual work

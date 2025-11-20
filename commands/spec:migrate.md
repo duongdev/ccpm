@@ -631,7 +631,7 @@ Breadcrumb files created with Linear links.
 1. Review migrated items in Linear
 2. Update status labels if needed
 3. Link related features/tasks
-4. Run /pm:utils:report to see project overview
+4. Run /ccpm:utils:report to see project overview
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -684,7 +684,7 @@ Save to: `${projectPath}/.claude/migration-log-${timestamp}.md`
     options: [
       {
         label: "View Project Report",
-        description: "See all migrated items organized (/pm:utils:report)"
+        description: "See all migrated items organized (/ccpm:utils:report)"
       },
       {
         label: "Review in Linear",
