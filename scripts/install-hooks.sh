@@ -13,7 +13,9 @@ NC='\033[0m' # No Color
 
 # Configuration
 SETTINGS_FILE=~/.claude/settings.json
-PLUGIN_ROOT="~/.claude/plugins/ccpm"
+# Auto-detect plugin root (script is in scripts/ subdirectory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BACKUP_DIR=~/.claude/backups
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
