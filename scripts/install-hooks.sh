@@ -71,7 +71,6 @@ fi
 HOOK_FILES=(
     "$PLUGIN_ROOT/hooks/scripts/smart-agent-selector.sh"
     "$PLUGIN_ROOT/hooks/tdd-enforcer-optimized.prompt"
-    "$PLUGIN_ROOT/hooks/quality-gate-optimized.prompt"
 )
 
 for hook_file in "${HOOK_FILES[@]}"; do
@@ -99,10 +98,8 @@ echo "   - Blocks production code if tests don't exist"
 echo "   - Enforces Red-Green-Refactor workflow"
 echo "   - Triggers: Write, Edit, NotebookEdit"
 echo ""
-echo -e "${BLUE}3. Stop${NC} - Quality gate"
-echo "   - Auto code review after implementation"
-echo "   - Security audit for sensitive changes"
-echo "   - Architecture validation"
+echo -e "${YELLOW}Note:${NC} Stop hook (quality gate) is disabled by default"
+echo "   (requires explicit bypass permissions in Claude Code)"
 echo ""
 
 # Ask for confirmation
@@ -145,19 +142,10 @@ jq --arg pluginRoot "$PLUGIN_ROOT" '
         "description": "CCPM: TDD enforcer (optimized: 49% token reduction, Red-Green-Refactor)"
       }]
     }]
-  ) |
-
-  # Add Stop hook (optimized version from PSN-23)
-  .hooks.Stop = (
-    (.hooks.Stop // []) + [{
-      "hooks": [{
-        "type": "prompt",
-        "prompt": "\($pluginRoot)/hooks/quality-gate-optimized.prompt",
-        "timeout": 5000,
-        "description": "CCPM: Quality gate (optimized: 38.8% token reduction, auto code review)"
-      }]
-    }]
   )
+
+  # Note: Stop hook is disabled by default (requires bypass permissions)
+  # Users can manually enable it in their settings.json if desired
 ' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
 
 # Verify the output is valid JSON
@@ -180,7 +168,6 @@ echo ""
 echo -e "${GREEN}✓ Hooks installed:${NC}"
 echo "  • UserPromptSubmit (smart-agent-selector)"
 echo "  • PreToolUse (tdd-enforcer)"
-echo "  • Stop (quality-gate)"
 echo ""
 echo -e "${BLUE}📝 Configuration:${NC}"
 echo "  Settings: $SETTINGS_FILE"
