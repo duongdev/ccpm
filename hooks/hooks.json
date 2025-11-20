@@ -26,7 +26,8 @@
           }
         ]
       }
-    ]
+    ],
+    "Stop": []
   },
   "usage": {
     "installation": "This file is automatically applied when the CCPM plugin is installed",
