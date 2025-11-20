@@ -26,18 +26,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/quality-gate-optimized.prompt",
-            "timeout": 5000,
-            "description": "Quality gate: Automatically invokes code review and security checks after implementation"
-          }
-        ]
-      }
     ]
   },
   "usage": {
@@ -59,13 +47,6 @@
       "execution": "Before file is written to disk",
       "output": "Blocks and invokes tdd-orchestrator if tests missing",
       "performance": "Optimized version: 49% token reduction, <1s execution"
-    },
-    "quality_gate": {
-      "purpose": "Automatically runs quality checks after implementation",
-      "trigger": "Stop (after Claude finishes responding)",
-      "execution": "Post-implementation analysis",
-      "output": "Invokes code-reviewer, security-auditor as needed",
-      "performance": "Optimized version: 38.8% token reduction, <1s execution"
     }
   }
 }
