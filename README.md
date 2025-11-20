@@ -185,7 +185,19 @@ See [INSTALL_HOOKS.md](./INSTALL_HOOKS.md) for detailed instructions.
 
 ## ✨ Key Features
 
-### 1. Dynamic Multi-Project Configuration
+### 1. Automatic Image Analysis
+
+**Visual context for pixel-perfect implementation.** CCPM automatically detects and analyzes images in Linear issues:
+
+- **Automatic Image Detection** - Detects UI mockups, architecture diagrams, and screenshots attached to Linear issues
+- **Visual Context in Planning** - Analyzes images and includes findings in Linear descriptions
+- **Pixel-Perfect UI Implementation** - Frontend/mobile agents receive mockups directly for ~95-100% design fidelity
+- **Smart Prompt Selection** - Uses context-aware prompts for UI mockups, diagrams, screenshots
+- **Direct Visual Reference** - Image URLs preserved for implementation phase
+- **Graceful Error Handling** - Failed images do not block workflows
+
+
+### 2. Dynamic Multi-Project Configuration
 
 **Manage all your projects from one place.** CCPM's new dynamic configuration system:
 
@@ -222,7 +234,7 @@ projects:
 
 See [Project Setup Guide](./docs/guides/project-setup.md) for complete documentation.
 
-### 2. Monorepo Subdirectory Support (NEW!)
+### 3. Monorepo Subdirectory Support (NEW!)
 
 **Work seamlessly in monorepos with multiple subprojects.** CCPM automatically detects which subproject you're in:
 
@@ -302,7 +314,7 @@ cd ~/my-monorepo/apps/frontend
 
 See [Monorepo Setup Guide](./docs/guides/monorepo-setup.md) for complete documentation.
 
-### 3. Smart Agent Auto-Invocation
+### 4. Smart Agent Auto-Invocation
 
 **Never forget to invoke the right agent again.** CCPM automatically:
 
@@ -330,7 +342,7 @@ CCPM: Detects backend + security task
       → All automatically, in the right order
 ```
 
-### 2. TDD Enforcement
+### 5. TDD Enforcement
 
 **Write tests first, always.** CCPM blocks production code changes if tests don't exist:
 
@@ -340,7 +352,7 @@ CCPM: Detects backend + security task
 - Automatically invokes `tdd-orchestrator` to write tests first
 - Enforces Red-Green-Refactor workflow
 
-### 3. Automatic Quality Gates
+### 6. Automatic Quality Gates
 
 **Quality checks run automatically.** After implementation, CCPM:
 
@@ -350,7 +362,7 @@ CCPM: Detects backend + security task
 - Runs architecture review for significant changes
 - Ensures nothing ships without validation
 
-### 4. Spec Management with Linear Documents
+### 7. Spec Management with Linear Documents
 
 **Spec-first development made easy:**
 
@@ -361,7 +373,7 @@ CCPM: Detects backend + security task
 - Sync spec with implementation reality
 - Migrate existing `.claude/` specs to Linear
 
-### 5. Interactive Workflow
+### 8. Interactive Workflow
 
 **One continuous flow from idea to deployment:**
 

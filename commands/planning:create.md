@@ -153,159 +153,73 @@ Display:
 ⏳ Starting planning workflow...
 ```
 
-### Step 2: Run Full Planning Workflow
+### Step 2: Execute Shared Planning Workflow
 
-Now run the **same workflow as `/ccpm:planning:plan`** using the created issue ID:
+**READ**: `commands/_shared-planning-workflow.md`
 
-#### Check if External PM is Enabled
+Execute the shared planning workflow to complete planning for the newly created issue.
 
-```javascript
-// Only fetch external PM data if enabled in config
-if (EXTERNAL_PM_ENABLED === "true") {
-  console.log(`📡 External PM enabled: ${EXTERNAL_PM_TYPE}`)
+**Set required context variables:**
+- `LINEAR_ISSUE_ID` = [created issue ID from Step 1]
+- `JIRA_TICKET_ID` = $3 (optional Jira ticket ID)
+- `PROJECT_CONFIG` = [loaded in project configuration section]
+- `EXTERNAL_PM_ENABLED` = [from config]
+- `EXTERNAL_PM_TYPE` = [from config]
+- `JIRA_ENABLED`, `CONFLUENCE_ENABLED`, `SLACK_ENABLED` = [from config]
 
-  // Fetch based on PM type
-  if (EXTERNAL_PM_TYPE === "jira") {
-    // Steps 1-3 below
-  }
-} else {
-  console.log(`📋 Linear-only mode (no external PM)`)
-  // Skip to Step 4
-}
-```
+**Execute these steps from the shared workflow:**
 
-1. **Fetch Jira context** (if `EXTERNAL_PM_ENABLED` and $3 provided):
-   - Load Jira config: `JIRA_BASE_URL`, `JIRA_PROJECT_KEY`
-   - Use Atlassian MCP to fetch Jira ticket: $3
-   - Get linked issues, comments, attachments
-   - **SAVE all URLs** for linking
+1. **Step 0.5**: Detect and analyze images in the Linear issue
+   - Uses `commands/_shared-image-analysis.md` logic
+   - Finds UI mockups, diagrams, screenshots
+   - Analyzes and formats for Linear description
 
-2. **Search Confluence** (if `confluence.enabled` in config):
-   - Load Confluence config: `CONFLUENCE_BASE_URL`, `CONFLUENCE_SPACE_KEY`
-   - Search for related documentation, PRD, design docs
-   - **SAVE all page URLs**
+2. **Step 0.6**: Detect and extract Figma designs
+   - Uses `commands/_shared-figma-detection.md` logic
+   - Identifies live Figma links
+   - Extracts design tokens and specifications
+   - Caches results in Linear comments
 
-3. **Search Slack** (if `slack.enabled` in config):
-   - Load Slack config: `SLACK_WORKSPACE`, `SLACK_CHANNELS`
-   - Search relevant channel discussions
-   - **SAVE thread URLs**
+3. **Step 1**: Gather external PM context (Jira, Confluence, Slack)
+   - Only if external PM is enabled
+   - Fetches Jira ticket details and linked issues
+   - Searches Confluence for related documentation
+   - Finds Slack thread discussions
+   - Checks BitBucket for related PRs
 
-4. **Use Playwright** (if applicable):
-   - BitBucket PRs and commits
-   - **SAVE PR URLs**
+4. **Step 2**: Analyze codebase
+   - Identifies relevant files to modify
+   - Maps patterns and conventions
+   - Determines dependencies
 
-5. **Extract and store all URLs** discovered
+5. **Step 2.5**: Invoke engineer agents for technical analysis
+   - Selects appropriate agents based on task type
+   - Backend tasks → `backend-architect`
+   - Frontend tasks → `frontend-developer`
+   - Mobile tasks → `mobile-developer`
+   - Full-stack → both backend and frontend in parallel
+   - Security-critical → add `security-auditor`
 
-6. **Analyze Codebase**:
-   - Identify relevant files
-   - Find patterns and conventions
-   - Assess complexity
+6. **Step 3**: Update Linear description with comprehensive research
+   - Creates implementation checklist
+   - Inserts visual context (images + Figma designs)
+   - Adds research findings
+   - Includes agent analysis
+   - Links all external resources
 
-7. **Use Context7 MCP**:
-   - Search for latest best practices
-   - Find recommended approaches
+7. **Step 4**: Confirm completion
+   - Display status summary
+   - Show research added
+   - Provide Linear issue URL
 
-### Step 3: Update Linear Issue with Research
+This ensures the new issue receives the same comprehensive planning as existing issues:
+- Image analysis
+- Figma design extraction
+- External PM research
+- Codebase analysis
+- Implementation checklist generation
 
-Use **Linear MCP** to update the created issue with comprehensive research:
-
-**Update Status**: Planning
-**Add Labels**: research-complete
-**Update Description** (replace the initial description):
-
-```markdown
-## ✅ Implementation Checklist
-
-> **Status**: Planning
-> **Complexity**: [Low/Medium/High - estimated from analysis]
-
-- [ ] **Subtask 1**: [Specific, actionable description]
-- [ ] **Subtask 2**: [Specific, actionable description]
-- [ ] **Subtask 3**: [Specific, actionable description]
-- [ ] **Subtask 4**: [Specific, actionable description]
-- [ ] **Subtask 5**: [Specific, actionable description]
-
----
-
-## 📋 Context
-
-**Linear Issue**: [WORK-123](https://linear.app/workspace/issue/WORK-123)
-**Original Jira Ticket**: [Jira $3](https://jira.company.com/browse/$3) (if provided)
-**Summary**: [Brief description from Jira/title]
-
-## 🔍 Research Findings
-
-### Jira/Documentation Analysis
-
-**Key Requirements**:
-
-- [Key requirement 1 from Jira or inferred from title]
-- [Key requirement 2 from Jira]
-
-**Related Tickets** (if found):
-
-- [TRAIN-XXX](link) - [Brief description]
-- [TRAIN-YYY](link) - [Brief description]
-
-**Design Decisions** (if found):
-
-- [Decision 1 with link to [Confluence page](link)]
-- [Decision 2 with link to [Confluence page](link)]
-
-### Codebase Analysis
-
-**Current Architecture**:
-
-- [How related features currently work]
-- [Relevant files and purposes]
-
-**Patterns Used**:
-
-- [Code patterns found in similar features]
-- [Conventions to follow]
-
-**Technical Constraints**:
-
-- [Any limitations or considerations]
-
-### Best Practices (from Context7)
-
-- [Latest recommended approach 1]
-- [Latest recommended approach 2]
-- [Performance considerations]
-- [Security considerations]
-
-### Cross-Repository Dependencies
-
-[If applicable]:
-
-- **Repository 1**: [What needs to change]
-- **Repository 2**: [What needs to change]
-- **Database**: [Schema changes if needed]
-
-## 📝 Implementation Plan
-
-**Approach**:
-[Detailed explanation of how to implement this]
-
-**Considerations**:
-
-- [Edge cases to handle]
-- [Backward compatibility]
-- [Testing strategy]
-- [Rollout plan if needed]
-
-## 🔗 References
-
-- **Linear Issue**: [WORK-123](https://linear.app/workspace/issue/WORK-123)
-- **Original Jira**: [$3](https://jira.company.com/browse/$3) (if provided)
-- **Related PRD**: [Title](link) (if found)
-- **Design Doc**: [Title](link) (if found)
-- **Related PRs**: [PR #XXX](link) (if found)
-- **Similar Implementation**: [file.ts:123](link) (if found)
-```
-
-### Step 4: Show Status & Interactive Next Actions
+### Step 3: Show Status & Interactive Next Actions
 
 **READ**: `/Users/duongdev/.claude/commands/pm/utils/_shared.md`
 

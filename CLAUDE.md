@@ -2,6 +2,39 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL RULES - READ FIRST
+
+### Git Commit & Push Policy
+
+**🚫 NEVER auto-commit or auto-push without explicit user approval**
+
+- ❌ **DO NOT** run `git commit` automatically after making changes
+- ❌ **DO NOT** run `git push` automatically after committing
+- ✅ **ALWAYS ASK** the user before committing or pushing
+- ✅ **SHOW** what will be committed (file list, changes summary)
+- ✅ **WAIT** for explicit "yes", "commit", "push" or similar confirmation
+
+**Example workflow:**
+```
+1. Make changes to files
+2. Show user: "I've made changes to X files. Would you like me to commit them?"
+3. Wait for user response
+4. Only then: git add . && git commit -m "message"
+5. Ask again: "Would you like me to push to remote?"
+6. Wait for confirmation
+7. Only then: git push
+```
+
+### Why This Matters
+- Users may want to review changes before committing
+- Commits may need specific formatting or messages
+- Pushing may affect other team members or CI/CD pipelines
+- User may want to test changes locally first
+
+**Always ask, never assume permission to commit or push.**
+
+---
+
 ## Project Overview
 
 CCPM (Claude Code Project Management) is a comprehensive Claude Code plugin that provides:

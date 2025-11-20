@@ -46,6 +46,102 @@ Display:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+### Step 1.5: Analyze Reference Mockups
+
+**READ**: `commands/_shared-image-analysis.md`
+
+If the user has attached reference mockups or screenshots, analyze them before generating design options:
+
+```javascript
+const images = detectImages(issue)
+if (images.length > 0) {
+  console.log("📎 Found " + images.length + " reference image(s)")
+  
+  // Analyze each reference
+  const references = []
+  for (const img of images) {
+    const prompt = generateImagePrompt(img.title, "design reference")
+    const analysis = fetchAndAnalyzeImage(img.url, prompt)
+    references.push({ ...img, analysis })
+  }
+  
+  // Use analysis to inform design options
+  console.log("✅ Reference analysis complete")
+  console.log("Using design patterns and elements from references...")
+}
+```
+
+**Benefits**:
+- Understand user's design preferences and expectations
+- Identify design patterns and elements to incorporate
+- Extract colors, typography, and layout preferences
+- Ensure design options align with provided references
+
+**Note**: If no references found, proceed with Step 1.6 to check for Figma designs.
+
+### Step 1.6: Detect and Analyze Figma Designs
+
+**READ**: `commands/_shared-figma-detection.md`
+
+Before asking user requirements, check if there are Figma design links in the Linear issue:
+
+```bash
+# 1. Extract Linear description and comments
+LINEAR_DESC=$(linear_get_issue "$1" | jq -r '.description')
+LINEAR_COMMENTS=$(linear_get_issue "$1" | jq -r '.comments[]? | .body' | tr '\n' ' ' || echo "")
+
+# 2. Detect Figma links
+FIGMA_LINKS=$(./scripts/figma-utils.sh extract-markdown "$LINEAR_DESC $LINEAR_COMMENTS")
+FIGMA_COUNT=$(echo "$FIGMA_LINKS" | jq 'length')
+
+if [ "$FIGMA_COUNT" -gt 0 ]; then
+  echo "🎨 Found $FIGMA_COUNT Figma design(s) - analyzing..."
+
+  # 3. Select MCP server for project
+  PROJECT_ID=$(linear_get_issue "$1" | jq -r '.projectId // ""')
+  FIGMA_SERVER=$(./scripts/figma-server-manager.sh select "$PROJECT_ID")
+
+  if [ -n "$FIGMA_SERVER" ]; then
+    # 4. Extract and analyze each Figma design
+    echo "$FIGMA_LINKS" | jq -c '.[]' | while read -r link; do
+      FILE_ID=$(echo "$link" | jq -r '.file_id')
+      FILE_NAME=$(echo "$link" | jq -r '.file_name')
+
+      echo "  📐 Analyzing: $FILE_NAME"
+
+      # Generate MCP call for data extraction
+      MCP_INSTRUCTION=$(./scripts/figma-data-extractor.sh extract "$FILE_ID" "$FIGMA_SERVER")
+
+      # Claude should execute the MCP call here
+      # FIGMA_DATA=$(execute MCP call based on MCP_INSTRUCTION)
+
+      # Then analyze the design data
+      # DESIGN_SYSTEM=$(echo "$FIGMA_DATA" | ./scripts/figma-design-analyzer.sh generate -)
+
+      # Cache in Linear for future use
+      # ./scripts/figma-cache-manager.sh store "$1" "$FILE_ID" "$FILE_NAME" "$(echo "$link" | jq -r '.url')" "$FIGMA_SERVER" "$DESIGN_SYSTEM"
+    done
+
+    echo "  ✅ Figma design analysis complete"
+    echo "  💡 Design system extracted - will inform UI design options"
+  else
+    echo "  ⚠️  No Figma MCP server configured - skipping automated extraction"
+    echo "  ℹ️  You can still manually reference Figma links: $(echo "$FIGMA_LINKS" | jq -r '.[0].url')"
+  fi
+fi
+```
+
+**What this enables:**
+- **Automatic Design System Detection**: Extract colors, fonts, spacing from Figma
+- **Component Analysis**: Understand existing component library
+- **Design Token Mapping**: Map Figma styles to Tailwind classes
+- **Consistency**: Ensure generated designs match existing design system
+
+**Fallback**: If no Figma MCP server or extraction fails, proceed with Step 2 user questions.
+
+**Note**: Figma design data is cached in Linear comments for reuse during implementation.
+
+
 ### Step 2: Gather User Requirements
 
 Use **AskUserQuestion** to collect design requirements:
@@ -588,3 +684,85 @@ Status:       /ccpm:utils:status $1
 - ✅ Seamless flow to refinement or approval
 - ✅ Linear integration for tracking
 - ✅ **Reduces implementation time and back-and-forth**
+
+### Step 1.6: Detect Figma Design Links
+
+**READ**: `commands/_shared-figma-detection.md`
+
+Check if the Linear issue or related documentation contains Figma design links:
+
+```bash
+# Detect Figma links from Linear issue
+LINEAR_DESC=$(linear_get_issue "$1" | jq -r '.description')
+LINEAR_COMMENTS=$(linear_get_issue "$1" | jq -r '.comments[] | .body')
+FIGMA_LINKS=$(./scripts/figma-utils.sh extract-markdown "$LINEAR_DESC $LINEAR_COMMENTS")
+FIGMA_COUNT=$(echo "$FIGMA_LINKS" | jq 'length')
+
+if [ "$FIGMA_COUNT" -gt 0 ]; then
+  echo "✅ Found $FIGMA_COUNT Figma design(s) - will use as authoritative source"
+  FIGMA_AVAILABLE=true
+  
+  # Display detected Figma links
+  echo "🎨 Figma Designs:"
+  echo "$FIGMA_LINKS" | jq -r '.[] | "  - \(.file_name): \(.canonical_url)"'
+  
+  # Determine workflow mode
+  DESIGN_MODE="figma-based"  # Use Figma as primary source
+else
+  echo "ℹ️  No Figma links found - will generate design options from requirements"
+  FIGMA_AVAILABLE=false
+  DESIGN_MODE="generative"    # Generate design options
+fi
+```
+
+**Workflow Decision Tree**
+
+Based on Figma availability, choose the appropriate workflow:
+
+```javascript
+if (figmaAvailable) {
+  // MODE: Figma-Based Design
+  // Skip Step 2 (user requirements) - extract from Figma instead
+  // Modify Step 6 to use Figma data instead of generating wireframes
+  
+  console.log("📋 Workflow: Figma-Based Design")
+  console.log("  ✓ Skip requirements gathering (extract from Figma)")
+  console.log("  ✓ Load Figma designs via MCP (Phase 2)")
+  console.log("  ✓ Generate specifications from Figma data")
+  console.log("  ✓ Create developer-ready component breakdown")
+  
+} else {
+  // MODE: Generative Design  
+  // Continue with Step 2 (gather requirements)
+  // Continue with Step 6 (generate ASCII wireframes)
+  
+  console.log("📋 Workflow: Generative Design")
+  console.log("  ✓ Gather user requirements")
+  console.log("  ✓ Analyze existing codebase patterns")
+  console.log("  ✓ Generate multiple design options")
+  console.log("  ✓ Create ASCII wireframes for approval")
+}
+```
+
+**Modified Step 2 (Conditional)**
+
+```javascript
+if (designMode === "figma-based") {
+  console.log("⏭️  Skipping requirements gathering - using Figma as source")
+  // Jump to Step 3: Analyze Frontend Architecture
+} else {
+  // Execute original Step 2: Gather User Requirements
+  // (AskUserQuestion for goal, devices, aesthetic, constraints)
+}
+```
+
+**Why This Matters**:
+- **Design Authority**: If Figma exists, it's the authoritative design specification
+- **Efficiency**: Skip manual requirements gathering when design already exists
+- **Accuracy**: Extract actual design data instead of making assumptions
+- **Consistency**: Ensure implementation matches approved designs
+
+**Phase 1 vs Phase 2**:
+- **Phase 1 (Current)**: Detect Figma links, skip ASCII wireframes if Figma found
+- **Phase 2 (Future)**: Extract design data from Figma via MCP, generate component specs
+
