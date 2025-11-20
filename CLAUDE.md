@@ -417,10 +417,131 @@ Task(backend-architect): "Design REST API for user authentication..."
 6. **Documentation**: Keep README.md, SAFETY_RULES.md, and command docs in sync
 7. **Versioning**: Follow semantic versioning for plugin releases
 
+## Documentation Structure
+
+This repository follows the CCPM documentation pattern for clean, navigable, and scalable documentation.
+
+### Pattern Overview
+
+```
+docs/
+├── README.md               # Documentation navigation hub
+├── guides/                 # 📘 User how-to guides
+├── reference/              # 📖 API & feature reference
+├── architecture/           # 🏗️ Design decisions & ADRs
+├── development/            # 🔧 Contributor documentation
+└── research/               # 📚 Historical context (archived)
+```
+
+### Documentation Guidelines
+
+**When creating new documentation:**
+
+1. **User guides** → `docs/guides/`
+   - Installation, setup, configuration
+   - Feature walkthroughs and tutorials
+   - Troubleshooting guides
+   - Use descriptive filenames: `installation.md`, `hooks-installation.md`
+
+2. **Reference documentation** → `docs/reference/`
+   - API documentation
+   - Command/feature catalogs
+   - Configuration references
+   - Technical specifications
+
+3. **Architecture documentation** → `docs/architecture/`
+   - System architecture overviews
+   - Component designs
+   - Architecture Decision Records (ADRs)
+   - Use descriptive names: `skills-system.md`, `documentation-structure.md`
+
+4. **Development documentation** → `docs/development/`
+   - Development environment setup
+   - Testing guides
+   - Release processes
+   - Contribution workflows
+
+5. **Research/Planning documents** → `docs/research/`
+   - Historical planning documents
+   - Research findings
+   - Implementation journeys
+   - Organized by topic: `skills/`, `hooks/`, `documentation/`, etc.
+   - **Note**: These are archived - current docs go elsewhere
+
+### Root Directory Rules
+
+**Keep ONLY these files in root:**
+- `README.md` - Main entry point
+- `CHANGELOG.md` - Version history
+- `CONTRIBUTING.md` - Contribution guide
+- `LICENSE` - License file
+- `CLAUDE.md` - This file
+- `MIGRATION.md` - Migration guide
+
+**All other documentation goes in `docs/`**
+
+### Index Files
+
+Each documentation directory has a `README.md` that:
+- Explains what the directory contains
+- Links to all documents in that directory
+- Provides navigation back to main docs
+
+### Maintaining Documentation
+
+**When you create or move documentation:**
+
+1. Place it in the appropriate `docs/` subdirectory
+2. Update the relevant index `README.md`
+3. Update internal links to use correct relative paths
+4. Keep root directory clean (≤5 markdown files)
+
+**When you reference documentation:**
+
+1. Use relative links from current location
+2. Link to `docs/README.md` for main navigation
+3. Link to specific guides/references as needed
+
+### Auto-Organization
+
+To reorganize documentation automatically:
+
+```bash
+/ccpm:utils:organize-docs [repo-path] [--dry-run] [--global]
+```
+
+This command:
+- Analyzes current documentation structure
+- Categorizes files using CCPM pattern rules
+- Moves files to appropriate locations
+- Creates index files
+- Updates internal links
+- Can be installed globally for use in any repository
+
+### Navigation
+
+All documentation is accessible from `docs/README.md`:
+- **Quick Start**: `docs/guides/installation.md`
+- **Full Documentation**: Browse by category in `docs/`
+- **Contributing**: `CONTRIBUTING.md`
+
+### Pattern Benefits
+
+- ✅ Clean root directory
+- ✅ Clear separation of concerns
+- ✅ Easy to find documentation
+- ✅ Scales with project growth
+- ✅ Historical context preserved
+- ✅ AI assistant friendly
+- ✅ Consistent across projects
+
 ## Resources
 
+- [Documentation Hub](./docs/README.md)
+- [Installation Guide](./docs/guides/installation.md)
 - [Complete Command Reference](./commands/README.md)
 - [Safety Rules](./commands/SAFETY_RULES.md)
 - [Spec Management Guide](./commands/SPEC_MANAGEMENT_SUMMARY.md)
-- [Hooks Implementation](./HOOKS_IMPLEMENTATION_SUMMARY.md)
+- [Skills Catalog](./docs/reference/skills-catalog.md)
+- [Hooks Implementation](./docs/research/hooks/implementation-summary.md)
 - [Smart Agent Selection](./hooks/SMART_AGENT_SELECTION.md)

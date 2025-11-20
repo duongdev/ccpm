@@ -417,10 +417,10 @@ chmod +x /Users/duongdev/personal/ccpm/scripts/*.sh
 
 ## 📚 Additional Resources
 
-- [Hooks Reference](./hooks/README.md) - Detailed hook documentation
-- [Smart Agent Selection](./hooks/SMART_AGENT_SELECTION.md) - How agent selection works
+- [Hooks Reference](../../hooks/README.md) - Detailed hook documentation
+- [Smart Agent Selection](../../hooks/SMART_AGENT_SELECTION.md) - How agent selection works
 - [Official Claude Code Hooks Docs](https://code.claude.com/docs/en/hooks)
-- [CCPM Commands](./commands/README.md) - All available PM commands
+- [CCPM Commands](../../commands/README.md) - All available PM commands
 
 ---
 

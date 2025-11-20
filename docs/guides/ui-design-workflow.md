@@ -528,10 +528,10 @@ Automatically pairs frontend + design agents for UI tasks based on keywords in `
 
 ## 📚 Related Documentation
 
-- [CLAUDE.md](./CLAUDE.md) - Full CCPM documentation
-- [Commands README](./commands/README.md) - All command reference
-- [Hooks Implementation](./HOOKS_IMPLEMENTATION_SUMMARY.md) - How hooks work
-- [Smart Agent Selection](./hooks/SMART_AGENT_SELECTION.md) - Agent selection logic
+- [CLAUDE.md](../../CLAUDE.md) - Full CCPM documentation
+- [Commands README](../../commands/README.md) - All command reference
+- [Hooks Implementation](../../docs/research/hooks/implementation-summary.md) - How hooks work
+- [Smart Agent Selection](../../hooks/SMART_AGENT_SELECTION.md) - Agent selection logic
 
 ## 🎉 Summary
 
