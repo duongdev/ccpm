@@ -27,46 +27,110 @@ Use **Linear MCP** to get issue: $1
 
 Read the current checklist and description.
 
-### Step 2: Update Checklist Item
+### Step 2: Parse Checklist from Description
 
-Update checklist item at index **$2** (0-based indexing):
+Look for the Implementation Checklist section in the description:
+
+**Pattern 1: Marker Comments (Preferred)**
+```markdown
+<!-- ccpm-checklist-start -->
+- [ ] Task 1: Description
+- [x] Task 2: Description
+<!-- ccpm-checklist-end -->
+```
+
+**Pattern 2: Header-Based (Fallback)**
+```markdown
+## ✅ Implementation Checklist
+- [ ] Task 1
+- [ ] Task 2
+```
+
+Parse the checklist to find item at index **$2**.
+
+### Step 3: Update Checklist Item in Description
+
+Update checklist item at index **$2** (0-based indexing) **directly in the description**:
 
 **If status is "completed"**:
-- Mark as checked: `- [x]`
-- Append: ` ✅ $4`
+- Change `- [ ]` to `- [x]` at line index $2
+- Mark as checked in description
 
 **If status is "in-progress"**:
-- Keep unchecked: `- [ ]`
-- Append: ` ⏳ $4`
+- Keep `- [ ]` (unchecked)
+- No change to checkbox, only update via comment
 
 **If status is "blocked"**:
-- Keep unchecked: `- [ ]`
-- Append: ` 🚫 $4`
+- Keep `- [ ]` (unchecked)
+- No change to checkbox
 - **Also add "blocked" label** to the issue
 
-### Step 3: Add Comment
+**Generate Updated Description:**
 
-Use **Linear MCP** to add this comment:
+1. Split description into lines
+2. Find checklist section (between markers or under header)
+3. Locate line at index $2 within checklist
+4. If status is "completed":
+   - Replace `- [ ]` with `- [x]` on that line
+5. Calculate new completion percentage
+6. Update progress line: `Progress: X% (Y/Z completed)`
+7. Add/update timestamp: `Last updated: [ISO timestamp]`
+
+**Example Update:**
+```markdown
+<!-- ccpm-checklist-start -->
+- [ ] Task 1: Description
+- [x] Task 2: Description ← UPDATED!
+- [ ] Task 3: Description
+<!-- ccpm-checklist-end -->
+
+Progress: 33% (1/3 completed) ← UPDATED!
+Last updated: 2025-01-20T14:30:00Z
+```
+
+### Step 4: Update Linear Issue
+
+Use **Linear MCP** to:
+
+**A) Update description** (with modified checklist from Step 3)
+
+**B) Add comment** documenting the change:
 
 ```markdown
 ## 📝 Subtask #$2 Update
 
-**Status**: $3  
+**Status**: $3
 **Summary**: $4
+
+**Checklist Progress**: X% → Y% (if status is "completed")
 
 **Timestamp**: [current date/time]
 ```
 
-### Step 4: Confirm Update
+**C) Update labels if needed**:
+- If status is "blocked" → Add "blocked" label
+- If status is "completed" and all items complete → Add "ready-for-review" label
+
+### Step 5: Display Confirmation
 
 Display confirmation:
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Subtask #$2 Updated!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+📋 Issue: $1
 Status: $3
 Summary: $4
 
-Updated in Linear issue: $1
+📊 Progress: X% → Y% (if completed)
+
+✅ Updated in Linear:
+  • Description checkbox updated
+  • Progress % recalculated
+  • Comment added
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ## Status Options

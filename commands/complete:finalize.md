@@ -16,12 +16,77 @@ argument-hint: <linear-issue-id>
 
 ### Step 1: Verify Task is Complete
 
-Use **Linear MCP** to verify:
-- Status is "Done" or "Verification" passed
-- All checklist items complete
-- No "blocked" label
+Use **Linear MCP** to get issue: $1
 
-If not complete, suggest `/ccpm:verification:verify $1` first.
+**A) Check Status**
+
+Verify status is "Done" or "Verification" (passed).
+
+If status is "In Progress" or "Backlog":
+- Display: ⚠️ Task status is "$status". Run `/ccpm:verification:verify $1` first.
+- Exit
+
+**B) Parse and Verify Checklist Completion**
+
+Look for checklist in description using markers:
+```markdown
+<!-- ccpm-checklist-start -->
+- [ ] Task 1
+- [x] Task 2
+<!-- ccpm-checklist-end -->
+```
+
+Or find "## ✅ Implementation Checklist" header.
+
+**Calculate completion:**
+- Total items: Count all `- [ ]` and `- [x]` lines
+- Checked items: Count `- [x]` lines only
+- Percentage: (checked / total) × 100
+
+**If completion < 100%:**
+
+Display incomplete items:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⛔ Cannot Finalize: Checklist Incomplete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Progress: X% (Y/Z completed)
+
+❌ Remaining Items:
+ - [ ] Task 3: Description
+ - [ ] Task 5: Description
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 Actions Required
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Complete remaining items
+2. Update checklist: /ccpm:utils:update-checklist $1
+3. Then run finalize again: /ccpm:complete:finalize $1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**BLOCK finalization and exit.**
+
+**If completion = 100%:**
+
+Display:
+```
+✅ Checklist complete! (100% - Z/Z items)
+```
+
+Continue to Step 2.
+
+**C) Check for "blocked" label**
+
+If "blocked" label exists:
+- Display: ⚠️ Task has "blocked" label. Resolve blockers before finalizing.
+- Exit
+
+**If all verifications pass:**
+- Continue to Step 2
 
 ### Step 2: Generate Completion Summary
 

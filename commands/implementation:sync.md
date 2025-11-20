@@ -282,15 +282,234 @@ Based on progress, suggested next actions:
 **Full Diff**: Available in git history (`git diff [previous-sync-commit]..HEAD`)
 ```
 
-### Step 6: Update Linear Issue
+### Step 6: Update Checklist Items
+
+**BEFORE syncing progress**, update the Implementation Checklist in the description:
+
+**A) Parse Current Checklist**
+
+Look for checklist in description using markers:
+```markdown
+<!-- ccpm-checklist-start -->
+- [ ] Task 1: Description
+- [x] Task 2: Description
+<!-- ccpm-checklist-end -->
+```
+
+Or find "## ✅ Implementation Checklist" header.
+
+**B) Display Current Checklist State**
+
+Show incomplete items with their indices:
+```
+📋 Current Checklist Progress: X% (Y/Z completed)
+
+Incomplete Items:
+ 0. [ ] Task 1: Create parser functions
+ 3. [ ] Task 4: Modify verification command
+ 5. [ ] Task 6: Add tests
+```
+
+**C) AI-Powered Suggestion Analysis**
+
+**BEFORE showing the checklist**, analyze git changes to suggest which items were likely completed:
+
+**1. Get git diff summary:**
+```bash
+git diff --stat HEAD
+git diff HEAD --name-only
+```
+
+**2. Extract changed files and their paths:**
+- Parse file paths from git output
+- Categorize by type: implementation, tests, config, docs
+- Extract key terms from paths (e.g., "auth", "login", "parser", "sync")
+
+**3. For each unchecked checklist item:**
+
+Parse the item description to extract key terms:
+```
+"Create checklist parser functions"
+→ Keywords: ["create", "checklist", "parser", "functions"]
+```
+
+**4. Semantic Matching Algorithm:**
+
+For each unchecked item, calculate a match score with git changes:
+
+```javascript
+score = 0
+
+// File path matching
+for each changed file:
+  if file path contains any checklist item keyword:
+    score += 30
+
+  // Type matching (e.g., "parser" → "parser.ts")
+  if file name matches item description pattern:
+    score += 40
+
+// Content size matching (larger changes = more likely complete)
+if file has > 50 lines changed:
+  score += 10
+if file has > 100 lines changed:
+  score += 20
+
+// Related file matching
+if multiple related files changed (e.g., impl + tests):
+  score += 20
+
+// Keyword frequency
+count keyword matches in file paths and diffs:
+  score += (keyword_matches * 5)
+
+// Confidence thresholds:
+// score >= 50: High confidence (pre-select)
+// score 30-49: Medium confidence (suggest but don't pre-select)
+// score < 30: Low confidence (don't suggest)
+```
+
+**5. Build suggestions map:**
+```javascript
+suggestions = {
+  highConfidence: [0, 2],  // Pre-select these
+  mediumConfidence: [4],    // Mention but don't pre-select
+  lowConfidence: [5, 6]     // Don't mention
+}
+```
+
+**D) Interactive Checklist Update with AI Suggestions**
+
+Use **AskUserQuestion** with multi-select, with AI suggestions:
+
+```javascript
+{
+  questions: [
+    {
+      question: "Which checklist items did you complete in this session? (Select all that apply)\n\n🤖 AI Suggestions based on git changes are pre-selected. Adjust as needed.",
+      header: "Completed",
+      multiSelect: true,
+      options: [
+        {
+          label: "0: Create checklist parser functions",
+          description: "🤖 SUGGESTED - High confidence (files: utils:update-checklist.md)",
+          // This item is PRE-SELECTED based on AI analysis
+        },
+        {
+          label: "2: Modify /ccpm:implementation:sync",
+          description: "🤖 SUGGESTED - High confidence (files: implementation:sync.md)",
+          // This item is PRE-SELECTED
+        },
+        {
+          label: "4: Add tests",
+          description: "💡 Possible match - Medium confidence (files: test-utils.ts)",
+          // This item is NOT pre-selected, but mentioned as possibility
+        },
+        {
+          label: "3: Modify verification command",
+          description: "Mark as complete"
+          // No suggestion for this item (low confidence)
+        }
+      ]
+    },
+    {
+      question: "Update checklist before syncing progress?",
+      header: "Update Now",
+      multiSelect: false,
+      options: [
+        {
+          label: "Yes, update checklist",
+          description: "Update description with selected items"
+        },
+        {
+          label: "Skip for now",
+          description: "I'll update manually later"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Display suggestion reasoning:**
+
+Show user why items were suggested:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 AI Suggestions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+High Confidence (pre-selected):
+✅ 0: Create checklist parser functions
+   Reason: Modified utils:update-checklist.md (+247 lines)
+   Keywords matched: "checklist", "parser", "functions"
+
+✅ 2: Modify /ccpm:implementation:sync
+   Reason: Modified implementation:sync.md (+125 lines)
+   Keywords matched: "implementation", "sync"
+
+Medium Confidence (review):
+💡 4: Add tests
+   Reason: Modified test-utils.ts (+45 lines)
+   Keywords matched: "tests"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Review the pre-selected items and adjust before confirming.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**D) Update Description if Confirmed**
+
+If user confirms update:
+
+1. Parse selected indices from user response
+2. For each selected index:
+   - Change `- [ ]` to `- [x]` in description
+3. Calculate new completion percentage
+4. Update progress line: `Progress: X% (Y/Z completed)`
+5. Add timestamp: `Last updated: [ISO timestamp]`
+
+**Updated Format:**
+```markdown
+<!-- ccpm-checklist-start -->
+- [x] Task 1: Create parser functions ← UPDATED!
+- [x] Task 2: Description
+- [ ] Task 3: Modify sync command
+- [x] Task 4: Modify verification ← UPDATED!
+<!-- ccpm-checklist-end -->
+
+Progress: 75% (3/4 completed) ← UPDATED!
+Last updated: 2025-01-20T14:30:00Z
+```
+
+### Step 7: Update Linear Issue
 
 **A) Add Progress Comment**
 
 Use **Linear MCP** to create comment with the progress report from Step 5.
 
+Include checklist changes in the comment:
+```markdown
+## 🔄 Progress Sync
+
+...existing progress report...
+
+### 📋 Checklist Updated
+
+**Progress**: X% → Y% (+Z%)
+
+**Completed This Session**:
+- ✅ Task 1: Create parser functions
+- ✅ Task 4: Modify verification
+
+**AI Suggestions Used**: 2/2 high confidence suggestions confirmed
+
+**Timestamp**: [current date/time]
+```
+
 **B) Update Issue Description**
 
-1. Fetch current description
+1. Update description with modified checklist (from Step 6)
 2. Look for "## 📊 Implementation Notes" section
 3. If exists, append new entry
 4. If not exists, create section before checklist
@@ -325,14 +544,7 @@ This keeps description clean while maintaining history.
 - Remove "blocked" label if all blockers resolved
 - Add "needs-review" label if work is ready for review
 
-**D) Auto-Update Checklist**
-
-Based on completed work mentioned in sync:
-- Mark relevant subtasks as completed
-- Update in-progress subtasks with percentage
-- Add completion notes to checklist items
-
-### Step 7: Display Confirmation
+### Step 8: Display Confirmation
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
