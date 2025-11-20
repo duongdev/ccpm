@@ -6,6 +6,24 @@ argument-hint: <linear-issue-id>
 
 # Verifying Task: $1
 
+## 💡 Hint: Try the New Natural Command
+
+For a simpler workflow, consider using:
+
+```bash
+/ccpm:verify [issue-id]
+```
+
+**Benefits:**
+- Auto-detects issue from git branch if not provided
+- Runs both quality checks AND final verification in sequence
+- Part of the 6-command natural workflow
+- See: [Quick Start Guide](./README.md#quick-start)
+
+This command still works perfectly! The hint is just a suggestion.
+
+---
+
 Running final verification before marking task as complete.
 
 ## 🚨 CRITICAL: Safety Rules
@@ -73,51 +91,110 @@ The verification-agent should provide:
 
 ### Step 4a: If Verification PASSES
 
-Use **Linear MCP** to:
+**READ**: `commands/_shared-linear-helpers.md`
 
-1. Update status to: **Done**
-2. Remove labels: **verification**, **blocked**
-3. Mark all checklist items as complete
-4. Add completion comment:
+Use **Linear MCP** to update issue status and labels:
 
-```markdown
-## ✅ Verification Complete - Task Done!
+```javascript
+try {
+  // Get team ID from issue
+  const teamId = issue.team.id;
+
+  // Get valid "Done" state ID
+  const doneStateId = await getValidStateId(teamId, "Done");
+
+  // Get current labels
+  const currentLabels = issue.labels || [];
+  const currentLabelIds = currentLabels.map(l => l.id);
+
+  // Find labels to remove
+  const verificationLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "verification"
+  );
+  const blockedLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "blocked"
+  );
+
+  // Build new label list: remove verification and blocked
+  let newLabelIds = currentLabelIds.filter(id =>
+    id !== verificationLabel?.id && id !== blockedLabel?.id
+  );
+
+  // Update issue with Done status and cleaned labels
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "update_issue",
+    args: {
+      id: issue.id,
+      stateId: doneStateId,
+      labelIds: newLabelIds
+    }
+  });
+
+  console.log("✅ Linear issue updated:");
+  console.log("   Status: Done");
+  console.log("   Labels: verification and blocked removed");
+
+} catch (error) {
+  console.error("⚠️ Failed to update Linear issue:", error.message);
+  console.warn("⚠️ Task is verified but status may not be updated in Linear.");
+  console.log("   You can manually update status to Done if needed.");
+}
+```
+
+**Add completion comment**:
+
+```javascript
+const commentBody = `## ✅ Verification Complete - Task Done!
 
 ### Verification Results
 ✅ All requirements met
-✅ All tests passing ([X]/[Y] tests)
+✅ All tests passing (${testResults.passed}/${testResults.total} tests)
 ✅ No regressions detected
 ✅ Code quality standards met
 ✅ Security best practices followed
 ✅ Performance acceptable
 
 ### Implementation Summary
-[High-level summary of what was implemented]
+${verificationReport.summary}
 
 ### Changes Made
 **Files Modified**:
-- [file1.ts - description]
-- [file2.tsx - description]
-- [file3.py - description]
+${verificationReport.filesModified.map(f => `- ${f.path} - ${f.description}`).join('\n')}
 
 **Key Features Implemented**:
-- [Feature 1]
-- [Feature 2]
-- [Feature 3]
+${verificationReport.features.map(f => `- ${f}`).join('\n')}
 
 ### Test Coverage
-- Unit tests: [X] added/updated
-- Integration tests: [Y] added/updated
+- Unit tests: ${testResults.unit} added/updated
+- Integration tests: ${testResults.integration} added/updated
 - All tests passing: ✅
 
 ### Related Links
-- Original ticket: [Jira link if applicable]
-- Pull request: [PR link if created]
-- Documentation: [Doc link if updated]
+- Linear: ${issue.url}
+${jiraLink ? `- Jira: ${jiraLink}` : ''}
+${prLink ? `- Pull request: ${prLink}` : ''}
 
 ---
 
 **Task completed successfully!** 🎉
+`;
+
+try {
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "create_comment",
+    args: {
+      issueId: issue.id,
+      body: commentBody
+    }
+  });
+
+  console.log("✅ Verification results added to Linear comments");
+} catch (error) {
+  console.error("⚠️ Failed to add comment:", error.message);
+  // Not critical, continue
+}
 ```
 
 Display success message:
@@ -133,11 +210,63 @@ Summary: [brief summary of work]
 
 ### Step 4b: If Verification FAILS
 
-Use **Linear MCP** to:
+**READ**: `commands/_shared-linear-helpers.md`
 
-1. Keep status: **In Progress**
-2. Add label: **blocked**
-3. Remove label: **verification**
+Use **Linear MCP** to update issue and add blocker:
+
+```javascript
+try {
+  // Get team ID from issue
+  const teamId = issue.team.id;
+
+  // Get or create "blocked" label
+  const blockedLabel = await getOrCreateLabel(teamId, "blocked", {
+    color: "#eb5757",
+    description: "CCPM: Task blocked, needs resolution"
+  });
+
+  // Get current labels
+  const currentLabels = issue.labels || [];
+  const currentLabelIds = currentLabels.map(l => l.id);
+
+  // Find verification label to remove
+  const verificationLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "verification"
+  );
+
+  // Build new label list: remove verification, add blocked
+  let newLabelIds = currentLabelIds.filter(id =>
+    id !== verificationLabel?.id
+  );
+
+  // Add blocked label if not already present
+  if (!currentLabels.some(l => l.name.toLowerCase() === "blocked")) {
+    newLabelIds.push(blockedLabel.id);
+  }
+
+  // Keep status as "In Progress" - don't change it
+  // Just update labels
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "update_issue",
+    args: {
+      id: issue.id,
+      labelIds: newLabelIds
+    }
+  });
+
+  console.log("✅ Linear issue updated:");
+  console.log("   Status: In Progress (unchanged)");
+  console.log("   Labels: blocked added, verification removed");
+
+} catch (error) {
+  console.error("⚠️ Failed to update Linear issue:", error.message);
+  console.warn("⚠️ Verification failed but status may not be updated.");
+  console.log("   Please manually add 'blocked' label if needed.");
+}
+```
+
+**Add failure comment**:
 4. Add failure comment:
 
 ```markdown

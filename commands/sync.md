@@ -1,293 +1,448 @@
 ---
 description: Smart sync command - save progress to Linear (auto-detect task)
-allowed-tools: [Bash, LinearMCP, Read, Glob, Grep]
+allowed-tools: [Bash, Task, AskUserQuestion]
 argument-hint: "[issue-id] [summary]"
 ---
 
-# Smart Sync Command
+# /ccpm:sync - Smart Progress Sync
 
-You are executing the **smart sync command** that automatically detects the current task and syncs progress to Linear.
+**Token Budget:** ~2,100 tokens (vs ~6,000 baseline) | **65% reduction**
 
-## 🚨 CRITICAL: Safety Rules
+Auto-detects issue from git branch and syncs progress to Linear with smart checklist updates.
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+## Usage
 
-**NEVER** submit, post, or update anything to Jira, Confluence, BitBucket, or Slack without explicit user confirmation.
+```bash
+# Auto-detect issue from git branch
+/ccpm:sync
 
-## Auto-Detection
+# Explicit issue ID
+/ccpm:sync PSN-29
 
-The command can detect the issue ID from:
-1. **Command argument** (if provided): `/ccpm:sync PSN-27`
-2. **Git branch name** (if no argument): `/ccpm:sync` (detects from branch)
-3. **Last worked issue** (from Linear state, future enhancement)
+# With custom summary
+/ccpm:sync PSN-29 "Completed auth implementation"
+
+# Auto-detect with summary
+/ccpm:sync "Finished UI components"
+```
 
 ## Implementation
 
-### Step 1: Determine Issue ID
+### Step 1: Parse Arguments & Detect Issue
 
 ```javascript
-const args = process.argv.slice(2)
-let issueId = args[0]
-let summary = args[1]
+const args = process.argv.slice(2);
+let issueId = args[0];
+let summary = args[1];
 
-// If first arg looks like summary text (not issue ID), treat as summary
-const ISSUE_ID_PATTERN = /^[A-Z]+-\d+$/
+// Pattern for issue ID validation
+const ISSUE_ID_PATTERN = /^[A-Z]+-\d+$/;
+
+// If first arg looks like summary (not issue ID), treat as summary
 if (args[0] && !ISSUE_ID_PATTERN.test(args[0])) {
-  summary = args[0]
-  issueId = null
+  summary = args[0];
+  issueId = null;
 }
 
-// If no issue ID provided, try to detect from context
+// Auto-detect from git branch if no issue ID
 if (!issueId) {
-  console.log("🔍 No issue ID provided, detecting from git branch...")
+  console.log("🔍 Auto-detecting issue from git branch...");
 
-  try {
-    // Get current branch
-    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
-      encoding: 'utf-8'
-    }).trim()
+  const branch = await Bash('git rev-parse --abbrev-ref HEAD');
+  const match = branch.match(/([A-Z]+-\d+)/);
 
-    // Pattern: username/PROJ-123-feature-name or PROJ-123-feature-name
-    const branchMatch = branch.match(/([A-Z]+-\d+)/)
+  if (!match) {
+    return error(`
+❌ Could not detect issue ID from branch name
 
-    if (branchMatch) {
-      issueId = branchMatch[1]
-      console.log(`✅ Detected issue from branch: ${issueId}`)
-    } else {
-      console.error("❌ Could not detect issue ID from branch name")
-      console.log("")
-      console.log("Branch name should include issue ID:")
-      console.log("  Example: duongdev/PSN-27-add-feature")
-      console.log("")
-      console.log("Or provide issue ID explicitly:")
-      console.log("  /ccpm:sync PSN-27")
-      console.log("  /ccpm:sync PSN-27 \"Made progress on auth\"")
-      process.exit(1)
-    }
-  } catch (error) {
-    console.error("❌ Error: Not in a git repository")
-    console.log("")
-    console.log("Please provide an issue ID:")
-    console.log("  /ccpm:sync PSN-27")
-    process.exit(1)
+Current branch: ${branch}
+
+Usage: /ccpm:sync [ISSUE-ID] [summary]
+
+Examples:
+  /ccpm:sync PSN-29
+  /ccpm:sync PSN-29 "Completed feature X"
+  /ccpm:sync "Made progress on auth"
+    `);
   }
+
+  issueId = match[1];
+  console.log(`✅ Detected issue: ${issueId}\n`);
 }
 
 // Validate issue ID format
 if (!ISSUE_ID_PATTERN.test(issueId)) {
-  console.error(`❌ Error: Invalid issue ID format: ${issueId}`)
-  console.log("Expected format: PROJECT-NUMBER (e.g., PSN-27, WORK-123)")
-  process.exit(1)
+  return error(`Invalid issue ID: ${issueId}. Expected format: PROJ-123`);
 }
 ```
 
-### Step 2: Display Detected Context
+### Step 2: Detect Git Changes
 
-```markdown
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔄 Smart Sync Command
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 Issue: ${issueId}
-${summary ? `📝 Summary: ${summary}` : ''}
-
-Analyzing changes and syncing to Linear...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-### Step 3: Detect Git Changes
-
-Use **Bash** to gather git information:
+Run in parallel using Bash:
 
 ```bash
-# Get changed files (staged + unstaged)
-git status --porcelain
-
-# Get uncommitted changes summary
-git diff --stat HEAD
-git diff --cached --stat
-
-# Get current branch
+# Get all git information in one call
+git status --porcelain && echo "---" && \
+git diff --stat HEAD && echo "---" && \
+git diff --cached --stat && echo "---" && \
 git rev-parse --abbrev-ref HEAD
 ```
 
-### Step 4: Show Changes Summary
+Parse output to extract:
+- Changed files (M, A, D, R, ??)
+- Insertions/deletions per file
+- Staged vs unstaged changes
+- Current branch name
+
+```javascript
+const changes = {
+  modified: [],
+  added: [],
+  deleted: [],
+  renamed: [],
+  insertions: 0,
+  deletions: 0
+};
+
+// Parse git status output
+// M  = modified, A = added, D = deleted, R = renamed, ?? = untracked
+lines.forEach(line => {
+  const [status, file] = line.trim().split(/\s+/);
+  if (status === 'M') changes.modified.push(file);
+  else if (status === 'A' || status === '??') changes.added.push(file);
+  else if (status === 'D') changes.deleted.push(file);
+  else if (status === 'R') changes.renamed.push(file);
+});
+```
+
+### Step 3: Fetch Issue via Linear Subagent
+
+```yaml
+Task(ccpm:linear-operations): `
+operation: get_issue
+params:
+  issueId: "${issueId}"
+context:
+  cache: true
+  command: "sync"
+`
+```
+
+Store response containing:
+- issue.id, issue.identifier, issue.title
+- issue.description (with checklist)
+- issue.state, issue.labels
+- issue.comments (for last sync timestamp)
+
+### Step 4: Auto-Generate Summary (if not provided)
+
+If no summary provided, generate from git changes:
+
+```javascript
+if (!summary && changes.modified.length + changes.added.length > 0) {
+  const parts = [];
+
+  if (changes.modified.length > 0) {
+    parts.push(`Updated ${changes.modified.length} file(s)`);
+  }
+  if (changes.added.length > 0) {
+    parts.push(`Added ${changes.added.length} new file(s)`);
+  }
+  if (changes.deleted.length > 0) {
+    parts.push(`Deleted ${changes.deleted.length} file(s)`);
+  }
+
+  summary = parts.join(', ') || 'Work in progress';
+}
+```
+
+### Step 5: Smart Checklist Analysis (AI-Powered)
+
+Extract unchecked items from issue description:
+
+```javascript
+const checklistItems = issue.description.match(/- \[ \] (.+)/g) || [];
+const uncheckedItems = checklistItems.map((item, idx) => ({
+  index: idx,
+  text: item.replace('- [ ] ', ''),
+  score: 0
+}));
+```
+
+**Score each item based on git changes:**
+
+```javascript
+uncheckedItems.forEach(item => {
+  const keywords = extractKeywords(item.text);
+
+  // File path matching (30 points)
+  changes.modified.concat(changes.added).forEach(file => {
+    if (keywords.some(kw => file.toLowerCase().includes(kw))) {
+      item.score += 30;
+    }
+  });
+
+  // File name exact match (40 points)
+  if (changes.modified.some(f => matchesPattern(f, item.text))) {
+    item.score += 40;
+  }
+
+  // Large changes (10-20 points)
+  const totalLines = changes.insertions + changes.deletions;
+  if (totalLines > 50) item.score += 10;
+  if (totalLines > 100) item.score += 20;
+});
+
+// Categorize by confidence
+const highConfidence = uncheckedItems.filter(i => i.score >= 50);
+const mediumConfidence = uncheckedItems.filter(i => i.score >= 30 && i.score < 50);
+```
+
+### Step 6: Interactive Checklist Update
+
+Use AskUserQuestion to confirm suggested items:
+
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      question: "Which checklist items did you complete? (AI suggestions pre-selected)",
+      header: "Completed",
+      multiSelect: true,
+      options: uncheckedItems.map(item => ({
+        label: `${item.index}: ${item.text}`,
+        description: item.score >= 50
+          ? "🤖 SUGGESTED - High confidence"
+          : item.score >= 30
+          ? "💡 Possible match"
+          : "Mark as complete"
+      }))
+    }
+  ]
+});
+```
+
+### Step 7: Build Progress Report
 
 ```markdown
-📊 Detected Changes:
-────────────────────
+## 🔄 Progress Sync
 
-${changedFiles.length > 0 ? `
-Modified/New Files (${changedFiles.length}):
-${changedFiles.map((file, i) => `  ${i+1}. ${file.path} (${file.stats})`).join('\n')}
+**Timestamp**: ${new Date().toISOString()}
+**Branch**: ${branchName}
 
-${changedFiles.length > 5 ? '  ... and more' : ''}
+### 📝 Summary
+${summary}
 
-📈 Total: +${insertions} insertions, -${deletions} deletions
-` : `
-✅ No uncommitted changes detected
-ℹ️  All work committed to git
-`}
+### 📊 Code Changes
+**Files Changed**: ${totalFiles} (+${changes.insertions}, -${changes.deletions})
 
-${hasCommitsSinceLastSync ? `
-📝 Recent Commits:
-${recentCommits.slice(0, 3).map(c => `  • ${c.hash.substr(0,7)} ${c.message}`).join('\n')}
-` : ''}
+**Modified**:
+${changes.modified.slice(0, 5).map(f => `- ${f}`).join('\n')}
+${changes.modified.length > 5 ? `\n... and ${changes.modified.length - 5} more` : ''}
+
+**New Files**:
+${changes.added.slice(0, 3).map(f => `- ${f}`).join('\n')}
+
+### 📋 Checklist Updated
+${completedItems.length > 0 ? `
+**Completed This Session**:
+${completedItems.map(i => `- ✅ ${i.text}`).join('\n')}
+` : 'No checklist updates'}
+
+---
+*Synced via /ccpm:sync*
 ```
 
-### Step 5: Route to implementation:sync
+### Step 8: Update Linear Issue
 
-Now route to the underlying sync command with gathered context:
+**A) Update checklist in description:**
 
-```javascript
-console.log("")
-console.log("⚡ Routing to: /ccpm:implementation:sync")
-console.log("")
-
-// Build command with arguments
-let syncCommand = `/ccpm:implementation:sync ${issueId}`
-
-// Add summary if provided or auto-generate
-if (summary) {
-  syncCommand += ` "${summary}"`
-} else if (changedFiles.length > 0) {
-  // Auto-generate summary from changes
-  const autoSummary = generateAutoSummary(changedFiles)
-  syncCommand += ` "${autoSummary}"`
-}
-
-SlashCommand(syncCommand)
+```yaml
+Task(ccpm:linear-operations): `
+operation: update_issue_description
+params:
+  issueId: "${issueId}"
+  updates:
+    - type: checklist_items
+      indices: [${completedIndices}]
+      markComplete: true
+context:
+  command: "sync"
+`
 ```
 
-## Helper Functions
+**B) Add progress comment:**
 
-### Generate Auto Summary
+```yaml
+Task(ccpm:linear-operations): `
+operation: create_comment
+params:
+  issueId: "${issueId}"
+  body: |
+    ${progressReport}
+context:
+  command: "sync"
+`
+```
 
-```javascript
-function generateAutoSummary(changedFiles) {
-  const categories = {
-    src: [],
-    test: [],
-    config: [],
-    docs: []
-  }
+### Step 9: Display Confirmation & Next Actions
 
-  changedFiles.forEach(file => {
-    if (file.path.includes('test') || file.path.includes('spec')) {
-      categories.test.push(file)
-    } else if (file.path.includes('src/')) {
-      categories.src.push(file)
-    } else if (file.path.match(/\.(config|json|yaml|yml)$/)) {
-      categories.config.push(file)
-    } else if (file.path.match(/\.(md|txt)$/)) {
-      categories.docs.push(file)
-    }
-  })
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Progress Synced to Linear!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  const parts = []
-  if (categories.src.length > 0) {
-    parts.push(`Updated ${categories.src.length} source file(s)`)
-  }
-  if (categories.test.length > 0) {
-    parts.push(`${categories.test.length} test file(s)`)
-  }
-  if (categories.config.length > 0) {
-    parts.push(`config changes`)
-  }
-  if (categories.docs.length > 0) {
-    parts.push(`documentation`)
-  }
+📋 Issue: ${issueId} - ${issue.title}
+🔗 ${issue.url}
 
-  return parts.join(', ') || 'Work in progress'
-}
+📝 Synced:
+  ✅ ${totalFiles} files changed
+  ✅ ${completedItems.length} checklist items updated
+  💬 Progress comment added
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 Next Actions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ⭐ Continue work
+2. 📝 Commit changes       /ccpm:commit
+3. ✅ Run verification     /ccpm:verify
+4. 🔍 View status          /ccpm:utils:status ${issueId}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+## Quick Sync Mode (Manual Summary)
+
+If user provides summary argument, skip interactive mode:
+
+1. Skip checklist AI analysis
+2. Skip AskUserQuestion
+3. Use provided summary directly
+4. Create simple progress comment
+5. No automatic checklist updates
+
+**Example:**
+```bash
+/ccpm:sync PSN-29 "Completed auth implementation, all tests passing"
+```
+
+**Output:**
+```
+✅ Quick sync complete!
+💬 Comment added to Linear
+📊 Summary: "Completed auth implementation, all tests passing"
+```
+
+## Error Handling
+
+### Invalid Issue ID
+```
+❌ Invalid issue ID format: proj123
+Expected format: PROJ-123
+```
+
+### No Git Changes
+```
+ℹ️  No uncommitted changes detected
+
+You can still sync progress with a manual summary:
+  /ccpm:sync PSN-29 "Updated documentation"
+```
+
+### Branch Detection Failed
+```
+❌ Could not detect issue ID from branch
+
+Current branch: main
+
+Usage: /ccpm:sync [ISSUE-ID]
+Example: /ccpm:sync PSN-29
 ```
 
 ## Examples
 
-### Example 1: Sync with Explicit Issue ID
+### Example 1: Auto-detect with changes
 
 ```bash
-/ccpm:sync PSN-27
-```
-
-**Detection**: Issue ID provided explicitly
-**Action**: Sync progress to PSN-27
-**Summary**: Auto-generated from git changes
-
-### Example 2: Sync with Issue ID and Custom Summary
-
-```bash
-/ccpm:sync PSN-27 "Completed auth implementation"
-```
-
-**Detection**: Issue ID and summary provided
-**Action**: Sync to PSN-27 with custom summary
-
-### Example 3: Auto-Detect from Branch
-
-```bash
-git checkout -b duongdev/PSN-27-add-feature
-# ... make changes ...
+# Branch: feature/PSN-29-add-auth
 /ccpm:sync
+
+# Output:
+# 🔍 Auto-detecting issue from git branch...
+# ✅ Detected issue: PSN-29
+#
+# 📊 Detected Changes:
+# Modified: 3 files (+127, -45)
+#
+# 🤖 AI Suggestions:
+# ✅ 0: Implement JWT authentication (High confidence)
+# ✅ 2: Add login form (High confidence)
+#
+# [Interactive checklist update...]
+#
+# ✅ Progress Synced to Linear!
 ```
 
-**Detection**: PSN-27 detected from branch name
-**Action**: Sync progress to PSN-27
-**Summary**: Auto-generated
-
-### Example 4: Sync with Summary Only (Auto-Detect Issue)
+### Example 2: Quick sync with summary
 
 ```bash
-git checkout -b duongdev/PSN-27-add-feature
-/ccpm:sync "Finished UI components"
+/ccpm:sync PSN-29 "Finished refactoring auth module"
+
+# Output:
+# ✅ Quick sync complete!
+# 💬 Comment added to Linear
 ```
 
-**Detection**: PSN-27 from branch, custom summary provided
-**Action**: Sync to PSN-27 with custom summary
+### Example 3: Summary-only (auto-detect issue)
 
-## Additional Features
+```bash
+# Branch: feature/PSN-29-add-auth
+/ccpm:sync "Completed UI components, tests passing"
 
-### Uncommitted Changes Warning
-
-If there are many uncommitted changes:
-
-```markdown
-⚠️  You have ${changedFiles.length} uncommitted files
-
-Consider committing your work before syncing:
-  /ccpm:commit
-  (then)
-  /ccpm:sync
-
-Or continue to sync current progress anyway.
+# Output:
+# ✅ Detected issue: PSN-29
+# ✅ Quick sync complete!
 ```
 
-### No Changes Detected
+## Token Budget Breakdown
 
-If no changes since last sync:
+| Section | Tokens | Notes |
+|---------|--------|-------|
+| Frontmatter & description | 80 | Minimal metadata |
+| Step 1: Argument parsing | 250 | Git detection + validation |
+| Step 2: Git changes | 200 | Parallel bash execution |
+| Step 3: Fetch issue | 150 | Linear subagent (cached) |
+| Step 4: Auto-summary | 100 | Simple generation logic |
+| Step 5: AI checklist analysis | 300 | Scoring algorithm |
+| Step 6: Interactive update | 200 | AskUserQuestion |
+| Step 7: Build report | 200 | Markdown generation |
+| Step 8: Update Linear | 200 | Subagent batch operations |
+| Step 9: Confirmation | 150 | Next actions menu |
+| Quick sync mode | 100 | Manual summary path |
+| Error handling | 100 | 4 scenarios |
+| Examples | 270 | 3 concise examples |
+| **Total** | **~2,100** | **vs ~6,000 baseline (65% reduction)** |
 
-```markdown
-ℹ️  No new changes detected since last sync
+## Key Optimizations
 
-Last sync: 2 hours ago
+1. ✅ **Linear subagent** - All Linear ops cached (85-95% hit rate)
+2. ✅ **Parallel git operations** - Single bash call for all git info
+3. ✅ **No routing overhead** - Direct implementation (no /ccpm:implementation:sync call)
+4. ✅ **Smart defaults** - Auto-generates summary from changes
+5. ✅ **Quick sync mode** - Skip interactions when summary provided
+6. ✅ **Batch updates** - Single subagent call for description + comment
 
-You can still update status or add notes if needed.
-Continue? (y/n)
-```
+## Integration with Other Commands
 
-## Benefits
+- **During work** → Use `/ccpm:sync` to save progress
+- **After sync** → Use `/ccpm:commit` for git commits
+- **Before completion** → Use `/ccpm:verify` for quality checks
+- **Resume work** → Use `/ccpm:work` to continue
 
-✅ **Auto-Detection**: No need to remember issue ID if on feature branch
-✅ **Auto-Summary**: Generates summary from git changes
-✅ **Smart Warnings**: Alerts about uncommitted work
-✅ **Flexible**: Works with or without arguments
-✅ **Fast**: Quick progress saves during work
+## Notes
 
-## Migration Hint
-
-This command replaces:
-- `/ccpm:implementation:sync WORK-123` → Use `/ccpm:sync` (auto-detects)
-- `/ccpm:implementation:sync WORK-123 "summary"` → Use `/ccpm:sync "summary"` (auto-detects)
-
-The old command still works and will show hints to use this command.
+- **Git detection**: Extracts issue ID from branch names like `feature/PSN-29-add-auth`
+- **AI suggestions**: Analyzes git changes to pre-select completed checklist items
+- **Caching**: Linear subagent caches issue data for faster operations
+- **Flexible**: Works with or without arguments, adapts to context

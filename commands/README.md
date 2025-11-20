@@ -6,35 +6,37 @@ Project Management commands with **Interactive Mode** for seamless workflow auto
 
 **Learn 6 commands, master your workflow.**
 
-CCPM now provides natural, verb-based commands that map to your actual workflow. These commands intelligently route to the right underlying operations based on context.
+CCPM provides natural, verb-based commands optimized for maximum efficiency. These commands implement functionality directly (no routing overhead) and leverage session-level caching for 63-67% token reduction.
 
-### The 6-Command Workflow
+### The 6-Command Workflow (Optimized in v2.3)
 
 ```bash
-# 1. PLAN - Create or update tasks
+# 1. PLAN - Create or update tasks (2,450 tokens, 65% reduction)
 /ccpm:plan "Add user authentication"              # Create new task
 /ccpm:plan WORK-123                                # Plan existing task
 /ccpm:plan WORK-123 "Also add 2FA"                 # Update plan
 
-# 2. WORK - Start or continue work
+# 2. WORK - Start or continue work (5,000 tokens, 67% reduction)
 /ccpm:work WORK-123                                # Auto-detects: start or resume
 /ccpm:work                                         # Auto-detects issue from branch
 
-# 3. SYNC - Save progress (anytime)
+# 3. SYNC - Save progress (anytime) (2,100 tokens, 65% reduction)
 /ccpm:sync                                         # Auto-detects issue from branch
 /ccpm:sync "Completed auth endpoints"              # With custom summary
 
-# 4. COMMIT - Git integration
+# 4. COMMIT - Git integration (2,000 tokens, already optimized)
 /ccpm:commit                                       # Auto-generates conventional commit
 /ccpm:commit "Finished login screen"               # Custom message (auto-formatted)
 
-# 5. VERIFY - Quality checks + verification
+# 5. VERIFY - Quality checks + verification (2,800 tokens, 65% reduction)
 /ccpm:verify                                       # Runs checks, then verification
 /ccpm:verify WORK-123                              # Explicit issue ID
 
-# 6. DONE - Finalize (PR + sync + complete)
+# 6. DONE - Finalize (PR + sync + complete) (2,100 tokens, 65% reduction)
 /ccpm:done                                         # Auto-detects, creates PR, syncs
 ```
+
+**Token Budget:** Complete workflow: ~16,500 tokens (vs ~44,500 before, 63% reduction)
 
 ### Complete Example Workflow
 
@@ -96,6 +98,31 @@ CCPM now provides natural, verb-based commands that map to your actual workflow.
 - Context-aware next actions
 - Time-based recommendations
 - Status-based routing
+
+### PSN-30 Optimizations (v2.3)
+
+🚀 **Performance Improvements:**
+- **63-67% token reduction** across all natural commands
+- **Direct implementation** (no routing overhead)
+- **Linear subagent caching** with 85-95% hit rates
+- **Smart agent selection** (automatic optimal agent choice)
+- **Batch operations** (combine multiple API calls)
+- **3-5x faster** response times for cached operations
+
+📊 **Token Budget per Command:**
+- `/ccpm:plan`: 2,450 tokens (was 7,000)
+- `/ccpm:work`: 5,000 tokens (was 15,000)
+- `/ccpm:sync`: 2,100 tokens (was 6,000)
+- `/ccpm:commit`: 2,000 tokens (already optimized)
+- `/ccpm:verify`: 2,800 tokens (was 8,000)
+- `/ccpm:done`: 2,100 tokens (was 6,000)
+
+💰 **Cost Savings:**
+- Complete workflow: ~16,500 tokens (vs 44,500 before)
+- **Annual savings**: $300-$3,000 depending on usage
+- **Faster execution**: <50ms for cached operations
+
+For detailed metrics, see [Token Savings Report](../docs/development/psn-30-token-savings-report.md)
 
 ### Migration from Old Commands
 

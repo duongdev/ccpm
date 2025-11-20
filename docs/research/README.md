@@ -10,6 +10,15 @@ These documents explain why decisions were made and how features were researched
 
 ## Contents
 
+### 🔄 [PSN-29: Linear Subagent Refactoring](psn-29/)
+
+Research and implementation documentation for the PSN-29 Linear subagent migration:
+- [Refactoring Complete](psn-29/refactoring-complete.md) - Main completion summary
+- [Refactoring Summary](psn-29/refactoring-summary.md) - Detailed refactoring summary
+- [Refactoring Index](psn-29/refactoring-index.md) - Complete file index
+- [Refactoring Complete (Group 3)](psn-29/refactoring-complete-group3.md) - Group 3 completion
+- [Integration Tests Complete](psn-29/integration-tests-complete.md) - Test suite completion
+
 ### 📚 [Skills Research](skills/)
 
 Research and planning documents for the skills integration system:

@@ -13,6 +13,7 @@ See the [commands directory](../../commands/README.md) for complete command refe
 
 ## Indexes & References
 
+- **[Linear Subagent Quick Reference](linear-subagent-quick-reference.md)** - Quick reference for Linear subagent refactoring (PSN-29)
 - **[Distribution Index](distribution-index.md)** - Index of distribution-related files and resources
 - **[Distribution Quick Reference](distribution-quick-reference.md)** - Quick reference for distribution strategies
 - **[Optimization Files Index](optimization-files-index.md)** - Index of optimization-related files

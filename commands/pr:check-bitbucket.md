@@ -518,13 +518,33 @@ const statuses = await mcp__linear__list_issue_statuses({
 
 If user confirms status update:
 
-```javascript
-await mcp__linear__update_issue({
-  id: linearIssue.id,
-  state: selectedStatus
-})
+**READ**: `commands/_shared-linear-helpers.md`
 
-console.log(`✅ Linear issue updated to "${selectedStatus}"`)
+```javascript
+try {
+  // Get team ID from Linear issue
+  const teamId = linearIssue.team.id;
+
+  // Get valid state ID using helper
+  const stateId = await getValidStateId(teamId, selectedStatus);
+
+  // Update issue with proper state ID
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "update_issue",
+    args: {
+      id: linearIssue.id,
+      stateId: stateId  // Use stateId, not state
+    }
+  });
+
+  console.log(`✅ Linear issue updated to "${selectedStatus}"`);
+
+} catch (error) {
+  console.error(`⚠️ Failed to update Linear status: ${error.message}`);
+  console.log(`   Could not update status to "${selectedStatus}"`);
+  console.log(`   Please update manually in Linear if needed`);
+}
 ```
 
 **Option: Both**

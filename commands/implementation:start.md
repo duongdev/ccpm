@@ -255,26 +255,98 @@ Create an assignment map:
 
 ### Step 4: Update Linear
 
-Use **Linear MCP** to:
-1. Update issue status to: **In Progress**
-2. Remove label: **planning**
-3. Add label: **implementation**
-4. Add comment with assignment plan:
+**READ**: `commands/_shared-linear-helpers.md`
 
-```markdown
-## 🚀 Implementation Started
+Use **Linear MCP** to update issue status and labels:
+
+```javascript
+try {
+  // Get team ID from issue
+  const teamId = issue.team.id;
+
+  // Step 4a: Get valid "In Progress" state ID
+  const inProgressStateId = await getValidStateId(teamId, "In Progress");
+
+  // Step 4b: Get or create "implementation" label
+  const implementationLabel = await getOrCreateLabel(teamId, "implementation", {
+    color: "#26b5ce",
+    description: "CCPM: Task in implementation phase"
+  });
+
+  // Step 4c: Get current labels and remove "planning" if present
+  const currentLabels = issue.labels || [];
+  const currentLabelIds = currentLabels.map(l => l.id);
+
+  // Find planning label ID to remove
+  const planningLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "planning"
+  );
+
+  // Build new label list: remove planning, add implementation
+  let newLabelIds = currentLabelIds.filter(id =>
+    id !== planningLabel?.id
+  );
+
+  // Add implementation label if not already present
+  if (!currentLabels.some(l => l.name.toLowerCase() === "implementation")) {
+    newLabelIds.push(implementationLabel.id);
+  }
+
+  // Step 4d: Update issue with new status and labels
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "update_issue",
+    args: {
+      id: issue.id,
+      stateId: inProgressStateId,
+      labelIds: newLabelIds
+    }
+  });
+
+  console.log("✅ Linear issue updated:");
+  console.log("   Status: In Progress");
+  console.log("   Labels: implementation (planning removed)");
+
+} catch (error) {
+  console.error("⚠️ Failed to update Linear issue:", error.message);
+  console.warn("⚠️ Continuing with implementation, but status/labels may not be updated.");
+  console.log("   You can manually update status in Linear if needed.");
+}
+```
+
+**Step 4e: Add comment with assignment plan**:
+
+```javascript
+const commentBody = `## 🚀 Implementation Started
 
 ### Agent Assignments:
-- Subtask 1 → database-agent
-- Subtask 2 → backend-agent
-- Subtask 3 → frontend-agent (parallel with 4)
-- Subtask 4 → mobile-agent (parallel with 3)
-- Subtask 5 → integration-agent
-- Subtask 6 → verification-agent
+${assignmentPlan.map(group =>
+  group.subtasks.map(st =>
+    `- ${st.description} → ${st.agent}`
+  ).join('\n')
+).join('\n\n')}
 
 ### Execution Strategy:
-- Groups 3 can execute in parallel
-- Other groups must run sequentially
+${assignmentPlan.map((group, idx) =>
+  `- Group ${idx + 1}: ${group.parallel ? 'Parallel execution' : 'Sequential execution'}`
+).join('\n')}
+`;
+
+try {
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "create_comment",
+    args: {
+      issueId: issue.id,
+      body: commentBody
+    }
+  });
+
+  console.log("✅ Implementation plan added to Linear comments");
+} catch (error) {
+  console.error("⚠️ Failed to add comment:", error.message);
+  // Not critical, continue
+}
 ```
 
 ### Step 5: Begin Execution
