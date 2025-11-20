@@ -12,7 +12,8 @@ Coming soon.
 
 ## Testing
 
-Coming soon.
+- **[Testing README](testing-readme.md)** - Testing infrastructure overview
+- **[Test Setup](test-setup.md)** - Test setup and configuration
 
 ## Release Process
 

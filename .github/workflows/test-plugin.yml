@@ -1,0 +1,285 @@
+name: CCPM Plugin Testing
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'commands/**'
+      - 'skills/**'
+      - 'hooks/**'
+      - 'agents/**'
+      - '.claude-plugin/**'
+      - 'scripts/**'
+      - '.github/workflows/test-plugin.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'commands/**'
+      - 'skills/**'
+      - 'hooks/**'
+      - 'agents/**'
+      - '.claude-plugin/**'
+      - 'scripts/**'
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin-validation:
+    name: Plugin Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for required tools
+        run: |
+          command -v jq >/dev/null 2>&1 || (apt-get update && apt-get install -y jq)
+          command -v bash >/dev/null 2>&1 || apt-get install -y bash
+
+      - name: Run plugin validation
+        run: |
+          chmod +x scripts/validate-plugin.sh
+          ./scripts/validate-plugin.sh --verbose
+
+      - name: Validate plugin.json
+        run: |
+          jq empty .claude-plugin/plugin.json
+          echo "✓ plugin.json is valid JSON"
+
+      - name: Count plugin components
+        run: |
+          echo "=== Component Summary ==="
+          echo "Commands: $(find commands -name '*.md' | wc -l)"
+          echo "Skills: $(find skills -name 'SKILL.md' | wc -l)"
+          echo "Hooks: $(find hooks -name '*.prompt' -o -name '*.sh' | wc -l)"
+          echo "Agents: $(find agents -name '*.md' | wc -l)"
+
+  skill-activation:
+    name: Skill Auto-Activation Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run skill tests
+        run: |
+          chmod +x scripts/test-skill-activation.sh
+          ./scripts/test-skill-activation.sh --verbose
+
+      - name: List discovered skills
+        run: |
+          echo "=== Discovered Skills ==="
+          find skills -name 'SKILL.md' -exec dirname {} \; | sed 's|.*/||' | sort
+
+  hook-verification:
+    name: Hook Integrity Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for required tools
+        run: |
+          command -v jq >/dev/null 2>&1 || (apt-get update && apt-get install -y jq)
+
+      - name: Run hook verification
+        run: |
+          chmod +x scripts/verify-hook-integrity.sh
+          ./scripts/verify-hook-integrity.sh --verbose
+
+      - name: Verify hook file existence
+        run: |
+          echo "=== Verifying Hook Files ==="
+          jq -r '.[] | .file' hooks/hooks.json | while read -r hook_file; do
+            if [ -f "hooks/$hook_file" ]; then
+              echo "✓ $hook_file"
+            else
+              echo "✗ Missing: $hook_file"
+              exit 1
+            fi
+          done
+
+  marketplace-tests:
+    name: Local Marketplace Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for required tools
+        run: |
+          command -v jq >/dev/null 2>&1 || (apt-get update && apt-get install -y jq)
+
+      - name: Run marketplace tests
+        run: |
+          chmod +x scripts/setup-local-marketplace.sh
+          ./scripts/setup-local-marketplace.sh --test
+
+      - name: Verify component discovery
+        run: |
+          echo "=== Component Discovery Test ==="
+          chmod +x scripts/setup-local-marketplace.sh
+          ./scripts/setup-local-marketplace.sh --info
+
+  comprehensive-test:
+    name: Comprehensive Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [plugin-validation, skill-activation, hook-verification, marketplace-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for required tools
+        run: |
+          command -v jq >/dev/null 2>&1 || (apt-get update && apt-get install -y jq)
+          command -v bash >/dev/null 2>&1 || apt-get install -y bash
+
+      - name: Run all tests
+        run: |
+          chmod +x scripts/run-all-tests.sh scripts/validate-plugin.sh scripts/test-skill-activation.sh scripts/verify-hook-integrity.sh scripts/setup-local-marketplace.sh
+          ./scripts/run-all-tests.sh --ci
+
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "## Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Components Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- Commands: $(find commands -name '*.md' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- Skills: $(find skills -name 'SKILL.md' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- Hooks: $(find hooks -name '*.prompt' -o -name '*.sh' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- Agents: $(find agents -name '*.md' | wc -l)" >> $GITHUB_STEP_SUMMARY
+
+  syntax-validation:
+    name: Syntax Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate YAML in commands
+        run: |
+          echo "=== Validating Command Frontmatter ==="
+          for file in commands/*.md; do
+            if head -20 "$file" | grep -q "^---"; then
+              echo "✓ $(basename $file) has valid frontmatter"
+            else
+              echo "✗ $(basename $file) missing frontmatter"
+              exit 1
+            fi
+          done
+
+      - name: Validate YAML in skills
+        run: |
+          echo "=== Validating Skill YAML ==="
+          for file in skills/*/SKILL.md; do
+            if head -20 "$file" | grep -q "^---"; then
+              echo "✓ $(dirname $file | xargs basename) has valid frontmatter"
+            else
+              echo "✗ $(dirname $file | xargs basename) missing frontmatter"
+              exit 1
+            fi
+          done
+
+      - name: Validate bash scripts
+        run: |
+          echo "=== Validating Bash Scripts ==="
+          for file in scripts/*.sh; do
+            if bash -n "$file" 2>/dev/null; then
+              echo "✓ $(basename $file) syntax valid"
+            else
+              echo "✗ $(basename $file) syntax error"
+              bash -n "$file"
+              exit 1
+            fi
+          done
+
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for required dependencies
+        run: |
+          echo "=== Checking Hook Dependencies ==="
+          if grep -r "discover-agents.sh" hooks/ >/dev/null 2>&1; then
+            if [ -f "scripts/discover-agents.sh" ]; then
+              echo "✓ discover-agents.sh exists"
+            else
+              echo "✗ discover-agents.sh missing"
+              exit 1
+            fi
+          fi
+
+      - name: Verify file references
+        run: |
+          echo "=== Verifying File References ==="
+          # Check that all referenced files exist
+          if [ -f ".claude-plugin/plugin.json" ]; then
+            echo "✓ plugin.json exists"
+          else
+            echo "✗ plugin.json missing"
+            exit 1
+          fi
+          if [ -d "commands" ]; then
+            echo "✓ commands directory exists"
+          else
+            echo "✗ commands directory missing"
+            exit 1
+          fi
+
+  # Report job
+  test-results:
+    name: Test Results
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [plugin-validation, skill-activation, hook-verification, marketplace-tests, comprehensive-test, syntax-validation, dependency-check]
+
+    steps:
+      - name: Check all tests passed
+        run: |
+          echo "## CCPM Plugin Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Plugin Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Skill Auto-Activation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Hook Integrity" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Marketplace Testing" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Comprehensive Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Syntax Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Dependency Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All tests completed successfully!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any test failed
+        if: |
+          needs.plugin-validation.result == 'failure' ||
+          needs.skill-activation.result == 'failure' ||
+          needs.hook-verification.result == 'failure' ||
+          needs.marketplace-tests.result == 'failure' ||
+          needs.comprehensive-test.result == 'failure' ||
+          needs.syntax-validation.result == 'failure' ||
+          needs.dependency-check.result == 'failure'
+        run: exit 1

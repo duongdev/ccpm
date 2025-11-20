@@ -1,6 +1,6 @@
 ---
 name: pm-workflow-guide
-description: Provides project management workflow guidance for Linear-based development. Auto-activates when user discusses task planning, implementation tracking, spec management, quality verification, or asks about CCPM workflows. Suggests appropriate CCPM commands based on current context and task phase.
+description: Provides intelligent context-aware PM workflow guidance using automatic phase detection and command suggestion. Auto-activates when user mentions planning, implementation, verification, spec management, or asks "what command should I use". Detects workflow phase (Planning → Spec → Implementation → Verification → Completion) and suggests optimal command path. Provides learning mode for new users with explanations of each command. Prevents common mistakes (implementing without planning, completing without verification). Suggests next actions based on task status and dependencies. Works with pm-workflow state machine (IDEA → PLANNED → IMPLEMENTING → VERIFYING → VERIFIED → COMPLETE). Offers error prevention ("Run planning first" when needed) and smart automation recommendations.
 ---
 
 # PM Workflow Guide

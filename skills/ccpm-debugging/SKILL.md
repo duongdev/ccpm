@@ -1,6 +1,6 @@
 ---
 name: ccpm-debugging
-description: Systematic debugging with defense-in-depth approach and root-cause tracing. Auto-activates when encountering errors, failing tests, broken builds, or runtime issues. Updates Linear with debugging findings, logs blockers, and provides structured troubleshooting workflow integrated with CCPM verification commands.
+description: Systematic debugging with defense-in-depth approach (symptoms → immediate cause → root cause → systemic issues → prevention). Auto-activates when user mentions "error", "failing", "broken", "debug", "bug", "issue" or when /ccpm:verification:fix runs. Uses Observe → Hypothesize → Test → Confirm → Fix → Verify → Document workflow. Updates Linear with findings and automatically logs blockers that require external fixes. Traces root causes instead of patching symptoms. Integrates with ccpm-code-review to verify fixes pass all gates before marking complete. Suggests binary search for intermittent issues and five-whys analysis for complex problems.
 ---
 
 # CCPM Debugging

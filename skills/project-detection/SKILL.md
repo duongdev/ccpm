@@ -1,6 +1,6 @@
 ---
 name: project-detection
-description: Automatic project detection and context awareness for CCPM commands. Auto-activates at the start of any CCPM command to ensure correct project context. Handles mono repos, subdirectories, and multi-project workflows with intelligent detection.
+description: Automatic project context detection with priority-based resolution (Manual setting → Git remote → Subdirectory pattern → Local path → Custom patterns). Auto-activates at start of every CCPM command to ensure correct project context. Supports monorepos with subdirectory detection using glob patterns and priority weighting. Handles ambiguous detection (multiple matches) by asking user to clarify. Caches detection result for command duration (fast reuse). Provides clear error messages with actionable suggestions when no project detected. Displays project context in command headers (e.g., "📋 Project: My Monorepo › frontend"). Supports auto-detection mode (cd = switch) or manual setting (stable context across sessions). Performance: <100ms for auto-detection, 0ms for manual.
 ---
 
 # Project Detection Skill

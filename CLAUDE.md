@@ -10,7 +10,8 @@ CCPM (Claude Code Project Management) is a comprehensive Claude Code plugin that
 - **TDD enforcement** through hooks
 - **Quality gates** with automated code review
 - **Spec management** with Linear Documents
-- **16+ PM commands** for complete project lifecycle management
+- **Skills system** for installable capabilities
+- **49+ commands** for complete project lifecycle management
 
 ## Repository Structure
 
@@ -19,48 +20,52 @@ ccpm/
 ├── .claude-plugin/          # Plugin manifest and marketplace config
 │   ├── plugin.json          # Plugin metadata, features, requirements
 │   └── marketplace.json     # Marketplace listing information
-├── commands/                # All slash commands (27 total) - flat structure
-│   ├── pm:spec:*.md        # Spec management (6 commands)
-│   ├── pm:planning:*.md    # Planning commands (3 commands)
-│   ├── pm:implementation:*.md  # Implementation commands (3 commands)
-│   ├── pm:verification:*.md    # Verification commands (3 commands)
-│   ├── pm:complete:*.md    # Completion commands (1 command)
-│   ├── pm:my-project:*.md      # Project-specific commands (1 command)
-│   └── pm:utils:*.md       # Utility commands (10 commands)
+├── commands/                # All slash commands (49 total) - flat structure
+│   ├── spec:*.md           # Spec management (6 commands)
+│   ├── planning:*.md       # Planning commands (7 commands)
+│   ├── implementation:*.md # Implementation commands (4 commands)
+│   ├── verification:*.md   # Verification commands (3 commands)
+│   ├── complete:*.md       # Completion commands (1 command)
+│   └── utils:*.md          # Utility commands (13+ commands)
 ├── hooks/                  # Hook implementations for automation
-│   ├── smart-agent-selector.prompt  # Intelligent agent selection with scoring
-│   ├── tdd-enforcer.prompt         # Enforces test-first development
-│   ├── quality-gate.prompt         # Post-implementation quality checks
-│   └── agent-selector.prompt       # Static agent selector (backup)
+│   ├── smart-agent-selector-optimized.prompt  # Optimized intelligent agent selection
+│   ├── tdd-enforcer-optimized.prompt         # Optimized TDD enforcement
+│   ├── quality-gate-optimized.prompt         # Optimized quality checks
+│   └── agent-selector.prompt                  # Static agent selector (backup)
 ├── scripts/                # Shell scripts for automation
-│   ├── discover-agents.sh  # Dynamically discovers all available agents
-│   └── flatten-commands.sh # Migration script for directory structure
+│   ├── discover-agents.sh           # Dynamically discovers all available agents
+│   ├── discover-agents-cached.sh    # Cached version for performance
+│   └── benchmark-hooks.sh           # Hook performance testing
+├── skills/                 # Claude Code skills (installable capabilities)
+│   ├── ccpm-code-review/   # Code review skill
+│   ├── ccpm-debugging/     # Debugging skill
+│   └── ...                 # Additional skills
 └── agents/                 # Custom agents for CCPM development
 ```
 
-**Note:** Commands use a **flat directory structure** with namespace prefixes in the filename (e.g., `pm:spec:create.md` → `/pm:spec:create`). This is required by Claude Code's plugin discovery system.
+**Note:** Commands use a **flat directory structure** with namespace prefixes in the filename (e.g., `spec:create.md` → `/ccpm:spec:create`). All commands require the `/ccpm:` prefix.
 
 ## Key Architectural Concepts
 
 ### 1. Hook-Based Automation System
 
-CCPM uses Claude Code's hook system to automate agent invocation and quality enforcement:
+CCPM uses Claude Code's hook system to automate agent invocation and quality enforcement. **Optimized** versions of hooks provide better performance:
 
-**UserPromptSubmit Hook** (smart-agent-selector.prompt):
+**UserPromptSubmit Hook** (smart-agent-selector-optimized.prompt):
 - Triggers on every user message
-- Runs `discover-agents.sh` to find all available agents
+- Uses cached agent discovery for performance
 - Scores agents 0-100+ based on context-aware algorithm
 - Injects agent invocation instructions into Claude's context
 - Plans execution (sequential vs parallel)
 
-**PreToolUse Hook** (tdd-enforcer.prompt):
+**PreToolUse Hook** (tdd-enforcer-optimized.prompt):
 - Triggers before Write/Edit/NotebookEdit operations
 - Checks if corresponding test files exist
 - Blocks production code if tests are missing
 - Automatically invokes `tdd-orchestrator` to write tests first
 - Enforces Red-Green-Refactor workflow
 
-**Stop Hook** (quality-gate.prompt):
+**Stop Hook** (quality-gate-optimized.prompt):
 - Triggers after task completion
 - Detects what changed (files, tools used)
 - Automatically invokes `code-reviewer` for all code changes
@@ -91,7 +96,7 @@ Score =
 
 ### 3. Command Structure & Interactive Mode
 
-All commands follow a consistent pattern defined in `commands/utils/_shared.md`:
+All commands follow a consistent pattern for interactive mode:
 
 **Standard Command Flow:**
 1. Execute command logic
@@ -103,11 +108,11 @@ All commands follow a consistent pattern defined in `commands/utils/_shared.md`:
 
 **Command Categories:**
 - **Spec Management** (6 commands): Epic/Feature creation, spec writing, review, breakdown, migration, sync
-- **Planning** (4 commands): Task creation, planning, plan updating with interactive clarification, quick planning
-- **Implementation** (3 commands): Start work, smart next action, subtask updates
+- **Planning** (7 commands): Task creation, planning, plan updating with interactive clarification, UI design, design approval, design refinement
+- **Implementation** (4 commands): Start work, smart next action, subtask updates, sync
 - **Verification** (3 commands): Quality checks, final verification, fix failures
 - **Completion** (1 command): PR creation, Jira sync, Slack notifications
-- **Utilities** (10+ commands): Status, context loading, reports, insights, dependencies, etc.
+- **Utilities** (13+ commands): Status, context loading, reports, insights, dependencies, documentation organization, etc.
 
 ### 4. Safety Rules
 
@@ -134,12 +139,12 @@ Defined in `commands/SAFETY_RULES.md`, these rules are ABSOLUTE:
 
 CCPM promotes a spec-first workflow using Linear Documents:
 
-1. **Create Epic/Feature** → `/pm:spec:create`
-2. **Write Comprehensive Spec** → `/pm:spec:write` (all sections)
-3. **Review & Validate** → `/pm:spec:review` (A-F grading)
-4. **Break Down into Tasks** → `/pm:spec:break-down`
-5. **Implement Tasks** → `/pm:implementation:start`
-6. **Keep Spec in Sync** → `/pm:spec:sync` (detect drift)
+1. **Create Epic/Feature** → `/ccpm:spec:create`
+2. **Write Comprehensive Spec** → `/ccpm:spec:write` (all sections)
+3. **Review & Validate** → `/ccpm:spec:review` (A-F grading)
+4. **Break Down into Tasks** → `/ccpm:spec:break-down`
+5. **Implement Tasks** → `/ccpm:implementation:start`
+6. **Keep Spec in Sync** → `/ccpm:spec:sync` (detect drift)
 
 **Spec sections:**
 - Requirements
@@ -151,6 +156,22 @@ CCPM promotes a spec-first workflow using Linear Documents:
 - User Flow
 - Timeline
 
+### 6. Skills System
+
+CCPM provides a **skills** directory containing installable capabilities that extend Claude Code's functionality:
+
+**Available Skills:**
+- `ccpm-code-review/` - Enhanced code review workflows
+- `ccpm-debugging/` - Structured debugging assistance
+- `ccpm-mcp-management/` - MCP server management
+- `ccpm-skill-creator/` - Create new skills
+- `docs-seeker/` - Documentation search and retrieval
+- `pm-workflow-guide/` - Project management workflows
+- And more...
+
+**Installing Skills:**
+Skills can be installed globally or per-project using the Claude Code skills system. Each skill provides specialized prompts and workflows for specific tasks.
+
 ## Common Use Cases
 
 ### Updating an Existing Plan
@@ -159,16 +180,16 @@ When requirements change or clarification is needed during planning/implementati
 
 ```bash
 # User realizes they need to add email notifications
-/pm:planning:update WORK-123 "Also add email notifications"
+/ccpm:planning:update WORK-123 "Also add email notifications"
 
 # User wants to change the technical approach
-/pm:planning:update WORK-456 "Use Redis instead of in-memory cache"
+/ccpm:planning:update WORK-456 "Use Redis instead of in-memory cache"
 
 # User needs to simplify the scope
-/pm:planning:update WORK-789 "Remove admin dashboard, just add API"
+/ccpm:planning:update WORK-789 "Remove admin dashboard, just add API"
 
 # User encounters a blocker
-/pm:planning:update WORK-321 "Library X doesn't support Node 20"
+/ccpm:planning:update WORK-321 "Library X doesn't support Node 20"
 ```
 
 **What happens:**
@@ -215,8 +236,10 @@ chmod +x scripts/*.sh
 # # Command Name
 # Implementation details...
 
-# Add new command
-cat > commands/category/command-name.md
+# Add new command (flat structure with namespace prefix)
+# File naming: commands/category:command-name.md
+# Command invocation: /ccpm:category:command-name
+cat > commands/planning:create.md  # Creates /ccpm:planning:create command
 ```
 
 ### Hook Development
@@ -225,10 +248,13 @@ cat > commands/category/command-name.md
 # Hooks are in hooks/ directory
 # Types:
 # - .prompt files: For AI-based decision making
-# - .sh files: For fast command execution
+# - -optimized.prompt files: Performance-optimized versions (preferred)
 
-# Test hook in isolation
-cat hooks/smart-agent-selector.prompt | \
+# Test hook performance
+./scripts/benchmark-hooks.sh
+
+# Test hook in isolation (use optimized versions)
+cat hooks/smart-agent-selector-optimized.prompt | \
   sed 's/{{userMessage}}/Add user auth/g' | \
   claude --stdin
 ```
@@ -237,13 +263,14 @@ cat hooks/smart-agent-selector.prompt | \
 
 ### Command Naming
 
-- Use namespace: `/pm:category:command-name`
+- Use namespace prefix: `/ccpm:category:command-name`
 - Categories: spec, planning, implementation, verification, complete, utils
 - Names should be verb-based: create, write, review, start, check
+- Example: `/ccpm:planning:create`, `/ccpm:spec:write`, `/ccpm:utils:status`
 
 ### Interactive Mode Template
 
-All commands should follow the interactive mode pattern from `commands/utils/_shared.md`:
+All commands should follow the interactive mode pattern:
 
 1. Show status with emoji indicators (✅ ⏳ ❌ 🎯)
 2. Calculate and display progress percentage
@@ -268,6 +295,20 @@ When new agents are added to the ecosystem:
 - Scoring algorithm applies automatically
 - Project-specific agents get +25 priority bonus
 
+### Progress and Documentation Standards
+
+**Progress Tracking:**
+- ⛔ NEVER write progress, status updates, or task notes to local markdown files
+- ✅ ALWAYS use Linear ticket comments for all progress updates
+- ✅ Update Linear issue fields (status, progress %, assignee, etc.)
+- ✅ Use Linear comments for blockers, decisions, and status changes
+
+**Documentation Creation:**
+- ⛔ NEVER create new markdown files in root directory
+- ✅ ALL documentation goes in `docs/` subdirectories
+- ✅ Follow the docs/ structure: guides/, reference/, architecture/, development/, research/
+- ✅ Update relevant index README.md files when adding docs
+
 ## Testing Practices
 
 ### Testing Agent Discovery
@@ -287,10 +328,10 @@ When new agents are added to the ecosystem:
 ```bash
 # Commands are invoked as slash commands
 # Test format:
-/pm:utils:help
+/ccpm:utils:help
 
 # With arguments:
-/pm:planning:create "Test task" test-project JIRA-123
+/ccpm:planning:create "Test task" test-project JIRA-123
 ```
 
 ### Testing Hooks
@@ -309,6 +350,26 @@ Use Linear MCP tools to fetch issue details:
 - linear_get_issue - Get issue by ID
 - linear_get_team - Get team details
 - linear_get_project - Get project details
+```
+
+### Tracking Progress on Linear Tickets
+
+```markdown
+⛔ NEVER write progress updates to local markdown files
+✅ ALWAYS comment on the Linear ticket instead
+
+When tracking progress during task execution:
+1. Use Linear MCP tools to add comments to the issue
+2. Include status updates, blockers, and decisions
+3. Keep the issue description up-to-date
+4. Update custom fields (progress %, status, etc.)
+
+Benefits:
+- Single source of truth
+- Visible to entire team
+- Automatically timestamped
+- Searchable history
+- No git noise from progress updates
 ```
 
 ### Creating Linear Documents
@@ -382,7 +443,7 @@ Task(backend-architect): "Design REST API for user authentication..."
 ### Wrong Agents Selected
 
 1. Check agent descriptions in discovery output
-2. Verify scoring weights in `hooks/smart-agent-selector.prompt`
+2. Verify scoring weights in `hooks/smart-agent-selector-optimized.prompt`
 3. Add project-specific agents for customization
 4. Review verbose logs for scoring details
 
@@ -416,6 +477,8 @@ Task(backend-architect): "Design REST API for user authentication..."
 5. **Scoring Tuning**: Adjust weights based on real-world usage
 6. **Documentation**: Keep README.md, SAFETY_RULES.md, and command docs in sync
 7. **Versioning**: Follow semantic versioning for plugin releases
+8. **Progress Tracking**: NEVER write progress updates to local markdown files. Always comment on the Linear ticket instead.
+9. **Documentation Structure**: ALL new documentation MUST follow the docs/ structure (guides/, reference/, architecture/, development/, research/)
 
 ## Documentation Structure
 
@@ -434,6 +497,9 @@ docs/
 ```
 
 ### Documentation Guidelines
+
+**⛔ CRITICAL: ALL new documentation MUST go in the `docs/` directory structure**
+**⛔ NEVER create new markdown files in the root directory**
 
 **When creating new documentation:**
 
@@ -467,6 +533,8 @@ docs/
    - Implementation journeys
    - Organized by topic: `skills/`, `hooks/`, `documentation/`, etc.
    - **Note**: These are archived - current docs go elsewhere
+
+**⚠️ IMPORTANT: Progress tracking, status updates, and task notes should NEVER be written to any markdown files. Always use Linear ticket comments instead.**
 
 ### Root Directory Rules
 

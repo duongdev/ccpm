@@ -1,6 +1,6 @@
 ---
 name: external-system-safety
-description: Enforces safety rules for external PM system writes (Jira, Confluence, BitBucket, Slack). Auto-activates when detecting potential writes to external systems. Requires explicit user confirmation before any write operation to prevent accidental changes.
+description: Enforces confirmation workflow for all external system writes (Jira, Confluence, BitBucket, Slack) with automatic operation detection and content preview. Auto-activates when detecting potential writes to external PM systems (status updates, page creation, PR posts, notifications). Blocks execution and displays exact content that will be written. Requires explicit "yes" confirmation (rejects "ok", "sure", ambiguous responses). Allows all read operations and Linear writes without confirmation. Works alongside ccpm-code-review to ensure quality before external broadcasts. Provides audit trail of all confirmed operations. Allows batch operations with granular per-item confirmation when needed.
 allowed-tools: read-file, grep, browser
 ---
 

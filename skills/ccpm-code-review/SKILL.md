@@ -1,6 +1,6 @@
 ---
 name: ccpm-code-review
-description: Enforces verification gates before task completion, PR creation, or status updates. Auto-activates when user says "done", "complete", "ready to merge", or runs /ccpm:verification:verify or /ccpm:complete:finalize. Requires evidence (passing tests, successful build, complete checklist) before any completion claims or Linear/Jira status updates. Prevents false completion claims and ensures quality standards.
+description: Enforces quality verification gates with four-step validation (tests pass, build succeeds, checklist complete, no blockers) before task completion, PR creation, or status updates. Auto-activates when user says "done", "complete", "finished", "ready to merge", or runs /ccpm:verification:verify or /ccpm:complete:finalize commands. Provides systematic verification workflow that prevents false completion claims and ensures production readiness. Blocks external system writes (Jira, Slack) until evidence collected. Integrates with external-system-safety for confirmation workflow. When verification fails, suggests /ccpm:verification:fix to debug issues systematically.
 allowed-tools: read-file, grep, bash
 ---
 
