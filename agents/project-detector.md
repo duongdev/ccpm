@@ -111,7 +111,7 @@ task: detect_project
 context:
   cwd: /Users/dev/monorepo/apps/frontend
   git_remote: git@github.com:org/monorepo.git
-  config_path: ~/.claude/ccpm-config.yaml
+  config_path: $CCPM_CONFIG_FILE
 ```
 
 ### Output

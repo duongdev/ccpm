@@ -10,7 +10,7 @@ You are initiating the **UI Design Planning Phase** for Linear issue **$1**.
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 This command is **READ-ONLY** for external systems and **WRITE** to Linear (internal tracking).
 

@@ -10,7 +10,7 @@ Generating comprehensive progress report for **$1** project.
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, or update anything to Jira, Confluence, BitBucket, or Slack without explicit user confirmation.
 
@@ -178,7 +178,7 @@ const stats = {
 
 ### Step 4: Interactive Next Actions
 
-**READ**: `/Users/duongdev/.claude/commands/pm/utils/_shared.md`
+**READ**: ``$CCPM_COMMANDS_DIR/_shared-linear-helpers.md``
 
 Use **AskUserQuestion** tool:
 

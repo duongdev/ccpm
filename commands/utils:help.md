@@ -8,7 +8,7 @@ argument-hint: [issue-id]
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, or update anything to Jira, Confluence, BitBucket, or Slack without explicit user confirmation, even in bypass mode.
 
@@ -481,10 +481,10 @@ If no issue ID:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📖 Full Documentation:
-   ~/Users/duongdev/.claude/commands/pm/README.md
+   ~`$CCPM_COMMANDS_DIR/`README.md
 
 ⚠️  Safety Rules:
-   ~/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md
+   ~`$CCPM_COMMANDS_DIR/SAFETY_RULES.md`
 
 🔍 Command Details:
    Each command has detailed docs in:

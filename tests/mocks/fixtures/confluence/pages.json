@@ -1,0 +1,142 @@
+{
+  "pages": [
+    {
+      "id": "98765",
+      "type": "page",
+      "status": "current",
+      "title": "CCPM Plugin Documentation",
+      "body": {
+        "storage": {
+          "value": "<h1>CCPM Plugin Documentation</h1><p>This page contains comprehensive documentation for the CCPM plugin.</p><h2>Overview</h2><p>CCPM (Claude Code Project Management) is a plugin that provides project management capabilities.</p>",
+          "representation": "storage"
+        },
+        "view": {
+          "value": "<h1>CCPM Plugin Documentation</h1><p>This page contains comprehensive documentation for the CCPM plugin.</p><h2>Overview</h2><p>CCPM (Claude Code Project Management) is a plugin that provides project management capabilities.</p>",
+          "representation": "view"
+        }
+      },
+      "space": {
+        "id": 123457,
+        "key": "CCPM",
+        "name": "CCPM Documentation"
+      },
+      "version": {
+        "number": 3,
+        "when": "2025-01-20T10:00:00.000Z",
+        "message": "Updated overview section"
+      },
+      "createdBy": {
+        "accountId": "test-user-1",
+        "displayName": "Test User"
+      },
+      "createdDate": "2024-12-01T10:00:00.000Z",
+      "_links": {
+        "webui": "/spaces/CCPM/pages/98765",
+        "self": "https://confluence.test.com/rest/api/content/98765"
+      }
+    },
+    {
+      "id": "98766",
+      "type": "page",
+      "status": "current",
+      "title": "Installation Guide",
+      "body": {
+        "storage": {
+          "value": "<h1>Installation Guide</h1><p>Follow these steps to install the CCPM plugin:</p><ol><li>Download the plugin</li><li>Install dependencies</li><li>Configure settings</li><li>Run initialization</li></ol>",
+          "representation": "storage"
+        }
+      },
+      "space": {
+        "id": 123457,
+        "key": "CCPM",
+        "name": "CCPM Documentation"
+      },
+      "ancestors": [
+        {
+          "id": "98765"
+        }
+      ],
+      "version": {
+        "number": 1,
+        "when": "2024-12-05T14:00:00.000Z",
+        "message": "Initial version"
+      },
+      "createdBy": {
+        "accountId": "test-user-1",
+        "displayName": "Test User"
+      },
+      "createdDate": "2024-12-05T14:00:00.000Z",
+      "_links": {
+        "webui": "/spaces/CCPM/pages/98766",
+        "self": "https://confluence.test.com/rest/api/content/98766"
+      }
+    },
+    {
+      "id": "98767",
+      "type": "page",
+      "status": "current",
+      "title": "API Reference",
+      "body": {
+        "storage": {
+          "value": "<h1>API Reference</h1><p>Complete API documentation for CCPM commands and hooks.</p><h2>Commands</h2><ul><li>/ccpm:plan</li><li>/ccpm:work</li><li>/ccpm:sync</li><li>/ccpm:verify</li><li>/ccpm:done</li></ul>",
+          "representation": "storage"
+        }
+      },
+      "space": {
+        "id": 123457,
+        "key": "CCPM",
+        "name": "CCPM Documentation"
+      },
+      "ancestors": [
+        {
+          "id": "98765"
+        }
+      ],
+      "version": {
+        "number": 5,
+        "when": "2025-01-15T09:00:00.000Z",
+        "message": "Added natural workflow commands"
+      },
+      "createdBy": {
+        "accountId": "test-user-1",
+        "displayName": "Test User"
+      },
+      "createdDate": "2024-12-10T11:00:00.000Z",
+      "_links": {
+        "webui": "/spaces/CCPM/pages/98767",
+        "self": "https://confluence.test.com/rest/api/content/98767"
+      }
+    },
+    {
+      "id": "98768",
+      "type": "page",
+      "status": "current",
+      "title": "Test Specification",
+      "body": {
+        "storage": {
+          "value": "<h1>Test Specification</h1><p>Test plan for feature implementation.</p><h2>Requirements</h2><p>User authentication must support JWT tokens.</p><h2>Test Cases</h2><ol><li>Verify token generation</li><li>Verify token validation</li><li>Verify token expiration</li></ol>",
+          "representation": "storage"
+        }
+      },
+      "space": {
+        "id": 123456,
+        "key": "TEST",
+        "name": "Test Space"
+      },
+      "version": {
+        "number": 2,
+        "when": "2025-01-18T13:00:00.000Z",
+        "message": "Added test cases"
+      },
+      "createdBy": {
+        "accountId": "test-user-1",
+        "displayName": "Test User"
+      },
+      "createdDate": "2025-01-17T10:00:00.000Z",
+      "_links": {
+        "webui": "/spaces/TEST/pages/98768",
+        "self": "https://confluence.test.com/rest/api/content/98768"
+      }
+    }
+  ]
+}

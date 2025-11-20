@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "metadata": {
+    "description": "Phase 6 Metrics Collection Schema",
+    "collection_start": "2025-12-09T00:00:00Z",
+    "last_updated": "{{TIMESTAMP}}"
+  },
+  "metrics": {
+    "adoption": {
+      "upgrade_rate": {
+        "description": "Percentage of users on v2.3.0+",
+        "unit": "percentage",
+        "target": 70,
+        "threshold_warning": 50,
+        "threshold_critical": 30,
+        "data": []
+      },
+      "feature_flag_adoption": {
+        "description": "Percentage of users with optimized features enabled",
+        "unit": "percentage",
+        "target": 60,
+        "threshold_warning": 40,
+        "threshold_critical": 20,
+        "data": []
+      },
+      "command_usage_new_vs_old": {
+        "description": "Ratio of new commands (/ccpm:plan, etc) vs old commands",
+        "unit": "ratio",
+        "target": 0.8,
+        "threshold_warning": 0.5,
+        "threshold_critical": 0.2,
+        "data": []
+      },
+      "daily_active_users": {
+        "description": "Count of users executing commands daily",
+        "unit": "count",
+        "data": []
+      }
+    },
+    "performance": {
+      "token_reduction": {
+        "description": "Average token reduction percentage compared to old commands",
+        "unit": "percentage",
+        "target": 50,
+        "threshold_warning": 30,
+        "threshold_critical": 15,
+        "data": []
+      },
+      "execution_time": {
+        "description": "Average command execution time",
+        "unit": "milliseconds",
+        "data": []
+      },
+      "error_rate": {
+        "description": "Percentage of commands resulting in error",
+        "unit": "percentage",
+        "target_max": 1,
+        "threshold_warning": 2,
+        "threshold_critical": 5,
+        "data": []
+      },
+      "latency_p99": {
+        "description": "99th percentile response time",
+        "unit": "milliseconds",
+        "data": []
+      }
+    },
+    "user_satisfaction": {
+      "nps_score": {
+        "description": "Net Promoter Score (post-release)",
+        "unit": "score",
+        "target": 55,
+        "threshold_warning": 50,
+        "threshold_critical": 40,
+        "data": []
+      },
+      "support_tickets": {
+        "description": "Daily support ticket volume",
+        "unit": "count",
+        "threshold_warning": 50,
+        "threshold_critical": 100,
+        "data": []
+      },
+      "rollback_rate": {
+        "description": "Percentage of users disabling new features",
+        "unit": "percentage",
+        "target_max": 1,
+        "threshold_warning": 5,
+        "threshold_critical": 10,
+        "data": []
+      },
+      "feature_flag_opt_out": {
+        "description": "Percentage of users declining new features",
+        "unit": "percentage",
+        "target_max": 1,
+        "data": []
+      }
+    },
+    "business": {
+      "cost_reduction": {
+        "description": "Estimated monthly cost savings from token reduction",
+        "unit": "usd",
+        "target": 400,
+        "data": []
+      },
+      "user_retention": {
+        "description": "Percentage of active users post-release",
+        "unit": "percentage",
+        "target": 95,
+        "threshold_warning": 90,
+        "threshold_critical": 85,
+        "data": []
+      },
+      "feature_engagement": {
+        "description": "Percentage of users trying new features",
+        "unit": "percentage",
+        "target": 70,
+        "threshold_warning": 50,
+        "threshold_critical": 30,
+        "data": []
+      }
+    },
+    "quality": {
+      "test_coverage": {
+        "description": "Code coverage percentage",
+        "unit": "percentage",
+        "target": 90,
+        "threshold_warning": 80,
+        "data": []
+      },
+      "critical_issues": {
+        "description": "Count of critical blocking issues",
+        "unit": "count",
+        "target_max": 0,
+        "data": []
+      },
+      "regressions": {
+        "description": "Count of regression bugs identified",
+        "unit": "count",
+        "target_max": 0,
+        "data": []
+      }
+    }
+  },
+  "rollout_stages": {
+    "beta": {
+      "start_date": "2025-12-09",
+      "end_date": "2025-12-20",
+      "target_users": 100,
+      "metrics_collected": true
+    },
+    "early_access": {
+      "start_date": "2025-12-21",
+      "end_date": "2026-01-03",
+      "target_users": 1000,
+      "metrics_collected": true
+    },
+    "general_availability": {
+      "start_date": "2026-01-06",
+      "end_date": "2026-01-17",
+      "target_users": 10000,
+      "metrics_collected": true
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "issues": [
+    {
+      "id": "10100",
+      "key": "TEST-1",
+      "fields": {
+        "summary": "Test issue for integration testing",
+        "description": "This is a test issue created for CCPM integration testing",
+        "issuetype": {
+          "id": "10003",
+          "name": "Task"
+        },
+        "project": {
+          "key": "TEST",
+          "name": "Test Project"
+        },
+        "priority": {
+          "id": "3",
+          "name": "Medium"
+        },
+        "status": {
+          "id": "10000",
+          "name": "To Do"
+        },
+        "assignee": null,
+        "reporter": {
+          "accountId": "test-user-1",
+          "displayName": "Test User"
+        },
+        "created": "2025-01-01T10:00:00.000Z",
+        "updated": "2025-01-01T10:00:00.000Z"
+      },
+      "self": "https://jira.test.com/rest/api/2/issue/TEST-1"
+    },
+    {
+      "id": "10101",
+      "key": "TEST-2",
+      "fields": {
+        "summary": "Implement user authentication",
+        "description": "Add JWT-based authentication to the API",
+        "issuetype": {
+          "id": "10002",
+          "name": "Story"
+        },
+        "project": {
+          "key": "TEST",
+          "name": "Test Project"
+        },
+        "priority": {
+          "id": "2",
+          "name": "High"
+        },
+        "status": {
+          "id": "10001",
+          "name": "In Progress"
+        },
+        "assignee": {
+          "accountId": "test-user-1",
+          "displayName": "Test User"
+        },
+        "reporter": {
+          "accountId": "test-user-1",
+          "displayName": "Test User"
+        },
+        "created": "2025-01-02T10:00:00.000Z",
+        "updated": "2025-01-03T15:30:00.000Z"
+      },
+      "self": "https://jira.test.com/rest/api/2/issue/TEST-2"
+    }
+  ]
+}

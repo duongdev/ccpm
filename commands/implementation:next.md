@@ -28,7 +28,7 @@ Analyzing task **$1** to suggest the optimal next action.
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, or update anything to external PM systems without confirmation.
 
@@ -183,7 +183,7 @@ Dependencies: [All met ✅ / Waiting on: X]
 
 ### Step 6: Interactive Choice
 
-**READ**: `/Users/duongdev/.claude/commands/pm/_shared.md`
+**READ**: ``$CCPM_COMMANDS_DIR/_shared-linear-helpers.md``
 
 Use **AskUserQuestion**:
 

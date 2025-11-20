@@ -1,0 +1,40 @@
+{
+  "projects": [
+    {
+      "key": "TEST",
+      "id": "10000",
+      "name": "Test Project",
+      "projectTypeKey": "software",
+      "description": "Test project for CCPM integration testing",
+      "lead": {
+        "accountId": "test-user-1",
+        "displayName": "Test User"
+      },
+      "issueTypes": [
+        { "id": "10001", "name": "Epic" },
+        { "id": "10002", "name": "Story" },
+        { "id": "10003", "name": "Task" },
+        { "id": "10004", "name": "Bug" }
+      ],
+      "url": "https://jira.test.com/projects/TEST"
+    },
+    {
+      "key": "CCPM",
+      "id": "10001",
+      "name": "CCPM Plugin",
+      "projectTypeKey": "software",
+      "description": "CCPM development project",
+      "lead": {
+        "accountId": "test-user-1",
+        "displayName": "Test User"
+      },
+      "issueTypes": [
+        { "id": "10001", "name": "Epic" },
+        { "id": "10002", "name": "Story" },
+        { "id": "10003", "name": "Task" },
+        { "id": "10004", "name": "Bug" }
+      ],
+      "url": "https://jira.test.com/projects/CCPM"
+    }
+  ]
+}

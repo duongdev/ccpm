@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "user_id": "{{USER_ID}}",
+  "created_at": "{{TIMESTAMP}}",
+  "feature_flags": {
+    "optimized_workflow_commands": {
+      "override": null,
+      "enabled": true,
+      "description": "Use /ccpm:plan, /ccpm:work, /ccpm:sync, /ccpm:commit, /ccpm:verify, /ccpm:done"
+    },
+    "linear_subagent_enabled": {
+      "override": null,
+      "enabled": true,
+      "description": "Use Linear operations subagent for improved performance"
+    },
+    "auto_detect_from_branch": {
+      "override": null,
+      "enabled": true,
+      "description": "Auto-detect issue ID from git branch name"
+    },
+    "shared_linear_helpers": {
+      "override": null,
+      "enabled": true,
+      "description": "Use shared Linear helper functions"
+    },
+    "legacy_command_support": {
+      "override": null,
+      "enabled": true,
+      "description": "Show migration hints when using old commands"
+    },
+    "monitoring_collection": {
+      "override": null,
+      "enabled": true,
+      "description": "Collect metrics for Phase 6 monitoring"
+    }
+  },
+  "rollout_preferences": {
+    "auto_update": true,
+    "beta_opt_in": false,
+    "early_access_opt_in": false,
+    "disable_all_new_features": false,
+    "disable_migration_hints": false
+  },
+  "preferences": {
+    "command_output_format": "detailed",
+    "show_performance_metrics": true,
+    "show_token_usage": true,
+    "auto_fix_suggestions": true
+  }
+}

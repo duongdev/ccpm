@@ -1,0 +1,64 @@
+{
+  "statuses": [
+    {
+      "id": "10000",
+      "name": "To Do",
+      "description": "Work that has not been started",
+      "iconUrl": "https://jira.test.com/images/icons/status_todo.png",
+      "statusCategory": {
+        "id": 2,
+        "key": "new",
+        "name": "To Do",
+        "colorName": "blue-gray"
+      }
+    },
+    {
+      "id": "10001",
+      "name": "In Progress",
+      "description": "Work that is actively being looked at",
+      "iconUrl": "https://jira.test.com/images/icons/status_inprogress.png",
+      "statusCategory": {
+        "id": 4,
+        "key": "indeterminate",
+        "name": "In Progress",
+        "colorName": "yellow"
+      }
+    },
+    {
+      "id": "10002",
+      "name": "Done",
+      "description": "Work that has been completed",
+      "iconUrl": "https://jira.test.com/images/icons/status_done.png",
+      "statusCategory": {
+        "id": 3,
+        "key": "done",
+        "name": "Done",
+        "colorName": "green"
+      }
+    },
+    {
+      "id": "10003",
+      "name": "In Review",
+      "description": "Work that is being reviewed",
+      "iconUrl": "https://jira.test.com/images/icons/status_review.png",
+      "statusCategory": {
+        "id": 4,
+        "key": "indeterminate",
+        "name": "In Progress",
+        "colorName": "yellow"
+      }
+    },
+    {
+      "id": "10004",
+      "name": "Blocked",
+      "description": "Work that is blocked",
+      "iconUrl": "https://jira.test.com/images/icons/status_blocked.png",
+      "statusCategory": {
+        "id": 4,
+        "key": "indeterminate",
+        "name": "In Progress",
+        "colorName": "red"
+      }
+    }
+  ]
+}

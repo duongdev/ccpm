@@ -148,7 +148,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ### Spec Management Commands (6 files)
 ```
-/Users/duongdev/.claude/commands/pm/spec/
+`$CCPM_COMMANDS_DIR/`
 ├── create.md         - Create Epic/Feature with spec doc (459 lines)
 ├── write.md          - AI-assisted spec writing (934 lines)
 ├── review.md         - Spec validation & grading (333 lines)
@@ -159,13 +159,13 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ### Help Command (1 file)
 ```
-/Users/duongdev/.claude/commands/pm/utils/
+`$CCPM_COMMANDS_DIR/`
 └── help.md           - Context-aware help (434 lines)
 ```
 
 ### Documentation Updates (1 file)
 ```
-/Users/duongdev/.claude/commands/pm/
+`$CCPM_COMMANDS_DIR/`
 └── README.md         - Updated with spec management section
 ```
 
@@ -433,10 +433,10 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 ## 📚 Documentation
 
 **Main README**:
-- `/Users/duongdev/.claude/commands/pm/README.md`
+- ``$CCPM_COMMANDS_DIR/`README.md`
 
 **Spec Command Docs**:
-- `/Users/duongdev/.claude/commands/pm/spec/*.md`
+- ``$CCPM_COMMANDS_DIR/`*.md`
 
 **Help Command**:
 ```bash

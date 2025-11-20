@@ -4,8 +4,22 @@
 
 set -euo pipefail
 
-HOOKS_DIR="/Users/duongdev/personal/ccpm/hooks"
-SCRIPTS_DIR="/Users/duongdev/personal/ccpm/scripts"
+# Dynamically resolve plugin directory
+if [ -z "${CCPM_PLUGIN_DIR:-}" ]; then
+  # Try standard installation location
+  if [ -d "$HOME/.claude/plugins/ccpm" ]; then
+    CCPM_PLUGIN_DIR="$HOME/.claude/plugins/ccpm"
+  # Try running from within plugin directory
+  elif [ -d "$(dirname "$0")/../hooks" ]; then
+    CCPM_PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+  else
+    echo "Error: CCPM plugin not found"
+    exit 1
+  fi
+fi
+
+HOOKS_DIR="$CCPM_PLUGIN_DIR/hooks"
+SCRIPTS_DIR="$CCPM_PLUGIN_DIR/scripts"
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
 echo "║            CCPM Hook Performance Benchmark Report                      ║"

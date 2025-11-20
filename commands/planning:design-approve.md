@@ -10,7 +10,7 @@ You are **approving the final UI design** and generating **comprehensive develop
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 This command is **READ-ONLY** for external systems and **WRITE** to Linear (internal tracking).
 

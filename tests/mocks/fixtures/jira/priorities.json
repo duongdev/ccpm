@@ -1,0 +1,39 @@
+{
+  "priorities": [
+    {
+      "id": "1",
+      "name": "Highest",
+      "description": "This problem will block progress",
+      "iconUrl": "https://jira.test.com/images/icons/priority_highest.png",
+      "statusColor": "#d04437"
+    },
+    {
+      "id": "2",
+      "name": "High",
+      "description": "Serious problem that could block progress",
+      "iconUrl": "https://jira.test.com/images/icons/priority_high.png",
+      "statusColor": "#f15C75"
+    },
+    {
+      "id": "3",
+      "name": "Medium",
+      "description": "Has the potential to affect progress",
+      "iconUrl": "https://jira.test.com/images/icons/priority_medium.png",
+      "statusColor": "#f79232"
+    },
+    {
+      "id": "4",
+      "name": "Low",
+      "description": "Minor problem or easily worked around",
+      "iconUrl": "https://jira.test.com/images/icons/priority_low.png",
+      "statusColor": "#707070"
+    },
+    {
+      "id": "5",
+      "name": "Lowest",
+      "description": "Trivial problem with little or no impact on progress",
+      "iconUrl": "https://jira.test.com/images/icons/priority_lowest.png",
+      "statusColor": "#999999"
+    }
+  ]
+}

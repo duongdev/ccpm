@@ -1,0 +1,26 @@
+{
+  "users": [
+    {
+      "accountId": "test-user-1",
+      "accountType": "atlassian",
+      "displayName": "Test User",
+      "emailAddress": "test.user@example.com",
+      "active": true,
+      "timeZone": "America/Los_Angeles",
+      "avatarUrls": {
+        "48x48": "https://jira.test.com/avatar/test-user-1"
+      }
+    },
+    {
+      "accountId": "test-user-2",
+      "accountType": "atlassian",
+      "displayName": "Another Test User",
+      "emailAddress": "another.test@example.com",
+      "active": true,
+      "timeZone": "America/New_York",
+      "avatarUrls": {
+        "48x48": "https://jira.test.com/avatar/test-user-2"
+      }
+    }
+  ]
+}

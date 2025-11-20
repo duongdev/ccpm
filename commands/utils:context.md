@@ -10,7 +10,7 @@ Quickly loading all context for Linear issue **$1** to help you resume work.
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, or update anything to Jira, Confluence, BitBucket, or Slack without explicit user confirmation.
 
@@ -203,7 +203,7 @@ Best Practices:
 
 ### Step 6: Interactive Next Actions
 
-**READ**: `/Users/duongdev/.claude/commands/pm/utils/_shared.md`
+**READ**: ``$CCPM_COMMANDS_DIR/_shared-linear-helpers.md``
 
 Determine next action based on status and progress:
 

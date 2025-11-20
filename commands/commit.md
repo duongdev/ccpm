@@ -10,7 +10,7 @@ You are executing the **smart git commit command** that integrates with Linear a
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 This command performs **git operations** which are local and safe. No external PM system writes.
 

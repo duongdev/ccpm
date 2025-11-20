@@ -10,7 +10,7 @@ You are **creating a new Linear issue** and running the **Planning Phase** in on
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 **NEVER** submit, post, or update anything to Jira, Confluence, BitBucket, or Slack without explicit user confirmation, even in bypass permission mode.
 
@@ -250,7 +250,7 @@ This ensures the new issue receives the same comprehensive planning as existing 
 
 ### Step 3: Show Status & Interactive Next Actions
 
-**READ**: `/Users/duongdev/.claude/commands/pm/utils/_shared.md`
+**READ**: ``$CCPM_COMMANDS_DIR/_shared-linear-helpers.md``
 
 Use **Linear MCP** to get current status.
 

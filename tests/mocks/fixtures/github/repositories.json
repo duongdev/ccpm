@@ -1,0 +1,56 @@
+{
+  "repositories": [
+    {
+      "id": 123456789,
+      "name": "ccpm",
+      "full_name": "test-org/ccpm",
+      "owner": {
+        "login": "test-org",
+        "id": 987654321,
+        "type": "Organization"
+      },
+      "private": false,
+      "description": "Claude Code Project Management plugin",
+      "default_branch": "main",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2025-01-21T00:00:00Z",
+      "pushed_at": "2025-01-21T12:00:00Z",
+      "size": 5120,
+      "stargazers_count": 150,
+      "watchers_count": 150,
+      "language": "JavaScript",
+      "has_issues": true,
+      "has_projects": true,
+      "has_wiki": true,
+      "html_url": "https://github.com/test-org/ccpm",
+      "clone_url": "https://github.com/test-org/ccpm.git",
+      "ssh_url": "git@github.com:test-org/ccpm.git"
+    },
+    {
+      "id": 123456790,
+      "name": "test-repo",
+      "full_name": "test-org/test-repo",
+      "owner": {
+        "login": "test-org",
+        "id": 987654321,
+        "type": "Organization"
+      },
+      "private": false,
+      "description": "Test repository for integration testing",
+      "default_branch": "main",
+      "created_at": "2024-06-01T00:00:00Z",
+      "updated_at": "2025-01-15T00:00:00Z",
+      "pushed_at": "2025-01-15T10:00:00Z",
+      "size": 1024,
+      "stargazers_count": 10,
+      "watchers_count": 10,
+      "language": "TypeScript",
+      "has_issues": true,
+      "has_projects": false,
+      "has_wiki": false,
+      "html_url": "https://github.com/test-org/test-repo",
+      "clone_url": "https://github.com/test-org/test-repo.git",
+      "ssh_url": "git@github.com:test-org/test-repo.git"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "issueTypes": [
+    {
+      "id": "10001",
+      "name": "Epic",
+      "description": "A large user story that can be broken down into a set of smaller stories",
+      "iconUrl": "https://jira.test.com/images/icons/epic.png",
+      "subtask": false,
+      "fields": {
+        "summary": { "required": true, "name": "Summary", "type": "string" },
+        "description": { "required": false, "name": "Description", "type": "string" },
+        "priority": { "required": false, "name": "Priority", "type": "priority" },
+        "assignee": { "required": false, "name": "Assignee", "type": "user" }
+      }
+    },
+    {
+      "id": "10002",
+      "name": "Story",
+      "description": "A user story",
+      "iconUrl": "https://jira.test.com/images/icons/story.png",
+      "subtask": false,
+      "fields": {
+        "summary": { "required": true, "name": "Summary", "type": "string" },
+        "description": { "required": false, "name": "Description", "type": "string" },
+        "priority": { "required": false, "name": "Priority", "type": "priority" },
+        "assignee": { "required": false, "name": "Assignee", "type": "user" },
+        "storyPoints": { "required": false, "name": "Story Points", "type": "number" }
+      }
+    },
+    {
+      "id": "10003",
+      "name": "Task",
+      "description": "A task that needs to be done",
+      "iconUrl": "https://jira.test.com/images/icons/task.png",
+      "subtask": false,
+      "fields": {
+        "summary": { "required": true, "name": "Summary", "type": "string" },
+        "description": { "required": false, "name": "Description", "type": "string" },
+        "priority": { "required": false, "name": "Priority", "type": "priority" },
+        "assignee": { "required": false, "name": "Assignee", "type": "user" }
+      }
+    },
+    {
+      "id": "10004",
+      "name": "Bug",
+      "description": "A problem that needs to be fixed",
+      "iconUrl": "https://jira.test.com/images/icons/bug.png",
+      "subtask": false,
+      "fields": {
+        "summary": { "required": true, "name": "Summary", "type": "string" },
+        "description": { "required": false, "name": "Description", "type": "string" },
+        "priority": { "required": true, "name": "Priority", "type": "priority" },
+        "assignee": { "required": false, "name": "Assignee", "type": "user" }
+      }
+    }
+  ]
+}

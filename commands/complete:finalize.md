@@ -26,7 +26,7 @@ This command still works perfectly! The hint is just a suggestion.
 
 ## 🚨 CRITICAL: Safety Rules
 
-**READ FIRST**: `/Users/duongdev/.claude/commands/pm/SAFETY_RULES.md`
+**READ FIRST**: ``$CCPM_COMMANDS_DIR/SAFETY_RULES.md``
 
 ⛔ **WILL ASK FOR CONFIRMATION** before posting to Jira, Slack, or creating PR!
 

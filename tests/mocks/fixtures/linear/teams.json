@@ -1,0 +1,31 @@
+{
+  "teams": [
+    {
+      "id": "test-team-1",
+      "name": "Test Team Alpha",
+      "key": "TTA",
+      "description": "Primary test team for integration testing",
+      "timezone": "America/Los_Angeles",
+      "issueCount": 0,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "test-team-2",
+      "name": "Test Team Beta",
+      "key": "TTB",
+      "description": "Secondary test team for multi-team scenarios",
+      "timezone": "America/New_York",
+      "issueCount": 0,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "test-team-3",
+      "name": "Test Team Gamma",
+      "key": "TTG",
+      "description": "Test team for monorepo scenarios",
+      "timezone": "Europe/London",
+      "issueCount": 0,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

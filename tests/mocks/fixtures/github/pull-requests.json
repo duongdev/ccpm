@@ -1,0 +1,116 @@
+{
+  "pullRequests": [
+    {
+      "id": 1234567890,
+      "number": 1,
+      "title": "feat: add user authentication",
+      "body": "## Summary\n\nImplements JWT-based authentication for the API.\n\n## Changes\n- Add JWT middleware\n- Add login/logout endpoints\n- Add user model\n\n## Test Plan\n- Unit tests for auth middleware\n- Integration tests for endpoints",
+      "state": "open",
+      "head": {
+        "ref": "feature/auth",
+        "sha": "abc123def456789",
+        "repo": {
+          "name": "ccpm",
+          "full_name": "test-org/ccpm"
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "main-sha-123",
+        "repo": {
+          "name": "ccpm",
+          "full_name": "test-org/ccpm"
+        }
+      },
+      "user": {
+        "login": "test-user",
+        "id": 11111111
+      },
+      "created_at": "2025-01-20T10:00:00Z",
+      "updated_at": "2025-01-20T15:00:00Z",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "assignees": [
+        {
+          "login": "test-user",
+          "id": 11111111
+        }
+      ],
+      "requested_reviewers": [
+        {
+          "login": "reviewer-1",
+          "id": 22222222
+        }
+      ],
+      "labels": [
+        {
+          "name": "feature",
+          "color": "a2eeef"
+        },
+        {
+          "name": "authentication",
+          "color": "d73a4a"
+        }
+      ],
+      "html_url": "https://github.com/test-org/ccpm/pull/1",
+      "diff_url": "https://github.com/test-org/ccpm/pull/1.diff",
+      "patch_url": "https://github.com/test-org/ccpm/pull/1.patch",
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "merged": false,
+      "comments": 5,
+      "review_comments": 3,
+      "commits": 8,
+      "additions": 245,
+      "deletions": 42,
+      "changed_files": 12
+    },
+    {
+      "id": 1234567891,
+      "number": 2,
+      "title": "fix: resolve authentication bug",
+      "body": "## Summary\n\nFixes issue with token expiration.\n\n## Changes\n- Update token validation logic\n- Add refresh token support\n\n## Test Plan\n- Added test for token expiration\n- Verified fix in staging",
+      "state": "closed",
+      "head": {
+        "ref": "bugfix/auth-token",
+        "sha": "def456abc789012",
+        "repo": {
+          "name": "ccpm",
+          "full_name": "test-org/ccpm"
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "main-sha-123",
+        "repo": {
+          "name": "ccpm",
+          "full_name": "test-org/ccpm"
+        }
+      },
+      "user": {
+        "login": "test-user",
+        "id": 11111111
+      },
+      "created_at": "2025-01-18T09:00:00Z",
+      "updated_at": "2025-01-19T14:30:00Z",
+      "merged_at": "2025-01-19T14:30:00Z",
+      "merge_commit_sha": "merge-sha-456",
+      "labels": [
+        {
+          "name": "bug",
+          "color": "d73a4a"
+        }
+      ],
+      "html_url": "https://github.com/test-org/ccpm/pull/2",
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "merged": true,
+      "comments": 2,
+      "review_comments": 1,
+      "commits": 3,
+      "additions": 45,
+      "deletions": 12,
+      "changed_files": 3
+    }
+  ]
+}
