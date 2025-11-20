@@ -21,6 +21,10 @@ Summary: $4
 
 ## Update Workflow
 
+### Step 0: Load Shared Helpers
+
+READ: commands/_shared-linear-helpers.md
+
 ### Step 1: Fetch Current Issue
 
 Use **Linear MCP** to get issue: $1
@@ -63,7 +67,7 @@ Update checklist item at index **$2** (0-based indexing) **directly in the descr
 **If status is "blocked"**:
 - Keep `- [ ]` (unchecked)
 - No change to checkbox
-- **Also add "blocked" label** to the issue
+- **Also add "blocked" label** to the issue (ensure it exists first using `getOrCreateLabel()`)
 
 **Generate Updated Description:**
 
@@ -108,8 +112,34 @@ Use **Linear MCP** to:
 ```
 
 **C) Update labels if needed**:
-- If status is "blocked" → Add "blocked" label
-- If status is "completed" and all items complete → Add "ready-for-review" label
+- If status is "blocked":
+  1. Get team ID from the issue
+  2. Use `getOrCreateLabel(teamId, "blocked", { color: "#eb5757", description: "CCPM: Task blocked, needs resolution" })`
+  3. Add the label to the issue using the returned label ID
+- If status is "completed" and all items complete:
+  1. Use `getOrCreateLabel(teamId, "ready-for-review", { color: "#5e6ad2", description: "CCPM: Ready for code review" })`
+  2. Add the label to the issue
+
+**Error Handling**:
+```javascript
+try {
+  // Get or create label
+  const blockedLabel = await getOrCreateLabel(teamId, "blocked", {
+    color: "#eb5757",
+    description: "CCPM: Task blocked, needs resolution"
+  });
+
+  // Add label to issue
+  await mcp__linear__update_issue({
+    id: issueId,
+    labelIds: [...existingLabelIds, blockedLabel.id]
+  });
+} catch (error) {
+  console.error("Failed to add blocked label:", error);
+  // Continue with update but warn user
+  console.warn("⚠️ Could not add 'blocked' label. Please add manually if needed.");
+}
+```
 
 ### Step 5: Display Confirmation
 

@@ -14,6 +14,18 @@ argument-hint: <type> "<title>" [parent-id]
 
 ---
 
+## Shared Utilities
+
+**READ**: commands/_shared-linear-helpers.md
+
+This provides helper functions for Linear integration:
+- `ensureLabelsExist()` - Ensures labels exist, creates if missing
+- `getValidStateId()` - Validates and resolves state IDs
+- `getOrCreateLabel()` - Get or create single label
+- `getDefaultColor()` - Standard CCPM colors
+
+---
+
 ## Arguments
 
 - **$1** - Type: `epic`, `feature`, or `initiative`
@@ -78,6 +90,33 @@ After loading, you'll have:
 
 #### For Epic/Initiative:
 
+**Step 1: Ensure labels exist**
+
+```javascript
+// Ensure required labels exist before creating entity
+const labelNames = await ensureLabelsExist(
+  projectMapping[project].team,
+  ["epic", "spec:draft"],
+  {
+    descriptions: {
+      "epic": "CCPM: Epic-level work item",
+      "spec:draft": "CCPM: Specification in draft status"
+    }
+  }
+);
+```
+
+**Step 2: Validate state (optional)**
+
+If you need to set a specific initial state:
+
+```javascript
+// Optional: Validate state if setting non-default state
+// const stateId = await getValidStateId(projectMapping[project].team, "planned");
+```
+
+**Step 3: Create initiative**
+
 Use **Linear MCP** `create_project` or initiative creation:
 
 ```javascript
@@ -85,12 +124,32 @@ Use **Linear MCP** `create_project` or initiative creation:
   name: $2,
   team: projectMapping[project].team,
   description: "Spec document: [DOC-XXX](link) (will be added after doc creation)",
-  status: "planned",
-  labels: ["epic", "spec:draft"]
+  // status: "planned",  // Optional: Use default state or validated stateId
+  labels: labelNames  // Use validated label names
 }
 ```
 
+**Note**: State is optional for initiatives. If you need a specific state, use `getValidStateId()` to validate it first.
+
 #### For Feature (Parent Issue):
+
+**Step 1: Ensure labels exist**
+
+```javascript
+// Ensure required labels exist before creating issue
+const labelNames = await ensureLabelsExist(
+  projectMapping[project].team,
+  ["feature", "spec:draft"],
+  {
+    descriptions: {
+      "feature": "CCPM: Feature-level work item",
+      "spec:draft": "CCPM: Specification in draft status"
+    }
+  }
+);
+```
+
+**Step 2: Create issue**
 
 Use **Linear MCP** `create_issue`:
 
@@ -100,7 +159,7 @@ Use **Linear MCP** `create_issue`:
   team: projectMapping[project].team,
   project: projectMapping[project].project,
   description: "Design doc: [DOC-XXX](link) (will be added after doc creation)",
-  labels: ["feature", "spec:draft"],
+  labels: labelNames,  // Use validated label names
   parent: $3, // if provided (epic/initiative ID)
   priority: 0  // No priority unless specified
 }
@@ -196,6 +255,51 @@ Use **AskUserQuestion**:
 - View in Linear → Show URL and exit
 - Create Another → Ask for details and repeat
 - Done → Show quick commands and exit
+
+---
+
+## Error Handling
+
+### Label Creation Failures
+
+If label creation fails, show helpful error message:
+
+```javascript
+try {
+  const labelNames = await ensureLabelsExist(teamId, ["epic", "spec:draft"], {...});
+} catch (error) {
+  console.error("❌ Failed to create/verify labels:", error.message);
+  throw new Error(
+    `Unable to create spec labels. This may indicate:\n` +
+    `  - Insufficient Linear permissions\n` +
+    `  - Network connectivity issues\n` +
+    `  - Invalid team ID\n\n` +
+    `Original error: ${error.message}`
+  );
+}
+```
+
+### State Validation Failures
+
+If state validation is used (optional for this command):
+
+```javascript
+try {
+  const stateId = await getValidStateId(teamId, "planned");
+} catch (error) {
+  // Error already includes helpful message with available states
+  console.error("❌ Invalid state:", error.message);
+  throw error; // Re-throw to halt command
+}
+```
+
+### Recovery Strategy
+
+If label/state operations fail:
+1. Display clear error message with context
+2. Show what was attempted (label names, state name)
+3. Suggest fixes (check permissions, verify team ID)
+4. DO NOT proceed with entity creation if validation fails
 
 ---
 

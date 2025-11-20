@@ -21,6 +21,20 @@ argument-hint: <pr-number-or-url> [project-id]
 - **$1** - PR number or full BitBucket URL (required)
 - **$2** - Project ID (optional, uses active project if not specified)
 
+## Shared Helpers
+
+**Load shared Linear helpers for label and state management:**
+
+```markdown
+READ: commands/_shared-linear-helpers.md
+```
+
+This provides helper functions:
+- `getOrCreateLabel(teamId, labelName, options)` - Get or create labels
+- `getValidStateId(teamId, stateNameOrType)` - Resolve state names to IDs
+- `ensureLabelsExist(teamId, labelNames, options)` - Ensure multiple labels exist
+- `getDefaultColor(labelName)` - Get standard CCPM colors
+
 ## Project Configuration
 
 **Load project configuration to get BitBucket settings:**
@@ -542,6 +556,26 @@ if (!linearIssue && ticketId) {
   }
 
   if (userWantsCreate) {
+    // Ensure pr-review label exists
+    await ensureLabelsExist(${LINEAR_TEAM}, ["pr-review"], {
+      colors: {
+        "pr-review": "#5e6ad2"
+      },
+      descriptions: {
+        "pr-review": "Pull request under review"
+      }
+    })
+
+    // Get valid state ID for "In Review"
+    let inReviewStateId
+    try {
+      inReviewStateId = await getValidStateId(${LINEAR_TEAM}, "In Review")
+    } catch (error) {
+      console.error(`⚠️  Could not find "In Review" state: ${error.message}`)
+      console.log(`Using fallback: "started" state type`)
+      inReviewStateId = await getValidStateId(${LINEAR_TEAM}, "started")
+    }
+
     // Create Linear issue with PR context
     const newIssue = await mcp__linear__create_issue({
       team: ${LINEAR_TEAM},
@@ -555,8 +589,8 @@ ${prDescription}
 ## PR Review Findings
 ${reviewSummary}
       `,
-      state: 'In Review',
-      labels: ['pr-review'],
+      stateId: inReviewStateId,
+      labelIds: ['pr-review'],
       // Add PR link
       links: [{
         url: prUrl,
