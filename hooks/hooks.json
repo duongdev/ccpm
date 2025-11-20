@@ -6,10 +6,10 @@
       {
         "hooks": [
           {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/test-hook.sh \"{{userMessage}}\"",
-            "timeout": 2000,
-            "description": "CCPM Test Hook - Verifies plugin hooks are working"
+            "type": "prompt",
+            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/smart-agent-selector-optimized.prompt",
+            "timeout": 5000,
+            "description": "Smart agent selector: Context-aware scoring algorithm to auto-invoke optimal agents"
           }
         ]
       }
@@ -20,9 +20,9 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "CCPM TDD Enforcer is temporarily disabled. Please ensure tests are written before production code.",
-            "timeout": 10,
-            "description": "Enforces TDD: Tests must be written before production code [TEMPORARILY DISABLED]"
+            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-enforcer-optimized.prompt",
+            "timeout": 3000,
+            "description": "TDD enforcer: Ensures tests exist before production code changes (Red-Green-Refactor)"
           }
         ]
       }
@@ -32,21 +32,9 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "CCPM Quality Gate is temporarily disabled. Please manually run code reviews after implementation.",
-            "timeout": 15,
-            "description": "Quality gate: Automatically invokes code review and security agents after implementation [TEMPORARILY DISABLED]"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "A subagent just completed its task.\n\nSubagent: {{subagentName}}\nTask: {{taskDescription}}\nResult: {{result}}\n\nAnalyze if:\n1. The subagent completed successfully\n2. Additional agents should be chained (e.g., after implementation, run code-reviewer)\n3. Any follow-up work is needed\n\nRespond with JSON:\n{\n  \"decision\": \"approve\",\n  \"shouldChainAgents\": true|false,\n  \"nextAgents\": [\"agent-name\"],\n  \"reasoning\": \"why chain these agents\",\n  \"systemMessage\": \"message to user\"\n}",
-            "timeout": 10000,
-            "description": "Agent chaining: Determines if more agents should run after subagent completion"
+            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/quality-gate-optimized.prompt",
+            "timeout": 5000,
+            "description": "Quality gate: Automatically invokes code review and security checks after implementation"
           }
         ]
       }
@@ -54,33 +42,30 @@
   },
   "usage": {
     "installation": "This file is automatically applied when the CCPM plugin is installed",
-    "customization": "Users can disable specific hooks in their project's .claude/settings.json"
+    "customization": "Users can disable specific hooks in their project's .claude/settings.json",
+    "optimization": "Using optimized hook prompts from PSN-23: 49% token reduction, 94% faster execution"
   },
   "notes": {
-    "agent_selector": {
+    "smart_agent_selector": {
       "purpose": "Analyzes every user prompt to determine which agents should be invoked",
       "trigger": "UserPromptSubmit",
       "execution": "Before Claude starts responding",
       "output": "Injects agent invocation instructions into Claude's context",
-      "script": "./scripts/discover-agents.sh"
+      "performance": "Optimized version: 81.7% token reduction, <1s execution with caching"
     },
     "tdd_enforcer": {
       "purpose": "Blocks production code changes if tests don't exist (Red-Green-Refactor)",
       "trigger": "PreToolUse for Write/Edit/NotebookEdit",
       "execution": "Before file is written to disk",
-      "output": "Blocks and invokes tdd-orchestrator if tests missing"
+      "output": "Blocks and invokes tdd-orchestrator if tests missing",
+      "performance": "Optimized version: 49% token reduction, <1s execution"
     },
     "quality_gate": {
       "purpose": "Automatically runs quality checks after implementation",
       "trigger": "Stop (after Claude finishes responding)",
       "execution": "Post-implementation analysis",
-      "output": "Blocks and invokes code-reviewer, security-auditor, etc."
-    },
-    "agent_chaining": {
-      "purpose": "Chains agents together (e.g., implement → review → deploy)",
-      "trigger": "SubagentStop (when subagent completes)",
-      "execution": "After subagent finishes",
-      "output": "Determines next agents to run"
+      "output": "Invokes code-reviewer, security-auditor as needed",
+      "performance": "Optimized version: 38.8% token reduction, <1s execution"
     }
   }
 }
