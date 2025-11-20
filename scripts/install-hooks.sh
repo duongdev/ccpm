@@ -67,9 +67,9 @@ if [ ! -d "$PLUGIN_ROOT" ]; then
     exit 1
 fi
 
-# Verify hook files exist (using working versions)
+# Verify hook files exist (smart selector now uses script)
 HOOK_FILES=(
-    "$PLUGIN_ROOT/hooks/agent-selector.prompt"
+    "$PLUGIN_ROOT/hooks/scripts/smart-agent-selector.sh"
     "$PLUGIN_ROOT/hooks/tdd-enforcer-optimized.prompt"
     "$PLUGIN_ROOT/hooks/quality-gate-optimized.prompt"
 )
@@ -122,14 +122,14 @@ jq --arg pluginRoot "$PLUGIN_ROOT" '
   # Ensure hooks object exists
   .hooks = (.hooks // {}) |
 
-  # Add UserPromptSubmit hook (static agent list - works without script execution)
+  # Add UserPromptSubmit hook (smart selector with dynamic agent discovery)
   .hooks.UserPromptSubmit = (
     (.hooks.UserPromptSubmit // []) + [{
       "hooks": [{
-        "type": "prompt",
-        "prompt": "\($pluginRoot)/hooks/agent-selector.prompt",
+        "type": "command",
+        "command": "\($pluginRoot)/hooks/scripts/smart-agent-selector.sh",
         "timeout": 5000,
-        "description": "CCPM: Agent selector - analyzes requests and selects appropriate agents"
+        "description": "CCPM: Smart agent selector - dynamically discovers and scores all available agents"
       }]
     }]
   ) |
