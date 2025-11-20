@@ -29,29 +29,7 @@
   "homepage": "https://github.com/duongdev/ccpm",
   "repository": "https://github.com/duongdev/ccpm",
   "license": "MIT",
-  "components": {
-    "commands": "./commands",
-    "agents": "./agents",
-    "hooks": "./hooks",
-    "scripts": "./scripts",
-    "skills": "./skills"
-  },
-  "features": [
-    "27 PM commands for complete project lifecycle",
-    "Smart agent auto-invocation with scoring algorithm",
-    "TDD enforcement through pre-tool-use hooks",
-    "Quality gates with automated code review",
-    "Linear integration for task tracking",
-    "Spec management with Linear Documents",
-    "Interactive mode with smart next actions",
-    "UI design workflow with wireframes and mockups",
-    "Skill: PM workflow guidance (auto-suggests commands)",
-    "Skill: External system safety guardrails",
-    "Skill: Spec-first development enforcement",
-    "Skill: TDD best practices"
-  ],
-  "requirements": {
-    "mcp_servers": ["linear", "github", "context7"]
-  },
+  "commands": "./commands",
+  "agents": "./agents",
   "hooks": "./hooks/hooks.json"
 }
