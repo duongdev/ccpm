@@ -96,6 +96,12 @@ console.log(projectContext.display.title)  // e.g., "My Monorepo › frontend"
 
 ### Step 1: Create Linear Issue
 
+**IMPORTANT**: Use shared Linear helpers for resilient state and label handling:
+
+```markdown
+READ: commands/_shared-linear-helpers.md
+```
+
 Use **Linear MCP** to create a new issue using loaded configuration:
 
 **Title**: $1
@@ -114,14 +120,37 @@ if (SUBPROJECT) {
   console.log(`📁 Subproject context: ${SUBPROJECT}`)
 }
 
-// Create issue
-const issue = linear_create_issue({
-  title: "$1",
-  team: LINEAR_TEAM,
-  project: LINEAR_PROJECT,
-  state: "Backlog",
-  labels: labels
-})
+// Ensure all labels exist before creating issue
+try {
+  const validLabels = await ensureLabelsExist(LINEAR_TEAM, labels, {
+    descriptions: {
+      'planning': 'Task is in planning phase',
+      'research': 'Research and discovery required',
+      'implementation': 'Task is being implemented',
+      'verification': 'Task is being verified'
+    }
+  })
+
+  // Get valid state ID for "Backlog"
+  const backlogStateId = await getValidStateId(LINEAR_TEAM, "Backlog")
+
+  // Create issue with validated state and labels
+  const issue = linear_create_issue({
+    title: "$1",
+    team: LINEAR_TEAM,
+    project: LINEAR_PROJECT,
+    stateId: backlogStateId,
+    labelIds: validLabels
+  })
+
+} catch (error) {
+  if (error.message.includes('Could not find state') || error.message.includes('Invalid state')) {
+    console.error(`❌ Linear State Error: ${error.message}`)
+    console.log(`💡 Tip: Run '/ccpm:utils:status' to see available states for your team`)
+    throw error
+  }
+  throw error
+}
 ```
 
 **Initial Description**:

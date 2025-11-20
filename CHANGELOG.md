@@ -5,6 +5,96 @@ All notable changes to the CCPM plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Shared Linear Integration Helpers** (PSN-28)
+  - `getOrCreateLabel()` - Auto-creates missing labels with standardized CCPM colors
+  - `getValidStateId()` - Validates state names with fuzzy matching and fallback mappings
+  - `ensureLabelsExist()` - Batch label processing with sequential execution
+  - `getDefaultColor()` - Standardized CCPM color palette for consistent visual identity
+  - Comprehensive documentation in `commands/_shared-linear-helpers.md`
+
+- **Comprehensive Error Handling for Linear Operations** (PSN-28)
+  - Detailed error handling patterns for 6 error categories
+  - User-friendly error messages with recovery steps
+  - 9 major error handling sections covering all Linear integration points
+  - 15+ code examples demonstrating best practices
+  - 5 recovery strategies for common failure scenarios
+  - Documentation in `docs/development/linear-error-handling-guide.md`
+
+- **Integration Testing Infrastructure** (PSN-28)
+  - 42 comprehensive test cases covering all helper functions
+  - Test runner script with category selection and verbose mode
+  - Automated cleanup utility for test data
+  - Complete testing guide with setup instructions
+  - Example test runs with expected outputs
+  - Documentation in `tests/integration/` directory
+
+- **Troubleshooting Documentation** (PSN-28)
+  - Complete troubleshooting guide for Linear integration issues
+  - Quick diagnostics section for immediate problem identification
+  - 6 common issue categories with detailed solutions
+  - Error messages reference with explanations and fixes
+  - 5 recovery procedures for common failure scenarios
+  - Prevention best practices with code examples
+  - Documentation in `docs/guides/troubleshooting-linear.md`
+
+### Changed
+
+- **Updated 6 Commands to Use Shared Linear Helpers** (PSN-28)
+  - `/ccpm:planning:create` - Fixed "Backlog" state and label validation
+  - `/ccpm:planning:design-approve` - Fixed "Todo" state and label validation
+  - `/ccpm:spec:create` - Added label validation for epic/feature labels
+  - `/ccpm:spec:break-down` - Ensured feature/task labels exist before use
+  - `/ccpm:implementation:update` - Fixed "blocked" label assumption
+  - `/ccpm:pr:check-bitbucket` - Fixed "In Review" state and pr-review label
+  - All commands now use validated state IDs instead of hardcoded assumptions
+  - All commands ensure labels exist before referencing them
+
+### Fixed
+
+- **State Resolution Issues** (PSN-28)
+  - Commands no longer fail when workflow states have custom names
+  - Fuzzy matching handles state name variations (e.g., "todo" → "unstarted" type)
+  - Fallback mappings for common state aliases ("In Progress" → "started" type)
+  - Clear error messages with available states when validation fails
+  - State type matching works across all Linear team workflows
+
+- **Label Management Issues** (PSN-28)
+  - Missing labels are automatically created instead of causing silent failures
+  - Label creation uses standardized CCPM color palette
+  - Case-insensitive label matching prevents duplicate labels
+  - Labels are reused if they already exist (idempotent operations)
+  - Better error messages when label operations fail
+
+- **Error Handling Gaps** (PSN-28)
+  - All Linear MCP operations now have proper error handling
+  - Network errors provide actionable recovery steps
+  - Permission errors explain how to request access
+  - Team/project errors guide users to correct configuration
+  - Issue creation errors include context for debugging
+
+### Documentation
+
+- **Linear Integration Documentation** (PSN-28)
+  - Added comprehensive troubleshooting guide
+  - Created error handling guide for developers
+  - Documented all shared helper functions
+  - Created testing guide with 42 test cases
+  - Added integration examples for common patterns
+  - Updated CLAUDE.md with helper usage patterns
+
+### Performance
+
+- **Linear Helper Functions** (PSN-28)
+  - Sequential label processing to respect rate limits
+  - Efficient state validation with early exit on exact match
+  - Cached color lookup via in-memory map
+  - Minimal API calls through label reuse
+  - Fast fuzzy matching with progressive fallback
+
 ## [2.2.0] - 2025-11-20
 
 ### Added

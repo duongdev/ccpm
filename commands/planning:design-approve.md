@@ -14,6 +14,16 @@ You are **approving the final UI design** and generating **comprehensive develop
 
 This command is **READ-ONLY** for external systems and **WRITE** to Linear (internal tracking).
 
+## 📦 Shared Helper Functions
+
+**READ**: `commands/_shared-linear-helpers.md`
+
+Use the following helper functions from the shared library:
+- `getValidStateId(teamId, stateNameOrType)` - Resolves state names to valid IDs
+- `ensureLabelsExist(teamId, labelNames, options)` - Creates labels if missing
+- `getOrCreateLabel(teamId, labelName, options)` - Gets or creates single label
+- `getDefaultColor(labelName)` - Standard CCPM color palette
+
 ## Arguments
 
 - **$1**: Linear issue ID (e.g., WORK-123)
@@ -274,14 +284,47 @@ linear_update_issue({
 
 ### Step 6: Update Issue Status and Labels
 
-Use **Linear MCP** to mark as ready for development:
+Use **Linear MCP** with shared helpers to mark as ready for development:
 
 ```javascript
-linear_update_issue({
+// Extract team ID from issue
+const issue = await linear_get_issue({ id: "$1" });
+const teamId = issue.team.id;
+
+// Get valid state ID using shared helper (supports fuzzy matching)
+const stateId = await getValidStateId(teamId, "todo"); // Maps to "unstarted" type
+
+// Ensure all required labels exist before using them
+const labelNames = await ensureLabelsExist(teamId, [
+  "design-approved",
+  "spec-complete",
+  "ready-for-dev"
+], {
+  colors: {
+    "design-approved": getDefaultColor("approved"),
+    "spec-complete": getDefaultColor("documentation"),
+    "ready-for-dev": getDefaultColor("planning")
+  }
+});
+
+// Update issue with validated state ID and labels
+await linear_update_issue({
   id: "$1",
-  state: "Todo", // or "Ready for Dev" if available
-  labels: ["design-approved", "spec-complete", "ready-for-dev"]
-})
+  stateId: stateId,
+  labelIds: labelNames
+});
+```
+
+**Error Handling:**
+```javascript
+try {
+  const stateId = await getValidStateId(teamId, "todo");
+  // Proceed with update
+} catch (error) {
+  console.error("Failed to resolve state:", error.message);
+  // Error message includes available states for the team
+  throw error;
+}
 ```
 
 ### Step 7: Generate Implementation Tasks (Optional)
@@ -314,23 +357,40 @@ Use **AskUserQuestion** to offer task breakdown:
 
 **If user wants task breakdown**:
 
-Create sub-issues using **Linear MCP**:
+Create sub-issues using **Linear MCP** with validated labels:
 
 ```javascript
-// Example sub-issues
-linear_create_issue({
+// Get team ID from parent issue
+const parentIssue = await linear_get_issue({ id: "$1" });
+const teamId = parentIssue.team.id;
+
+// Ensure labels exist before creating sub-tasks
+const taskLabels = await ensureLabelsExist(teamId, [
+  "frontend",
+  "ui-implementation"
+], {
+  colors: {
+    "frontend": getDefaultColor("frontend"),
+    "ui-implementation": getDefaultColor("implementation")
+  }
+});
+
+// Create sub-issues with validated labels
+await linear_create_issue({
   title: "Implement [Component 1 Name]",
   description: "See UI Specification: [Link]\n\nComponent: [Component 1]\nPriority: High",
   parentId: "$1",
-  labels: ["frontend", "ui-implementation"]
-})
+  teamId: teamId,
+  labelIds: taskLabels
+});
 
-linear_create_issue({
+await linear_create_issue({
   title: "Implement [Component 2 Name]",
   description: "See UI Specification: [Link]\n\nComponent: [Component 2]\nPriority: High",
   parentId: "$1",
-  labels: ["frontend", "ui-implementation"]
-})
+  teamId: teamId,
+  labelIds: taskLabels
+});
 
 // Continue for all major components
 ```

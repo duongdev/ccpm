@@ -14,6 +14,16 @@ argument-hint: <epic-or-feature-id>
 
 ---
 
+## Shared Helpers
+
+**READ**: `commands/_shared-linear-helpers.md`
+
+This command uses the following helper functions:
+- `ensureLabelsExist()` - Ensure labels exist before using them
+- `getOrCreateLabel()` - Create or retrieve individual labels
+
+---
+
 ## Argument
 
 - **$1** - Epic ID (to break into Features) or Feature ID (to break into Tasks)
@@ -116,12 +126,23 @@ features.push(...suggestedFeatures)
 For each feature:
 
 ```javascript
+// Ensure required labels exist before creating issues
+const featureLabels = await ensureLabelsExist(epic.team.id,
+  ['feature', 'spec:draft'],
+  {
+    descriptions: {
+      'feature': 'Feature-level work item',
+      'spec:draft': 'Specification in draft state'
+    }
+  }
+);
+
 {
   title: feature.title,
   team: epic.team,
   project: epic.project,
   parent: epic.id, // Link to epic
-  labels: ['feature', 'spec:draft'],
+  labelIds: featureLabels, // Use validated label IDs
   priority: mapPriority(feature.priority), // P0=1, P1=2, P2=3, P3=4
   description: `
 ## 📄 Specification
@@ -202,12 +223,23 @@ tasks.push(...suggestedTasks)
 For each task:
 
 ```javascript
+// Ensure required labels exist before creating tasks
+const taskLabels = await ensureLabelsExist(feature.team.id,
+  ['task', 'planning'],
+  {
+    descriptions: {
+      'task': 'Implementation task',
+      'planning': 'Task in planning phase'
+    }
+  }
+);
+
 {
   title: task.title,
   team: feature.team,
   project: feature.project,
   parent: feature.id, // Link to feature as sub-issue
-  labels: ['task', 'planning'],
+  labelIds: taskLabels, // Use validated label IDs
   estimate: convertToPoints(task.estimate), // 2h → 1 point, 4h → 2 points
   description: `
 ## 📋 Task Description
@@ -347,12 +379,50 @@ If user confirms:
 ```javascript
 const createdIssues = []
 
-for (const item of breakdownItems) {
-  const issue = await createLinearIssue(item)
-  createdIssues.push(issue)
+try {
+  // Ensure labels exist once before creating all issues
+  // (Labels are reused across all items in the breakdown)
+  const labels = isEpicBreakdown
+    ? await ensureLabelsExist(parentIssue.team.id,
+        ['feature', 'spec:draft'],
+        {
+          descriptions: {
+            'feature': 'Feature-level work item',
+            'spec:draft': 'Specification in draft state'
+          }
+        }
+      )
+    : await ensureLabelsExist(parentIssue.team.id,
+        ['task', 'planning'],
+        {
+          descriptions: {
+            'task': 'Implementation task',
+            'planning': 'Task in planning phase'
+          }
+        }
+      );
 
-  // Brief pause to avoid rate limits
-  await sleep(500)
+  for (const item of breakdownItems) {
+    const issue = await createLinearIssue({
+      ...item,
+      labelIds: labels // Use pre-validated labels
+    })
+    createdIssues.push(issue)
+
+    // Brief pause to avoid rate limits
+    await sleep(500)
+  }
+} catch (error) {
+  console.error(`Failed to create issues: ${error.message}`);
+
+  if (error.message.includes('label')) {
+    throw new Error(
+      `Label operation failed. Please check that you have permission to create labels in this team.\n` +
+      `Error: ${error.message}`
+    );
+  }
+
+  throw error;
 }
 ```
 
@@ -506,3 +576,9 @@ function extractDependencies(taskDescription) {
 - Dependencies are parsed and preserved
 - Timeline estimates are converted to Linear points
 - Priority mapping follows P0=Urgent, P1=High, etc.
+- **Label Handling**: Uses shared Linear helpers from `_shared-linear-helpers.md`
+  - Labels are validated/created once before batch issue creation
+  - Features get labels: `['feature', 'spec:draft']`
+  - Tasks get labels: `['task', 'planning']`
+  - Graceful error handling if label creation fails
+  - Automatic label reuse prevents duplicates
