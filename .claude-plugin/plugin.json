@@ -27,6 +27,11 @@
   "repository": "https://github.com/duongdev/ccpm",
   "license": "MIT",
   "commands": "./commands",
-  "agents": "./agents",
-  "hooks": "./hooks"
+  "agents": [
+    "./agents/pm:ui-designer.md",
+    "./agents/project-config-loader.md",
+    "./agents/project-context-manager.md",
+    "./agents/project-detector.md"
+  ],
+  "hooks": "./hooks/hooks.json"
 }
