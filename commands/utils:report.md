@@ -21,9 +21,9 @@ Generating comprehensive progress report for **$1** project.
 
 **Project Mapping**:
 
-- **trainer-guru** → Linear Team: "Work", Project: "Trainer Guru"
-- **repeat** → Linear Team: "Work", Project: "Repeat"
-- **nv-internal** → Linear Team: "Personal", Project: "NV Internal"
+- **my-app** → Linear Team: "Work", Project: "My App"
+- **my-project** → Linear Team: "Work", Project: "My Project"
+- **personal-project** → Linear Team: "Personal", Project: "Personal Project"
 
 ## Workflow
 
@@ -244,11 +244,11 @@ Refresh:       /ccpm:utils:report $1
 
 ```bash
 # For external PM projects
-/ccpm:utils:report trainer-guru
-/ccpm:utils:report repeat
+/ccpm:utils:report my-app
+/ccpm:utils:report my-project
 
 # For internal projects
-/ccpm:utils:report nv-internal
+/ccpm:utils:report personal-project
 ```
 
 ### Refresh Frequency

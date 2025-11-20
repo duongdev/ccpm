@@ -179,7 +179,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ### Combined Workflow Options
 
-#### Option 1: Spec-First Workflow (Recommended for NV Internal)
+#### Option 1: Spec-First Workflow (Recommended for Personal Project)
 ```
 1. /ccpm:spec:create epic "User Auth"
 2. /ccpm:spec:write DOC-123 all
@@ -195,7 +195,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 #### Option 2: Task-First Workflow (Quick tasks)
 ```
-1. /ccpm:planning:create "Add dark mode" nv-internal
+1. /ccpm:planning:create "Add dark mode" personal-project
 2. /ccpm:implementation:start WORK-300
 3. /ccpm:verification:check WORK-300
 4. /ccpm:complete:finalize WORK-300
@@ -203,7 +203,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 #### Option 3: Migrate Existing → Spec Workflow
 ```
-1. /ccpm:spec:migrate ~/personal/nv-internal
+1. /ccpm:spec:migrate ~/personal/personal-project
 2. Review migrated items in Linear
 3. /ccpm:spec:sync DOC-XXX            ← Sync with codebase
 4. Continue with spec-first workflow
@@ -253,7 +253,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ## 🎯 Use Cases
 
-### Use Case 1: New Feature Development (nv-internal)
+### Use Case 1: New Feature Development (personal-project)
 
 **Scenario**: Building "Task Comments System" feature
 
@@ -293,7 +293,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 ```bash
 # 1. Run Migration
-/ccpm:spec:migrate ~/personal/nv-internal
+/ccpm:spec:migrate ~/personal/personal-project
 
 # Output: Detailed preview for ALL 45 files
 # - 2 Epics → Linear Initiatives + Spec Docs
@@ -305,7 +305,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 # → Creates all items in Linear
 
 # 3. Review in Linear
-/ccpm:utils:report nv-internal
+/ccpm:utils:report personal-project
 # Shows all migrated items organized
 
 # 4. Continue with spec workflow
@@ -317,7 +317,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 **Morning:**
 ```bash
-/ccpm:utils:report nv-internal
+/ccpm:utils:report personal-project
 # Shows: 5 active tasks, 2 blocked, 3 in verification
 
 /ccpm:utils:help WORK-150
@@ -383,7 +383,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 1. **Migrate Existing Specs** (if you have any):
    ```bash
-   /ccpm:spec:migrate ~/personal/nv-internal
+   /ccpm:spec:migrate ~/personal/personal-project
    ```
 
 2. **Create First Epic with Spec**:
@@ -412,7 +412,7 @@ Implemented a comprehensive **Spec Management System** for PM Commands, enabling
 
 **Morning:**
 ```bash
-/ccpm:utils:report nv-internal
+/ccpm:utils:report personal-project
 /ccpm:utils:help WORK-XXX  # Get context-aware suggestions
 ```
 

@@ -20,32 +20,40 @@ You are **creating a new Linear issue** and running the **Planning Phase** in on
 
 When in doubt, ASK before posting anything externally.
 
-## Project Context
+## Project Configuration
 
-Projects and their PM systems:
+**IMPORTANT**: This command uses dynamic project configuration from `~/.claude/ccpm-config.yaml`.
 
-- **trainer-guru**: Uses Jira, Confluence, Slack
-  - Linear: Team "Work", Project "Trainer Guru"
-- **repeat**: Uses Jira, Confluence, Slack
-  - Linear: Team "Work", Project "Repeat"
-- **nv-internal**: Pure Linear-based (no external PM)
-  - Linear: Team "Personal", Project "NV Internal"
+See [Project Setup Guide](../docs/guides/project-setup.md) for configuration details.
+
+### Load Project Configuration
+
+```bash
+# Set project argument (from command: /ccpm:planning:create "title" <project> <jira-id>)
+PROJECT_ARG="$2"
+```
+
+**LOAD PROJECT CONFIG**: Follow instructions in `commands/_shared-project-config-loader.md`
+
+After loading, these variables are available:
+- `${PROJECT_ID}`, `${PROJECT_NAME}`
+- `${LINEAR_TEAM}`, `${LINEAR_PROJECT}`, `${LINEAR_DEFAULT_LABELS}`
+- `${EXTERNAL_PM_ENABLED}`, `${EXTERNAL_PM_TYPE}`
+- `${JIRA_ENABLED}`, `${JIRA_BASE_URL}`, `${JIRA_PROJECT_KEY}`
+- `${CONFLUENCE_ENABLED}`, `${SLACK_ENABLED}`
+- And more... (see shared loader for complete list)
 
 ## Workflow
 
 ### Step 1: Create Linear Issue
 
-Use **Linear MCP** to create a new issue:
+Use **Linear MCP** to create a new issue using loaded configuration:
 
 **Title**: $1
-**Team & Project mapping**:
-
-- If project is "trainer-guru" → Team: "Work", Project: "Trainer Guru"
-- If project is "repeat" → Team: "Work", Project: "Repeat"
-- If project is "nv-internal" → Team: "Personal", Project: "NV Internal"
-
+**Team**: ${LINEAR_TEAM} (from config)
+**Project**: ${LINEAR_PROJECT} (from config)
 **Status**: Backlog
-**Labels**: planning
+**Labels**: ${DEFAULT_LABELS} (from config)
 
 **Initial Description**:
 
@@ -80,17 +88,37 @@ Display:
 
 Now run the **same workflow as `/ccpm:planning:plan`** using the created issue ID:
 
-1. **Fetch Jira context** (if $3 provided):
+#### Check if External PM is Enabled
+
+```javascript
+// Only fetch external PM data if enabled in config
+if (EXTERNAL_PM_ENABLED === "true") {
+  console.log(`📡 External PM enabled: ${EXTERNAL_PM_TYPE}`)
+
+  // Fetch based on PM type
+  if (EXTERNAL_PM_TYPE === "jira") {
+    // Steps 1-3 below
+  }
+} else {
+  console.log(`📋 Linear-only mode (no external PM)`)
+  // Skip to Step 4
+}
+```
+
+1. **Fetch Jira context** (if `EXTERNAL_PM_ENABLED` and $3 provided):
+   - Load Jira config: `JIRA_BASE_URL`, `JIRA_PROJECT_KEY`
    - Use Atlassian MCP to fetch Jira ticket: $3
    - Get linked issues, comments, attachments
    - **SAVE all URLs** for linking
 
-2. **Search Confluence** (if applicable):
-   - Related documentation, PRD, design docs
+2. **Search Confluence** (if `confluence.enabled` in config):
+   - Load Confluence config: `CONFLUENCE_BASE_URL`, `CONFLUENCE_SPACE_KEY`
+   - Search for related documentation, PRD, design docs
    - **SAVE all page URLs**
 
-3. **Search Slack** (if applicable):
-   - Relevant channel discussions
+3. **Search Slack** (if `slack.enabled` in config):
+   - Load Slack config: `SLACK_WORKSPACE`, `SLACK_CHANNELS`
+   - Search relevant channel discussions
    - **SAVE thread URLs**
 
 4. **Use Playwright** (if applicable):
@@ -308,13 +336,20 @@ Context:       /ccpm:utils:context [WORK-123]
 **With Jira:**
 
 ```bash
-/ccpm:planning:create "Add JWT authentication" trainer-guru TRAIN-456
+/ccpm:planning:create "Add JWT authentication" my-app PROJ-456
 ```
 
-**Without Jira (NV Internal):**
+**Without Jira (Linear-only):**
 
 ```bash
-/ccpm:planning:create "Add dark mode toggle" nv-internal
+/ccpm:planning:create "Add dark mode toggle" personal-project
+```
+
+**With Active Project:**
+
+```bash
+/ccpm:project:set my-app
+/ccpm:planning:create "Add JWT authentication"  # Uses active project
 ```
 
 ### Benefits

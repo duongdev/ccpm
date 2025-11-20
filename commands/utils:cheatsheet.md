@@ -504,7 +504,7 @@ Are all subtasks complete?
 
 ### Project-Specific
 ```bash
-/ccpm:repeat:check-pr <pr-number-or-url>
+/ccpm:my-project:check-pr <pr-number-or-url>
 ```
 
 ---

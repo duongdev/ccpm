@@ -21,16 +21,16 @@ Searching for tasks matching: **$2**
 
 **Project Mapping**:
 
-- **trainer-guru** → Linear Team: "Work", Project: "Trainer Guru"
-- **repeat** → Linear Team: "Work", Project: "Repeat"
-- **nv-internal** → Linear Team: "Personal", Project: "NV Internal"
+- **my-app** → Linear Team: "Work", Project: "My App"
+- **my-project** → Linear Team: "Work", Project: "My Project"
+- **personal-project** → Linear Team: "Personal", Project: "Personal Project"
 
 ## Workflow
 
 ### Step 1: Parse Arguments
 
 Extract:
-- `$1` = Project identifier (trainer-guru, repeat, or nv-internal)
+- `$1` = Project identifier (my-app, my-project, or personal-project)
 - `$2+` = Search query (all remaining arguments joined with spaces)
 
 ### Step 2: Search Issues
@@ -181,7 +181,7 @@ Combine with status filters:
 
 ```bash
 # Search for "auth" tasks in "In Progress" status
-/ccpm:utils:search trainer-guru "auth"
+/ccpm:utils:search my-app "auth"
 # Then manually filter by status in results
 ```
 
@@ -199,10 +199,10 @@ Omit project parameter to search all projects:
 
 Common search patterns:
 
-- Feature name: `/ccpm:utils:search repeat "user profile"`
-- Bug description: `/ccpm:utils:search trainer-guru "crash"`
-- Technical term: `/ccpm:utils:search nv-internal "API"`
-- Label/tag: `/ccpm:utils:search repeat "backend"`
+- Feature name: `/ccpm:utils:search my-project "user profile"`
+- Bug description: `/ccpm:utils:search my-app "crash"`
+- Technical term: `/ccpm:utils:search personal-project "API"`
+- Label/tag: `/ccpm:utils:search my-project "backend"`
 
 ## Notes
 
@@ -223,14 +223,14 @@ Common search patterns:
 ### Usage Examples
 
 ```bash
-# Search for authentication tasks in Trainer Guru
-/ccpm:utils:search trainer-guru "authentication"
+# Search for authentication tasks in My App
+/ccpm:utils:search my-app "authentication"
 
-# Search for UI-related tasks in Repeat
-/ccpm:utils:search repeat "UI component"
+# Search for UI-related tasks in My Project
+/ccpm:utils:search my-project "UI component"
 
-# Search for bug fixes in NV Internal
-/ccpm:utils:search nv-internal "bug fix"
+# Search for bug fixes in Personal Project
+/ccpm:utils:search personal-project "bug fix"
 
 # Search all projects for "Redis"
 /ccpm:utils:search "" "Redis"

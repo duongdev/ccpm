@@ -20,27 +20,41 @@ You are starting the **Planning Phase** for Linear issue **$1** based on Jira ti
 
 When in doubt, ASK before posting anything externally.
 
-## Project Context
+## Project Configuration
 
-Projects and their PM systems:
-
-- **trainer-guru**: Uses Jira, Confluence, Slack
-  - Linear: Team "Work", Project "Trainer Guru"
-- **repeat**: Uses Jira, Confluence, Slack
-  - Linear: Team "Work", Project "Repeat"
-- **nv-internal**: Pure Linear-based (no external PM)
-  - Linear: Team "Personal", Project "NV Internal"
+**IMPORTANT**: This command uses dynamic project configuration from `~/.claude/ccpm-config.yaml`.
 
 ## Planning Workflow
 
-### Step 0: Fetch Existing Linear Issue
+### Step 0: Fetch Existing Linear Issue & Load Project Config
 
 Use **Linear MCP** to:
 
 1. Get issue details for: $1
 2. Read current title, description, and any existing context
-3. Identify the project to determine which external PM systems to query
+3. **Determine the project from the Linear issue** (team/project mapping)
 4. Extract any existing Jira ticket reference (if not provided as $2)
+
+**Load Project Configuration:**
+
+```bash
+# Get project ID from Linear issue's team/project
+# Map Linear team+project to project ID in config
+
+# Example: If Linear shows "Work / My App"
+# Search config for matching linear.team="Work" and linear.project="My App"
+
+# Load project config
+PROJECT_ARG=$(determine_project_from_linear_issue "$1")
+```
+
+**LOAD PROJECT CONFIG**: Follow instructions in `commands/_shared-project-config-loader.md`
+
+After loading, you'll have:
+- `${EXTERNAL_PM_ENABLED}` - Whether to query Jira/Confluence/Slack
+- `${EXTERNAL_PM_TYPE}` - Type of external PM
+- `${JIRA_ENABLED}`, `${CONFLUENCE_ENABLED}`, `${SLACK_ENABLED}`
+- All other project settings
 
 If $2 (Jira ticket ID) is not provided:
 

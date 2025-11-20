@@ -1,5 +1,5 @@
 ---
-description: Quick planning for NV Internal tasks without external PM systems
+description: Quick planning for tasks without external PM systems
 allowed-tools: [Bash, LinearMCP, Context7MCP]
 argument-hint: "<task-description>" <project>
 ---
@@ -8,7 +8,7 @@ argument-hint: "<task-description>" <project>
 
 You are doing **Quick Planning** for: **$1** in project **$2**.
 
-This command is for **NV Internal** or other projects without external PM systems (no Jira/Confluence).
+This command is for projects without external PM systems (no Jira/Confluence).
 
 ## 🚨 CRITICAL: Safety Rules
 
@@ -49,8 +49,8 @@ Project: $2
 
 Use **Linear MCP** to create issue:
 
-**Team & Project**: 
-- NV Internal → Team: "Personal", Project: "NV Internal"
+**Team & Project**:
+- Load from project configuration using `_shared-project-config-loader.md`
 
 **Title**: $1  
 **Status**: Planning  

@@ -1,10 +1,12 @@
 ---
-description: Check and analyze BitBucket PR for Repeat project
-allowed-tools: [PlaywrightMCP, BrowserMCP, LinearMCP, Read, AskUserQuestion]
-argument-hint: <pr-number-or-url>
+description: Check and analyze BitBucket PR for any project
+allowed-tools: [PlaywrightMCP, BrowserMCP, LinearMCP, Read, AskUserQuestion, Bash]
+argument-hint: <pr-number-or-url> [project-id]
 ---
 
-# Check BitBucket PR for Repeat
+# Check BitBucket PR
+
+**Works with any project configured with BitBucket in `~/.claude/ccpm-config.yaml`**
 
 ## 🚨 CRITICAL: Safety Rules
 
@@ -14,9 +16,39 @@ argument-hint: <pr-number-or-url>
 
 ---
 
-## Argument
+## Arguments
 
 - **$1** - PR number or full BitBucket URL (required)
+- **$2** - Project ID (optional, uses active project if not specified)
+
+## Project Configuration
+
+**Load project configuration to get BitBucket settings:**
+
+```bash
+# Set project argument
+PROJECT_ARG="$2"  # Optional - will use active project if not provided
+```
+
+**LOAD PROJECT CONFIG**: Follow instructions in `commands/_shared-project-config-loader.md`
+
+After loading, you'll have:
+- `${REPO_TYPE}` - Should be "bitbucket"
+- `${BITBUCKET_WORKSPACE}`, `${BITBUCKET_REPO}`, `${BITBUCKET_BASE_URL}`
+- Custom command config (browser_mcp preference, etc.)
+
+**Validate BitBucket is configured:**
+
+```bash
+if [[ "$REPO_TYPE" != "bitbucket" ]]; then
+  echo "❌ Error: Project '$PROJECT_ID' is not configured for BitBucket"
+  echo "   Current repository type: $REPO_TYPE"
+  echo ""
+  echo "To use this command, configure BitBucket in project settings:"
+  echo "  /ccpm:project:update $PROJECT_ID"
+  exit 1
+fi
+```
 
 ## Workflow
 
@@ -48,7 +80,7 @@ Store the selected MCP type for use in subsequent steps.
 
 ### Step 2: Parse PR Identifier
 
-Determine PR URL from input:
+Determine PR URL from input using loaded project configuration:
 
 ```javascript
 let prUrl
@@ -57,10 +89,15 @@ if ($1.startsWith('http')) {
   // Full URL provided
   prUrl = $1
 } else {
-  // PR number provided - construct URL
-  // Default Repeat project URL pattern
-  prUrl = `https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/${$1}`
+  // PR number provided - construct URL from project config
+  // Use BITBUCKET_BASE_URL from loaded config
+  prUrl = `${BITBUCKET_BASE_URL}/pull-requests/${$1}`
+
+  // Alternative if base URL not in config:
+  // prUrl = `https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO}/pull-requests/${$1}`
 }
+
+console.log(`📎 PR URL: ${prUrl}`)
 ```
 
 ### Step 3: Navigate to PR
@@ -276,7 +313,7 @@ if (ticketMatch) {
   // Search for Linear issue linked to this Jira ticket
   // Use Linear MCP to search by title or description containing ticket ID
   const searchResults = await mcp__linear__list_issues({
-    team: 'repeat',  // or appropriate team identifier
+    team: ${LINEAR_TEAM},  // or appropriate team identifier
     query: ticketId,
     limit: 10
   })
@@ -507,7 +544,7 @@ if (!linearIssue && ticketId) {
   if (userWantsCreate) {
     // Create Linear issue with PR context
     const newIssue = await mcp__linear__create_issue({
-      team: 'repeat',
+      team: ${LINEAR_TEAM},
       title: `[${ticketId}] ${prTitle}`,
       description: `
 # Jira Ticket: ${ticketId}
@@ -780,7 +817,7 @@ Throughout the entire workflow:
 ### Example 1: Check PR by number
 
 ```bash
-/ccpm:repeat:check-pr 123
+/ccpm:pr:check-bitbucket 123
 
 # Workflow:
 # 1. Ask which MCP to use
@@ -794,7 +831,7 @@ Throughout the entire workflow:
 ### Example 2: Check PR by URL
 
 ```bash
-/ccpm:repeat:check-pr https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/456
+/ccpm:pr:check-bitbucket https://bitbucket.org/my-workspace/my-repo/pull-requests/456
 
 # Workflow:
 # Same as above but uses provided URL directly
@@ -803,7 +840,7 @@ Throughout the entire workflow:
 ### Example 3: Full workflow with fixes
 
 ```bash
-/ccpm:repeat:check-pr 789
+/ccpm:pr:check-bitbucket 789
 
 # After review:
 # User selects: "Fix Issues Locally"

@@ -165,7 +165,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 /ccpm:spec:migrate .
 
 # Migrate from specific project path
-/ccpm:spec:migrate ~/personal/nv-internal
+/ccpm:spec:migrate ~/personal/personal-project
 
 # Migrate only specific category (skip selection)
 /ccpm:spec:migrate . enhancements
@@ -232,7 +232,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Interactive next action prompts
 
 ```bash
-/ccpm:planning:create "Add JWT authentication" trainer-guru TRAIN-456
+/ccpm:planning:create "Add JWT authentication" my-app TRAIN-456
 ```
 
 #### `/ccpm:planning:plan <linear-issue-id> [jira-ticket-id]`
@@ -275,10 +275,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 #### `/ccpm:planning:quick-plan "<description>" <project>`
 
-**Quick planning for NV Internal (no external PM).**
+**Quick planning for Personal Project (no external PM).**
 
 ```bash
-/ccpm:planning:quick-plan "Add dark mode" nv-internal
+/ccpm:planning:quick-plan "Add dark mode" personal-project
 ```
 
 ### Implementation Commands
@@ -447,7 +447,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 - Interactive next actions
 
 ```bash
-/ccpm:utils:report trainer-guru
+/ccpm:utils:report my-app
 ```
 
 #### `/ccpm:utils:insights <linear-issue-id>` 🆕
@@ -525,10 +525,10 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # Search for authentication tasks
-/ccpm:utils:search trainer-guru "authentication"
+/ccpm:utils:search my-app "authentication"
 
 # Search for UI components
-/ccpm:utils:search repeat "button component"
+/ccpm:utils:search my-project "button component"
 
 # Search all projects (use empty string)
 /ccpm:utils:search "" "Redis"
@@ -598,7 +598,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ```bash
 # 1. Create & Plan
-/ccpm:planning:create "Add JWT auth" trainer-guru TRAIN-456
+/ccpm:planning:create "Add JWT auth" my-app TRAIN-456
 
 📋 Issue Created: WORK-123
 ✅ Planning Complete!
@@ -666,7 +666,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 ## 🎯 Best Practices
 
-### Spec-First Workflow (Recommended for NV Internal)
+### Spec-First Workflow (Recommended for Personal Project)
 
 **For new features or major projects:**
 
@@ -699,7 +699,7 @@ Read: [SAFETY_RULES.md](./SAFETY_RULES.md)
 
 **If you have existing markdown specs in `.claude/`:**
 
-1. **Run Migration** → `/ccpm:spec:migrate ~/personal/nv-internal`
+1. **Run Migration** → `/ccpm:spec:migrate ~/personal/personal-project`
 2. **Review in Linear** - Check migrated items
 3. **Organize Hierarchy** - Link features to epics
 4. **Continue with Spec Workflow** - Use spec commands going forward
@@ -791,9 +791,9 @@ Done → Suggest: New Task/Report
 
 ### Project-Specific Commands
 
-#### `/ccpm:repeat:check-pr <pr-number-or-url>` 🆕
+#### `/ccpm:my-project:check-pr <pr-number-or-url>` 🆕
 
-**Comprehensive BitBucket PR analysis for Repeat project.**
+**Comprehensive BitBucket PR analysis for My Project project.**
 
 **What it does:**
 - Browser MCP selection (Playwright or Browser MCP)
@@ -809,10 +809,10 @@ Done → Suggest: New Task/Report
 
 ```bash
 # Check PR by number
-/ccpm:repeat:check-pr 123
+/ccpm:my-project:check-pr 123
 
 # Check PR by full URL
-/ccpm:repeat:check-pr https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/456
+/ccpm:my-project:check-pr https://bitbucket.org/my-project-dev/my-project-mobile-app/pull-requests/456
 ```
 
 **Features:**
@@ -857,7 +857,7 @@ Done → Suggest: New Task/Report
 │   └── fix.md - Fix verification failures
 ├── complete/
 │   └── finalize.md - Post-completion workflow
-├── repeat/ (NEW - Repeat Project)
+├── my-project/ (NEW - My Project Project)
 │   └── check-pr.md - Comprehensive PR analysis
 └── utils/
     ├── _shared.md (Interactive mode patterns)

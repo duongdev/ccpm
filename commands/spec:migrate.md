@@ -18,7 +18,7 @@ argument-hint: <project-path> [category]
 
 - **$1** - Project path:
   - `.` - Use current directory
-  - Absolute path (e.g., `~/personal/nv-internal`)
+  - Absolute path (e.g., `~/projects/my-app`)
   - Relative path (e.g., `../other-project`)
 - **$2** - (Optional) Category to migrate: `docs`, `plans`, `enhancements`, `tasks`, `all`
 
@@ -261,7 +261,7 @@ Will Create in Linear:
 1. Epic/Initiative:
    - Title: "Production Deployment Plan"
    - Team: Personal
-   - Project: NV Internal
+   - Project: Personal Project
    - Labels: ["epic", "migrated", "spec:draft"]
    - Status: Planned
 
@@ -294,7 +294,7 @@ Will Create in Linear:
 1. Feature (Parent Issue):
    - Title: "PostHog Observability Implementation"
    - Team: Personal
-   - Project: NV Internal
+   - Project: Personal Project
    - Labels: ["feature", "migrated", "spec:draft"]
    - Priority: High (detected)
 
@@ -706,18 +706,56 @@ Save to: `${projectPath}/.claude/migration-log-${timestamp}.md`
 ## Helper Functions
 
 ```javascript
-function detectTeam(projectPath) {
-  if (projectPath.includes('trainer-guru')) return 'Work'
-  if (projectPath.includes('repeat')) return 'Work'
-  if (projectPath.includes('nv-internal')) return 'Personal'
-  return 'Personal' // default
+function detectTeamAndProject(projectPath) {
+  // Load CCPM configuration
+  const config = loadCCPMConfig() // from ~/.claude/ccpm-config.yaml
+
+  // Try auto-detection from config patterns
+  for (const [projectId, projectConfig] of Object.entries(config.projects)) {
+    const patterns = config.context.detection.patterns || []
+
+    // Check if path matches any detection pattern
+    for (const pattern of patterns) {
+      if (pattern.project === projectId) {
+        const regex = new RegExp(pattern.pattern.replace('*', '.*'))
+        if (regex.test(projectPath)) {
+          return {
+            team: projectConfig.linear.team,
+            project: projectConfig.linear.project,
+            projectId: projectId
+          }
+        }
+      }
+    }
+
+    // Also check repository URL match
+    if (projectConfig.repository?.url && projectPath.includes(projectConfig.repository.url)) {
+      return {
+        team: projectConfig.linear.team,
+        project: projectConfig.linear.project,
+        projectId: projectId
+      }
+    }
+  }
+
+  // If no match, use active project or prompt
+  const activeProject = config.context.current_project
+  if (activeProject && config.projects[activeProject]) {
+    return {
+      team: config.projects[activeProject].linear.team,
+      project: config.projects[activeProject].linear.project,
+      projectId: activeProject
+    }
+  }
+
+  // Last resort: prompt user to select from available projects
+  return promptForProject(config.projects)
 }
 
-function detectProject(projectPath) {
-  if (projectPath.includes('trainer-guru')) return 'Trainer Guru'
-  if (projectPath.includes('repeat')) return 'Repeat'
-  if (projectPath.includes('nv-internal')) return 'NV Internal'
-  return 'NV Internal' // default
+function loadCCPMConfig() {
+  // Load from ~/.claude/ccpm-config.yaml
+  const configPath = path.join(process.env.HOME, '.claude', 'ccpm-config.yaml')
+  return yaml.parse(fs.readFileSync(configPath, 'utf8'))
 }
 
 function extractMetadata(content) {

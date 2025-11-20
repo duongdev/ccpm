@@ -30,7 +30,7 @@ Display formatted status:
 
 🏷️  **Title**: [Issue title]
 🏢 **Team**: [Team name - Work or Personal]
-📦 **Project**: [Project name - Trainer Guru, Repeat, or NV Internal]
+📦 **Project**: [Project name - My App, My Project, or Personal Project]
 📊 **Status**: [Current status]
 🏷️  **Labels**: [Comma-separated labels]
 👤 **Assignee**: [Assignee name if any]
