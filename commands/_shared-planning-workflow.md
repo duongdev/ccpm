@@ -318,10 +318,28 @@ After agents respond, extract and organize their insights:
 
 ### Step 3: Update Linear Issue with Research
 
-Use **Linear MCP** to update issue $LINEAR_ISSUE_ID with comprehensive research:
+Use **Linear operations subagent** to update issue $LINEAR_ISSUE_ID with comprehensive research:
 
 **Update Status**: Planning (if not already)
 **Add Labels**: planning, research-complete
+
+**Subagent Invocation**:
+```markdown
+Task(linear-operations): `
+operation: update_issue
+params:
+  issue_id: ${LINEAR_ISSUE_ID}
+  state: "Planning"
+  labels:
+    - "planning"
+    - "research-complete"
+context:
+  command: "planning:plan"
+  purpose: "Updating issue with planning phase research"
+`
+```
+
+After the subagent updates the issue, proceed to update the description with research content (see below).
 
 **IMPORTANT - Linking Format**:
 
@@ -362,7 +380,24 @@ When mentioning Jira tickets, Confluence pages, or related issues, create proper
    - ✅ `Based on [PRD](https://confluence.company.com/display/DOCS/PRD)`
    - ❌ `Based on PRD` (no link)
 
-**Update Description** with this structure (replace existing content):
+**Update Description with Subagent**:
+
+After formatting the comprehensive research content below, use the linear-operations subagent to update the description:
+
+```markdown
+Task(linear-operations): `
+operation: update_issue
+params:
+  issue_id: ${LINEAR_ISSUE_ID}
+  description: |
+    ${FORMATTED_RESEARCH_DESCRIPTION}
+context:
+  command: "planning:plan"
+  purpose: "Updating issue description with research findings"
+`
+```
+
+**Description** structure (to be included in the subagent description update):
 
 ```markdown
 ## ✅ Implementation Checklist
@@ -563,12 +598,25 @@ When mentioning Jira tickets, Confluence pages, or related issues, create proper
 
 ### Step 4: Confirm Completion
 
-After updating the Linear issue:
+After all Linear updates via subagent are complete:
 
-1. Display the Linear issue ID and current status
-2. Show a summary of the research findings added
-3. Confirm checklist has been created/updated
-4. Provide the Linear issue URL
+1. **Fetch final issue state** using subagent:
+```markdown
+Task(linear-operations): `
+operation: get_issue
+params:
+  issue_id: ${LINEAR_ISSUE_ID}
+context:
+  command: "planning:plan"
+  purpose: "Fetching updated issue for confirmation display"
+`
+```
+
+2. Display the Linear issue ID and current status
+3. Show a summary of the research findings added
+4. Confirm checklist has been created/updated
+5. Provide the Linear issue URL
+6. Show confirmation that all Linear operations completed successfully
 
 ## Output Format
 
@@ -619,10 +667,128 @@ Provide a summary like:
 - Create specific, actionable subtasks in the checklist
 - Include links to ALL referenced materials (Jira, Confluence, Slack, PRs)
 
+## Linear Subagent Integration
+
+This workflow uses the **linear-operations subagent** for all Linear API operations. This provides:
+
+### Benefits
+
+- **Token Reduction**: 50-60% fewer tokens per operation through caching and batching
+- **Performance**: <50ms for cached operations, <500ms for uncached
+- **Consistency**: Centralized Linear operation logic with standardized error handling
+- **Maintainability**: Single source of truth for Linear operations
+
+### Subagent Invocations in This Workflow
+
+**Step 3.1 - Update Issue Status & Labels**:
+- Operation: `update_issue`
+- Sets issue to "Planning" state
+- Adds labels: "planning", "research-complete"
+- Uses cached team/state/label lookups
+
+**Step 3.2 - Update Issue Description**:
+- Operation: `update_issue`
+- Sets comprehensive description with research findings
+- Includes all linked resources (Jira, Confluence, Slack, etc.)
+- Preserves markdown formatting and structure
+
+**Step 4.1 - Fetch Final Issue State**:
+- Operation: `get_issue`
+- Retrieves updated issue for confirmation display
+- Shows final state, labels, and status
+
+### Caching Benefits
+
+The subagent caches:
+- Team lookups (first request populates cache, subsequent requests <50ms)
+- Label existence checks (batch operation reduces MCP calls)
+- State/status validation (fuzzy matching cached per team)
+- Project lookups (if specified)
+
+### Error Handling
+
+If a subagent operation fails:
+
+1. Check the error response for the `error.code` and `error.suggestions`
+2. Most errors include available values (e.g., valid states for a team)
+3. The workflow can continue partially if non-critical operations fail
+4. Always re-raise errors that prevent issue creation/update
+
+### Example Subagent Responses
+
+**Successful State/Label Update**:
+```yaml
+success: true
+data:
+  id: "abc-123"
+  identifier: "PSN-25"
+  state:
+    id: "state-planning"
+    name: "Planning"
+  labels:
+    - id: "label-1"
+      name: "planning"
+    - id: "label-2"
+      name: "research-complete"
+metadata:
+  cached: true
+  duration_ms: 95
+  mcp_calls: 1
+```
+
+**Error Response (State Not Found)**:
+```yaml
+success: false
+error:
+  code: STATUS_NOT_FOUND
+  message: "Status 'InvalidState' not found for team 'Engineering'"
+  suggestions:
+    - "Use exact status name: 'In Progress', 'Done', etc."
+    - "Use status type: 'started', 'completed', etc."
+suggestions:
+  - "Run /ccpm:utils:statuses to list available statuses"
+```
+
+### Migration Notes
+
+This refactoring replaces all direct Linear MCP calls with subagent invocations:
+
+**Before**:
+```markdown
+Use Linear MCP to update issue:
+await mcp__linear__update_issue({
+  id: issueId,
+  state: "Planning",
+  labels: ["planning", "research-complete"]
+});
+```
+
+**After**:
+```markdown
+Task(linear-operations): `
+operation: update_issue
+params:
+  issue_id: ${issueId}
+  state: "Planning"
+  labels: ["planning", "research-complete"]
+context:
+  command: "planning:plan"
+`
+```
+
+### Performance Impact
+
+Expected token reduction for this workflow:
+- **Before**: ~15,000-20,000 tokens (heavy Linear MCP usage)
+- **After**: ~6,000-8,000 tokens (subagent with caching)
+- **Reduction**: ~55-60% fewer tokens
+
 ## Related Documentation
 
+- **Linear Subagent**: `agents/linear-operations.md` (comprehensive operation reference)
 - **Image Analysis**: `commands/_shared-image-analysis.md`
 - **Figma Detection**: `commands/_shared-figma-detection.md`
 - **Project Configuration**: `commands/_shared-project-config-loader.md`
 - **Planning Command**: `commands/planning:plan.md`
 - **Create & Plan Command**: `commands/planning:create.md`
+- **CCPM Architecture**: `docs/architecture/linear-subagent-architecture.md`

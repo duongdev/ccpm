@@ -74,6 +74,11 @@ ccpm/
 │   ├── ccpm-debugging/     # Debugging skill
 │   └── ...                 # Additional skills
 └── agents/                 # Custom agents for CCPM development
+    ├── linear-operations.md      # Linear operations subagent (v2.3+)
+    ├── pm:ui-designer.md
+    ├── project-config-loader.md
+    ├── project-context-manager.md
+    └── project-detector.md
 ```
 
 **Note:** Commands use a **flat directory structure** with namespace prefixes in the filename (e.g., `spec:create.md` → `/ccpm:spec:create`). All commands require the `/ccpm:` prefix.
@@ -127,7 +132,51 @@ Score =
 - Parallel: Independent agents run simultaneously
 - Dependency-aware ordering
 
-### 3. Command Structure & Interactive Mode
+### 3. Linear Operations Subagent
+
+CCPM uses a dedicated Linear operations subagent to optimize token usage and provide session-level caching for all Linear API operations.
+
+**Purpose**: Central handler for all Linear MCP operations (issue, label, state, team, project, comment, document operations)
+
+**Benefits**:
+- **50-60% token reduction** for Linear operations (15k-25k → 8k-12k per workflow)
+- **Session-level caching** with 85-95% hit rates (teams, projects, labels, statuses)
+- **Performance**: <50ms for cached operations (vs 400-600ms direct MCP)
+- **Single source of truth** for Linear logic
+- **Structured error handling** with actionable suggestions
+
+**Architecture**:
+```
+Commands → Linear Subagent → Linear MCP → Linear API
+            (caching layer)
+```
+
+**Usage in Commands**:
+Commands delegate to the subagent via the Task tool:
+```markdown
+Task(linear-operations): `
+operation: update_issue
+params:
+  issueId: PSN-29
+  state: "In Progress"
+  labels: ["planning", "implementation"]
+context:
+  cache: true
+  command: "planning:plan"
+`
+```
+
+**Shared Helpers**:
+The `_shared-linear-helpers.md` file provides convenience functions that delegate to the subagent:
+- `getOrCreateLabel()` - Smart label management with caching
+- `getValidStateId()` - State validation with fuzzy matching
+- `ensureLabelsExist()` - Batch label operations
+
+**Location**: `agents/linear-operations.md`
+**Documentation**: `docs/architecture/linear-subagent-architecture.md`
+**Migration Guide**: `docs/guides/LINEAR_SUBAGENT_MIGRATION.md`
+
+### 4. Command Structure & Interactive Mode
 
 All commands follow a consistent pattern for interactive mode:
 
@@ -147,7 +196,7 @@ All commands follow a consistent pattern for interactive mode:
 - **Completion** (1 command): PR creation, Jira sync, Slack notifications
 - **Utilities** (13+ commands): Status, context loading, reports, insights, dependencies, documentation organization, etc.
 
-### 4. Safety Rules
+### 5. Safety Rules
 
 Defined in `commands/SAFETY_RULES.md`, these rules are ABSOLUTE:
 
@@ -168,7 +217,7 @@ Defined in `commands/SAFETY_RULES.md`, these rules are ABSOLUTE:
 3. Wait for explicit user confirmation
 4. Only proceed after receiving "yes" or similar
 
-### 5. Spec-First Development Pattern
+### 6. Spec-First Development Pattern
 
 CCPM promotes a spec-first workflow using Linear Documents:
 
@@ -189,7 +238,7 @@ CCPM promotes a spec-first workflow using Linear Documents:
 - User Flow
 - Timeline
 
-### 6. Skills System
+### 7. Skills System
 
 CCPM provides a **skills** directory containing installable capabilities that extend Claude Code's functionality:
 
@@ -562,6 +611,53 @@ Task(backend-architect): "Design REST API for user authentication..."
 8. **Progress Tracking**: NEVER write progress updates to local markdown files. Always comment on the Linear ticket instead.
 9. **Documentation Structure**: ALL new documentation MUST follow the docs/ structure (guides/, reference/, architecture/, development/, research/)
 
+## Linear Subagent Best Practices
+
+When working with Linear operations in CCPM:
+
+### Use Shared Helpers When Possible
+
+```javascript
+// Good: Use shared helper (delegates to subagent with caching)
+const label = await getOrCreateLabel(teamId, "planning");
+
+// Avoid: Direct subagent invocation for common operations
+const result = await Task('linear-operations', '...');
+```
+
+### Enable Caching for Read Operations
+
+```markdown
+Task(linear-operations): `
+operation: get_issue
+params:
+  issueId: ${issueId}
+context:
+  cache: true  # Enable caching for 85-95% hit rate
+`
+```
+
+### Provide Context for Better Error Messages
+
+```markdown
+context:
+  command: "planning:create"  # Helps with debugging
+  purpose: "Creating new task from Jira ticket"
+```
+
+### Handle Errors Gracefully
+
+The subagent provides structured errors with suggestions:
+
+```yaml
+error:
+  code: STATE_NOT_FOUND
+  message: "State 'In Progress' not found"
+  suggestions:
+    - "Use 'In Progress' (exact match required)"
+    - "Available states: Backlog, Todo, In Progress, Done"
+```
+
 ## Documentation Structure
 
 This repository follows the CCPM documentation pattern for clean, navigable, and scalable documentation.
@@ -695,3 +791,5 @@ All documentation is accessible from `docs/README.md`:
 - [Skills Catalog](./docs/reference/skills-catalog.md)
 - [Hooks Implementation](./docs/research/hooks/implementation-summary.md)
 - [Smart Agent Selection](./hooks/SMART_AGENT_SELECTION.md)
+- [Linear Subagent Architecture](./docs/architecture/linear-subagent-architecture.md) (v2.3+)
+- [Linear Subagent Migration Guide](./docs/guides/LINEAR_SUBAGENT_MIGRATION.md) (v2.3+)

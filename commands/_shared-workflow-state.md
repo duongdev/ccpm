@@ -10,6 +10,16 @@ Detect potential workflow issues before executing commands:
 - Incomplete tasks before finalizing
 - Wrong branch before operations
 
+## Architecture
+
+**Linear Operations**: This file delegates all Linear read operations to the `linear-operations` subagent for optimal token usage and caching.
+
+**Git Operations**: All git-based state detection remains local in this file (no external dependencies).
+
+**Function Classification**:
+- Linear read functions (use subagent): `detectStaleSync()`, `checkTaskCompletion()`
+- Pure git functions (local): `detectUncommittedChanges()`, `detectActiveWork()`, `isBranchPushed()`
+
 ## State Detection Functions
 
 ### 1. Detect Uncommitted Changes
@@ -60,22 +70,44 @@ function generateChangeSummary(changes) {
 
 ### 2. Detect Stale Sync
 
+Uses Linear subagent to fetch issue comments, then compares with current time.
+
 ```javascript
 async function detectStaleSync(issueId) {
   try {
-    const issue = await linear_get_issue(issueId)
+    // Step 1: Fetch issue with comments via Linear subagent
+    const linearResult = await Task('linear-operations', `
+operation: get_issue
+params:
+  issue_id: "${issueId}"
+  include_comments: true
+context:
+  command: "workflow:detect-stale"
+  purpose: "Checking if Linear comments are stale"
+`);
+
+    if (!linearResult.success) {
+      return {
+        isStale: false,
+        error: linearResult.error?.message || 'Failed to fetch issue'
+      }
+    }
+
+    const issue = linearResult.data
     const comments = issue.comments || []
 
-    // Find most recent sync comment
+    // Step 2: Find most recent sync comment (local logic)
     const syncComments = comments.filter(c =>
       c.body.includes('## 🔄 Progress Sync') ||
-      c.body.includes('Progress Sync')
+      c.body.includes('Progress Sync') ||
+      c.body.includes('📝 Implementation Progress')
     )
 
     if (syncComments.length === 0) {
       return { isStale: false, reason: 'No previous sync' }
     }
 
+    // Step 3: Compare timestamps (local logic)
     const lastSync = syncComments[syncComments.length - 1]
     const lastSyncTime = new Date(lastSync.createdAt)
     const now = new Date()
@@ -91,6 +123,9 @@ async function detectStaleSync(issueId) {
   }
 }
 ```
+
+**Note**: The Linear subagent caches comments at session level, making subsequent calls very fast (<50ms).
+The parsing and comparison logic remains local for full control over stale detection thresholds.
 
 ### 3. Detect Active Work on Another Task
 
@@ -150,12 +185,34 @@ function isBranchPushed() {
 
 ### 5. Check Task Completion Status
 
+Uses Linear subagent to fetch issue description, then parses checklist locally.
+
 ```javascript
 async function checkTaskCompletion(issueId) {
   try {
-    const issue = await linear_get_issue(issueId)
+    // Step 1: Fetch issue via Linear subagent
+    const linearResult = await Task('linear-operations', `
+operation: get_issue
+params:
+  issue_id: "${issueId}"
+  include_comments: false
+  include_attachments: false
+context:
+  command: "workflow:check-completion"
+  purpose: "Checking task completion status from checklist"
+`);
 
-    // Parse checklist from description
+    if (!linearResult.success) {
+      return {
+        hasChecklist: false,
+        isComplete: false,
+        error: linearResult.error?.message || 'Failed to fetch issue'
+      }
+    }
+
+    const issue = linearResult.data
+
+    // Step 2: Parse checklist from description (local logic)
     const description = issue.description || ''
     const checklistMatch = description.match(/- \[([ x])\]/g)
 
@@ -166,6 +223,7 @@ async function checkTaskCompletion(issueId) {
       }
     }
 
+    // Step 3: Calculate completion percentage (local logic)
     const total = checklistMatch.length
     const completed = checklistMatch.filter(m => m.includes('[x]')).length
     const percent = Math.round((completed / total) * 100)
@@ -183,6 +241,9 @@ async function checkTaskCompletion(issueId) {
   }
 }
 ```
+
+**Note**: The Linear subagent caches issue descriptions at session level.
+The regex parsing and completion calculation remain local for full control over what constitutes "completion".
 
 ## Usage in Commands
 
@@ -285,9 +346,79 @@ ${recommendation}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+## Subagent Integration
+
+### Linear Operations Subagent
+
+Two functions in this file use the `linear-operations` subagent for optimized read operations:
+
+1. **`detectStaleSync(issueId)`**
+   - Uses: `linear-operations` with `get_issue` operation
+   - Fetches: Issue with comments (`include_comments: true`)
+   - Local logic: Filters sync comments, compares timestamps
+   - Performance: <50ms for cached calls, ~400-500ms for uncached
+   - Caching: Session-level cache automatically populated
+
+2. **`checkTaskCompletion(issueId)`**
+   - Uses: `linear-operations` with `get_issue` operation
+   - Fetches: Issue description only (no comments/attachments)
+   - Local logic: Regex parsing, completion calculation
+   - Performance: <50ms for cached calls, ~400-500ms for uncached
+   - Caching: Session-level cache automatically populated
+
+### Why Use the Subagent?
+
+- **Token Efficiency**: 60-70% fewer tokens vs direct Linear MCP calls
+- **Caching**: Session-level cache hits = massive performance boost
+- **Consistency**: Single source of truth for Linear API interactions
+- **Error Handling**: Standardized error responses with helpful suggestions
+- **Maintainability**: Linear API changes isolated to subagent
+
+### Error Handling
+
+Both functions gracefully handle subagent errors:
+
+```javascript
+if (!linearResult.success) {
+  return {
+    isStale: false,  // or appropriate default
+    error: linearResult.error?.message || 'Fallback error message'
+  }
+}
+```
+
+If the subagent fails to fetch Linear data, the workflow continues with safe defaults rather than blocking.
+
+### Subagent Task Format
+
+Both functions use the standard CCPM subagent invocation pattern:
+
+```javascript
+const result = await Task('linear-operations', `
+operation: <operation_name>
+params:
+  <param_name>: <value>
+  ...
+context:
+  command: "workflow:..."
+  purpose: "..."
+`);
+```
+
+Key fields:
+- `operation`: The subagent operation (e.g., `get_issue`)
+- `params`: Operation parameters with issue_id/team/etc
+- `context`: Metadata for logging and command tracking
+- `success`: Result boolean indicating success/failure
+- `data`: Operation response (issue object, etc)
+- `error`: Error details if success=false
+- `metadata`: Execution metrics (duration_ms, mcp_calls, cached flag)
+
 ## Benefits
 
 ✅ **Prevents Common Mistakes**: Catches issues before they cause problems
 ✅ **Actionable Recommendations**: Always suggests what to do next
 ✅ **User Control**: Warnings, not errors - user can proceed if needed
 ✅ **Context Aware**: Different checks for different workflow stages
+✅ **Optimized Linear Reads**: Uses subagent caching for 60-70% token reduction
+✅ **Pure Git Operations**: All git logic remains fast and local

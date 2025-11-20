@@ -205,11 +205,113 @@ Use **AskUserQuestion**:
   ```
 - If yes → Use Slack MCP to post
 
-### Step 5: Archive and Clean Up
+### Step 5: Update Linear Status and Labels
 
-- Update Linear status to "Done" (if not already)
-- Remove "in-progress" labels
-- Add completion timestamp comment
+**READ**: `commands/_shared-linear-helpers.md`
+
+Use **Linear MCP** to mark task as complete:
+
+```javascript
+try {
+  // Get team ID from issue
+  const teamId = issue.team.id;
+
+  // Get valid "Done" state ID
+  const doneStateId = await getValidStateId(teamId, "Done");
+
+  // Get or create "done" label
+  const doneLabel = await getOrCreateLabel(teamId, "done", {
+    color: "#4cb782",
+    description: "CCPM: Task completed successfully"
+  });
+
+  // Get current labels
+  const currentLabels = issue.labels || [];
+  const currentLabelIds = currentLabels.map(l => l.id);
+
+  // Find labels to remove
+  const implementationLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "implementation"
+  );
+  const verificationLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "verification"
+  );
+  const blockedLabel = currentLabels.find(l =>
+    l.name.toLowerCase() === "blocked"
+  );
+
+  // Build new label list: remove workflow labels, add done
+  let newLabelIds = currentLabelIds.filter(id =>
+    id !== implementationLabel?.id &&
+    id !== verificationLabel?.id &&
+    id !== blockedLabel?.id
+  );
+
+  // Add done label if not already present
+  if (!currentLabels.some(l => l.name.toLowerCase() === "done")) {
+    newLabelIds.push(doneLabel.id);
+  }
+
+  // Update issue with Done status and final labels
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "update_issue",
+    args: {
+      id: issue.id,
+      stateId: doneStateId,
+      labelIds: newLabelIds
+    }
+  });
+
+  console.log("✅ Linear issue finalized:");
+  console.log("   Status: Done");
+  console.log("   Labels: done (removed implementation, verification, blocked)");
+
+} catch (error) {
+  console.error("⚠️ Failed to update Linear issue:", error.message);
+  console.warn("⚠️ Task is complete but status may not be updated in Linear.");
+  console.log("   You can manually update status to Done if needed.");
+}
+```
+
+**Add completion timestamp comment**:
+
+```javascript
+const finalComment = `## 🎉 Task Completed and Finalized
+
+**Completion Time**: ${new Date().toISOString()}
+
+### Actions Taken:
+${prCreated ? '✅ Pull Request created' : '⏭️ PR creation skipped'}
+${jiraUpdated ? '✅ Jira status updated to Done' : '⏭️ Jira update skipped'}
+${slackNotified ? '✅ Team notified in Slack' : '⏭️ Slack notification skipped'}
+
+### Final Status:
+- Linear: Done ✅
+- All workflow labels cleaned up
+- Task marked as complete
+
+---
+
+**This task is now closed and archived.** 🎊
+`;
+
+try {
+  await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "create_comment",
+    args: {
+      issueId: issue.id,
+      body: finalComment
+    }
+  });
+
+  console.log("✅ Completion comment added to Linear");
+} catch (error) {
+  console.error("⚠️ Failed to add comment:", error.message);
+  // Not critical, continue
+}
+```
 
 ### Step 6: Show Final Summary
 
