@@ -1,7 +1,7 @@
 {
   "name": "ccpm",
   "version": "2.0.0",
-  "description": "Comprehensive Project Management plugin with Linear integration, smart agent auto-invocation, TDD enforcement, quality gates, and UI design planning. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
+  "description": "Enterprise-grade Project Management plugin for Claude Code. Features: 45 PM commands covering complete project lifecycle, 10 auto-activating Agent Skills with context-aware selection, hook-based automation (TDD enforcement, quality gates, smart agent selection), Linear integration with spec management, multi-system workflows (Jira, Confluence, BitBucket, Slack), monorepo support with auto-detection, safety-first design with confirmation for external writes. Built with 2025 best practices for optimal agent auto-activation and workflow automation.",
   "author": {
     "name": "Dustin Do",
     "email": "dustin.do95@gmail.com",
@@ -12,25 +12,21 @@
     "linear",
     "jira",
     "confluence",
-    "bitbucket",
-    "slack",
     "workflow",
     "automation",
     "tdd",
     "quality-gates",
-    "agents",
+    "agent-skills",
     "hooks",
     "spec-management",
-    "ui-design",
-    "design-systems",
-    "tailwind",
-    "shadcn-ui"
+    "monorepo",
+    "multi-project",
+    "2025-best-practices"
   ],
   "homepage": "https://github.com/duongdev/ccpm",
   "repository": "https://github.com/duongdev/ccpm",
   "license": "MIT",
   "commands": "./commands",
-  "agents": [
-    "./agents/pm:ui-designer.md"
-  ]
+  "agents": "./agents",
+  "hooks": "./hooks"
 }

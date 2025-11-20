@@ -1,6 +1,6 @@
 ---
 name: sequential-thinking
-description: Structured problem-solving through iterative reasoning with revision and branching capabilities. Use when tackling complex multi-step problems, design planning, tasks with uncertain scope, or situations requiring systematic decomposition. Ideal for breaking down complex epics, analyzing architecture decisions, root-cause analysis, and complexity assessment.
+description: Structured problem-solving through iterative reasoning with revision and branching capabilities for complex problems. Use when tackling multi-step problems with uncertain scope, design planning, architecture decisions, or systematic decomposition. Auto-activates when user asks about breaking down epics, designing systems, assessing complexity, or performing root-cause analysis. Uses 6-step process: Initial assessment (rough estimate) → Iterative reasoning (learn progressively) → Dynamic scope adjustment (refine as understanding deepens) → Revision mechanism (update when assumptions change) → Branching for alternatives (explore multiple approaches) → Conclusion (synthesize findings). Supports explicit uncertainty acknowledgment within thoughts. Adjusts total thought count dynamically (e.g., "Thought 3/8" when initially estimated 5). Recommends binary search for intermittent issues and five-whys technique for root causes.
 ---
 
 # Sequential Thinking
