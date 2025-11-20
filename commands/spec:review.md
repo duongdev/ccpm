@@ -311,7 +311,7 @@ Legend: ✅ Pass | ⚠️  Partial | ❌ Fail
 → Address issues above, then run review again
 
 **If Grade F:**
-→ Use `/pm:spec:write [doc-id] [section]` to complete missing sections
+→ Use `/ccpm:spec:write [doc-id] [section]` to complete missing sections
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -359,11 +359,11 @@ If approved, update Linear issue/initiative labels via **Linear MCP**.
     options: [
       {
         label: "Fix Issues",
-        description: "Use /pm:spec:write to address identified issues"
+        description: "Use /ccpm:spec:write to address identified issues"
       },
       {
         label: "Break Down into Tasks",
-        description: "Create implementation tasks (/pm:spec:break-down)"
+        description: "Create implementation tasks (/ccpm:spec:break-down)"
       },
       {
         label: "View in Linear",

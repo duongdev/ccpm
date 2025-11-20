@@ -50,7 +50,7 @@ function determineNextAction(state) {
   if (state.isBlocked) {
     return {
       action: 'fix-blockers',
-      command: `/pm:verification:fix ${issueId}`,
+      command: `/ccpm:verification:fix ${issueId}`,
       reason: 'Task is blocked. Fix issues before continuing.'
     }
   }
@@ -59,7 +59,7 @@ function determineNextAction(state) {
   if (state.status === 'Planning') {
     return {
       action: 'start-implementation',
-      command: `/pm:implementation:start ${issueId}`,
+      command: `/ccpm:implementation:start ${issueId}`,
       reason: 'Planning complete. Ready to start implementation.'
     }
   }
@@ -70,7 +70,7 @@ function determineNextAction(state) {
     if (state.progress.completed === state.progress.total) {
       return {
         action: 'quality-checks',
-        command: `/pm:verification:check ${issueId}`,
+        command: `/ccpm:verification:check ${issueId}`,
         reason: 'All subtasks complete. Run quality checks.'
       }
     }
@@ -90,7 +90,7 @@ function determineNextAction(state) {
     if (state.progress.inProgress > 0) {
       return {
         action: 'continue-current',
-        command: `/pm:utils:context ${issueId}`,
+        command: `/ccpm:utils:context ${issueId}`,
         reason: 'Continue working on in-progress subtask.'
       }
     }
@@ -100,7 +100,7 @@ function determineNextAction(state) {
   if (state.status === 'Verification') {
     return {
       action: 'run-verification',
-      command: `/pm:verification:verify ${issueId}`,
+      command: `/ccpm:verification:verify ${issueId}`,
       reason: 'Ready for final verification.'
     }
   }
@@ -109,7 +109,7 @@ function determineNextAction(state) {
   if (state.status === 'Done') {
     return {
       action: 'finalize',
-      command: `/pm:complete:finalize ${issueId}`,
+      command: `/ccpm:complete:finalize ${issueId}`,
       reason: 'Task complete. Finalize and sync.'
     }
   }
@@ -117,7 +117,7 @@ function determineNextAction(state) {
   // Default
   return {
     action: 'check-status',
-    command: `/pm:utils:status ${issueId}`,
+    command: `/ccpm:utils:status ${issueId}`,
     reason: 'Review current status to decide next step.'
   }
 }
@@ -200,8 +200,8 @@ Use **AskUserQuestion**:
 **Execute based on choice**:
 - "Yes, Proceed" → Execute suggested command
 - "Show All Options" → Display all possible next actions with pros/cons
-- "Load Context First" → Run `/pm:utils:context $1`
-- "Just Status" → Run `/pm:utils:status $1`
+- "Load Context First" → Run `/ccpm:utils:context $1`
+- "Just Status" → Run `/ccpm:utils:status $1`
 - "Other" → Exit gracefully
 
 ```
@@ -209,10 +209,10 @@ Use **AskUserQuestion**:
 📝 Quick Commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Status:        /pm:utils:status $1
-Context:       /pm:utils:context $1
-Update:        /pm:implementation:update $1 <idx> <status> "msg"
-Report:        /pm:utils:report [project]
+Status:        /ccpm:utils:status $1
+Context:       /ccpm:utils:context $1
+Update:        /ccpm:implementation:update $1 <idx> <status> "msg"
+Report:        /ccpm:utils:report [project]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -231,13 +231,13 @@ Report:        /pm:utils:report [project]
 
 ```bash
 # Quick decision helper
-/pm:implementation:next WORK-123
+/ccpm:implementation:next WORK-123
 
 # After completing a subtask
-/pm:implementation:next WORK-123
+/ccpm:implementation:next WORK-123
 
 # When resuming work
-/pm:implementation:next WORK-123
+/ccpm:implementation:next WORK-123
 ```
 
 ### Benefits

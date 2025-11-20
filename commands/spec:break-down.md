@@ -126,7 +126,7 @@ For each feature:
   description: `
 ## 📄 Specification
 
-**Feature Design Doc**: [Will be created] ← Use /pm:spec:write to populate
+**Feature Design Doc**: [Will be created] ← Use /ccpm:spec:write to populate
 
 **Parent Epic**: [${epic.title}](${epic.url})
 **Epic Spec**: [Link to epic spec doc]
@@ -149,9 +149,9 @@ ${feature.description}
 ---
 
 **Next Steps:**
-1. Run /pm:spec:write to create detailed feature design
-2. Run /pm:spec:review to validate completeness
-3. Run /pm:spec:break-down to create implementation tasks
+1. Run /ccpm:spec:write to create detailed feature design
+2. Run /ccpm:spec:review to validate completeness
+3. Run /ccpm:spec:break-down to create implementation tasks
   `
 }
 ```
@@ -246,8 +246,8 @@ ${task.dependencies ? `Depends on: ${task.dependencies.map(d => `[Task ${d}]`).j
 ---
 
 **Next Steps:**
-1. Run /pm:planning:plan to gather implementation research
-2. Run /pm:implementation:start when ready to begin work
+1. Run /ccpm:planning:plan to gather implementation research
+2. Run /ccpm:implementation:start when ready to begin work
   `
 }
 ```
@@ -380,7 +380,7 @@ Created from spec breakdown:
 - [Task 3: Frontend integration](https://linear.app/workspace/issue/WORK-203)
 - [Task 4: Testing](https://linear.app/workspace/issue/WORK-204)
 
-**💡 Tip**: Use /pm:utils:dependencies to visualize task order
+**💡 Tip**: Use /ccpm:utils:dependencies to visualize task order
 ```
 
 ### Step 7: Display Results
@@ -421,15 +421,15 @@ Created from spec breakdown:
         description: "Start writing detailed design for first feature"
       } : {
         label: "Start Implementation",
-        description: "Begin working on first task (/pm:implementation:start)"
+        description: "Begin working on first task (/ccpm:implementation:start)"
       },
       {
         label: "View Dependencies",
-        description: "Visualize task dependencies (/pm:utils:dependencies)"
+        description: "Visualize task dependencies (/ccpm:utils:dependencies)"
       },
       {
         label: "Auto-Assign Agents",
-        description: "AI-powered agent assignment (/pm:utils:auto-assign)"
+        description: "AI-powered agent assignment (/ccpm:utils:auto-assign)"
       },
       {
         label: "View in Linear",

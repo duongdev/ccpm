@@ -780,7 +780,7 @@ Throughout the entire workflow:
 ### Example 1: Check PR by number
 
 ```bash
-/pm:repeat:check-pr 123
+/ccpm:repeat:check-pr 123
 
 # Workflow:
 # 1. Ask which MCP to use
@@ -794,7 +794,7 @@ Throughout the entire workflow:
 ### Example 2: Check PR by URL
 
 ```bash
-/pm:repeat:check-pr https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/456
+/ccpm:repeat:check-pr https://bitbucket.org/repeat-dev/repeat-mobile-app/pull-requests/456
 
 # Workflow:
 # Same as above but uses provided URL directly
@@ -803,7 +803,7 @@ Throughout the entire workflow:
 ### Example 3: Full workflow with fixes
 
 ```bash
-/pm:repeat:check-pr 789
+/ccpm:repeat:check-pr 789
 
 # After review:
 # User selects: "Fix Issues Locally"

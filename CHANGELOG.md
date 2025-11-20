@@ -14,45 +14,45 @@ This is the first release of CCPM as a standalone Claude Code plugin, migrated f
 ### Added
 
 #### Spec Management (6 commands)
-- `/pm:spec:create` - Create Epic/Feature with Linear Document
-- `/pm:spec:write` - AI-assisted spec writing with codebase analysis
-- `/pm:spec:review` - Spec validation and grading (A-F)
-- `/pm:spec:break-down` - Break Epic into Features or Feature into Tasks
-- `/pm:spec:migrate` - Migrate existing `.claude/` specs to Linear Documents
-- `/pm:spec:sync` - Sync spec with implementation reality
+- `/ccpm:spec:create` - Create Epic/Feature with Linear Document
+- `/ccpm:spec:write` - AI-assisted spec writing with codebase analysis
+- `/ccpm:spec:review` - Spec validation and grading (A-F)
+- `/ccpm:spec:break-down` - Break Epic into Features or Feature into Tasks
+- `/ccpm:spec:migrate` - Migrate existing `.claude/` specs to Linear Documents
+- `/ccpm:spec:sync` - Sync spec with implementation reality
 
 #### Planning Commands (3 commands)
-- `/pm:planning:create` - Create Linear issue + full planning in one step
-- `/pm:planning:plan` - Populate existing issue with comprehensive research
-- `/pm:planning:quick-plan` - Quick planning for internal projects (no external PM)
+- `/ccpm:planning:create` - Create Linear issue + full planning in one step
+- `/ccpm:planning:plan` - Populate existing issue with comprehensive research
+- `/ccpm:planning:quick-plan` - Quick planning for internal projects (no external PM)
 
 #### Implementation Commands (3 commands)
-- `/pm:implementation:start` - Start implementation with agent coordination
-- `/pm:implementation:next` - Smart next action detection based on dependencies
-- `/pm:implementation:update` - Update subtask progress
+- `/ccpm:implementation:start` - Start implementation with agent coordination
+- `/ccpm:implementation:next` - Smart next action detection based on dependencies
+- `/ccpm:implementation:update` - Update subtask progress
 
 #### Verification Commands (3 commands)
-- `/pm:verification:check` - Run quality checks (IDE, lint, tests)
-- `/pm:verification:verify` - Final verification with verification agent
-- `/pm:verification:fix` - Fix verification failures with agent coordination
+- `/ccpm:verification:check` - Run quality checks (IDE, lint, tests)
+- `/ccpm:verification:verify` - Final verification with verification agent
+- `/ccpm:verification:fix` - Fix verification failures with agent coordination
 
 #### Completion Commands (1 command)
-- `/pm:complete:finalize` - Post-completion workflow (PR + Jira + Slack + cleanup)
+- `/ccpm:complete:finalize` - Post-completion workflow (PR + Jira + Slack + cleanup)
 
 #### Utility Commands (10+ commands)
-- `/pm:utils:status` - Show detailed task status
-- `/pm:utils:context` - Fast task context loading for quick resume
-- `/pm:utils:report` - Project-wide progress reporting
-- `/pm:utils:insights` - AI-powered complexity & risk analysis
-- `/pm:utils:auto-assign` - AI-powered agent assignment
-- `/pm:utils:sync-status` - Sync Linear status to Jira
-- `/pm:utils:rollback` - Undo planning changes
-- `/pm:utils:dependencies` - Visualize task dependencies
-- `/pm:utils:agents` - List all available subagents
-- `/pm:utils:help` - Context-aware help and command suggestions
+- `/ccpm:utils:status` - Show detailed task status
+- `/ccpm:utils:context` - Fast task context loading for quick resume
+- `/ccpm:utils:report` - Project-wide progress reporting
+- `/ccpm:utils:insights` - AI-powered complexity & risk analysis
+- `/ccpm:utils:auto-assign` - AI-powered agent assignment
+- `/ccpm:utils:sync-status` - Sync Linear status to Jira
+- `/ccpm:utils:rollback` - Undo planning changes
+- `/ccpm:utils:dependencies` - Visualize task dependencies
+- `/ccpm:utils:agents` - List all available subagents
+- `/ccpm:utils:help` - Context-aware help and command suggestions
 
 #### Project-Specific Commands
-- `/pm:repeat:check-pr` - Comprehensive BitBucket PR analysis for Repeat project
+- `/ccpm:repeat:check-pr` - Comprehensive BitBucket PR analysis for Repeat project
 
 #### Smart Agent Auto-Invocation
 - **Dynamic Agent Discovery** - Automatically discovers all agents (global, plugins, project-specific)

@@ -74,134 +74,139 @@ ${context.hasSubtasks ? `✅ Subtasks: ${context.progress.completed}/${context.p
 
 ## 📐 Spec Management
 
-/pm:spec:create <type> "<title>" [parent-id]
+/ccpm:spec:create <type> "<title>" [parent-id]
   Create Epic/Feature with Linear Document
   Types: epic, feature
-  Example: /pm:spec:create epic "User Auth System"
+  Example: /ccpm:spec:create epic "User Auth System"
 
-/pm:spec:write <doc-id> <section>
+/ccpm:spec:write <doc-id> <section>
   AI-assisted spec writing
   Sections: requirements, architecture, api-design, data-model, testing, security, user-flow, timeline, all
-  Example: /pm:spec:write DOC-123 requirements
+  Example: /ccpm:spec:write DOC-123 requirements
 
-/pm:spec:review <doc-id>
+/ccpm:spec:review <doc-id>
   Validate spec completeness & quality (A-F grade)
-  Example: /pm:spec:review DOC-123
+  Example: /ccpm:spec:review DOC-123
 
-/pm:spec:break-down <epic-or-feature-id>
+/ccpm:spec:break-down <epic-or-feature-id>
   Epic → Features or Feature → Tasks
-  Example: /pm:spec:break-down WORK-100
+  Example: /ccpm:spec:break-down WORK-100
 
-/pm:spec:migrate <project-path> [category]
+/ccpm:spec:migrate <project-path> [category]
   Migrate .claude/ markdown specs to Linear
   Categories: docs, plans, enhancements, tasks, all
-  Example: /pm:spec:migrate ~/personal/nv-internal
+  Example: /ccpm:spec:migrate ~/personal/nv-internal
 
-/pm:spec:sync <doc-id-or-issue-id>
+/ccpm:spec:sync <doc-id-or-issue-id>
   Sync spec with implementation (detect drift)
-  Example: /pm:spec:sync WORK-123
+  Example: /ccpm:spec:sync WORK-123
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 📝 Planning
 
-/pm:planning:create "<title>" <project> [jira-id]
+/ccpm:planning:create "<title>" <project> [jira-id]
   Create + plan Linear issue in one step
   Projects: trainer-guru, repeat, nv-internal
-  Example: /pm:planning:create "Add JWT auth" nv-internal
+  Example: /ccpm:planning:create "Add JWT auth" nv-internal
 
-/pm:planning:plan <linear-issue-id> [jira-id]
+/ccpm:planning:plan <linear-issue-id> [jira-id]
   Populate existing issue with research
-  Example: /pm:planning:plan WORK-123 TRAIN-456
+  Example: /ccpm:planning:plan WORK-123 TRAIN-456
 
-/pm:planning:quick-plan "<description>" <project>
+/ccpm:planning:quick-plan "<description>" <project>
   Quick planning (no Jira)
-  Example: /pm:planning:quick-plan "Add dark mode" nv-internal
+  Example: /ccpm:planning:quick-plan "Add dark mode" nv-internal
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 🔨 Implementation
 
-/pm:implementation:start <linear-issue-id>
+/ccpm:implementation:start <linear-issue-id>
   Start with agent coordination
-  Example: /pm:implementation:start WORK-123
+  Example: /ccpm:implementation:start WORK-123
 
-/pm:implementation:next <linear-issue-id>
+/ccpm:implementation:next <linear-issue-id>
   Smart next action detection
-  Example: /pm:implementation:next WORK-123
+  Example: /ccpm:implementation:next WORK-123
 
-/pm:implementation:update <id> <idx> <status> "<msg>"
+/ccpm:implementation:update <id> <idx> <status> "<msg>"
   Update subtask status
   Statuses: completed, in-progress, blocked
-  Example: /pm:implementation:update WORK-123 0 completed "Done"
+  Example: /ccpm:implementation:update WORK-123 0 completed "Done"
+
+/ccpm:implementation:sync <linear-issue-id> [summary]
+  Sync progress, findings & code changes to Linear
+  Auto-detects git changes, prompts for notes
+  Example: /ccpm:implementation:sync WORK-123
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## ✅ Verification
 
-/pm:verification:check <linear-issue-id>
+/ccpm:verification:check <linear-issue-id>
   Run quality checks (IDE, linting, tests)
-  Example: /pm:verification:check WORK-123
+  Example: /ccpm:verification:check WORK-123
 
-/pm:verification:verify <linear-issue-id>
+/ccpm:verification:verify <linear-issue-id>
   Final verification with verification-agent
-  Example: /pm:verification:verify WORK-123
+  Example: /ccpm:verification:verify WORK-123
 
-/pm:verification:fix <linear-issue-id>
+/ccpm:verification:fix <linear-issue-id>
   Fix verification failures
-  Example: /pm:verification:fix WORK-123
+  Example: /ccpm:verification:fix WORK-123
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 🎉 Completion
 
-/pm:complete:finalize <linear-issue-id>
+/ccpm:complete:finalize <linear-issue-id>
   Post-completion (PR + Jira sync + Slack)
-  Example: /pm:complete:finalize WORK-123
+  Example: /ccpm:complete:finalize WORK-123
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 🛠️ Utilities
 
-/pm:utils:status <linear-issue-id>
+/ccpm:utils:status <linear-issue-id>
   Show detailed task status
-  Example: /pm:utils:status WORK-123
+  Example: /ccpm:utils:status WORK-123
 
-/pm:utils:context <linear-issue-id>
+/ccpm:utils:context <linear-issue-id>
   Fast task context loading
-  Example: /pm:utils:context WORK-123
+  Example: /ccpm:utils:context WORK-123
 
-/pm:utils:report <project>
+/ccpm:utils:report <project>
   Project-wide progress report
-  Example: /pm:utils:report nv-internal
+  Example: /ccpm:utils:report nv-internal
 
-/pm:utils:insights <linear-issue-id>
+/ccpm:utils:insights <linear-issue-id>
   AI complexity & risk analysis
-  Example: /pm:utils:insights WORK-123
+  Example: /ccpm:utils:insights WORK-123
 
-/pm:utils:auto-assign <linear-issue-id>
+/ccpm:utils:auto-assign <linear-issue-id>
   AI-powered agent assignment
-  Example: /pm:utils:auto-assign WORK-123
+  Example: /ccpm:utils:auto-assign WORK-123
 
-/pm:utils:sync-status <linear-issue-id>
+/ccpm:utils:sync-status <linear-issue-id>
   Sync Linear → Jira (with confirmation)
-  Example: /pm:utils:sync-status WORK-123
+  Example: /ccpm:utils:sync-status WORK-123
 
-/pm:utils:rollback <linear-issue-id>
+/ccpm:utils:rollback <linear-issue-id>
   Rollback planning changes
-  Example: /pm:utils:rollback WORK-123
+  Example: /ccpm:utils:rollback WORK-123
 
-/pm:utils:dependencies <linear-issue-id>
+/ccpm:utils:dependencies <linear-issue-id>
   Visualize task dependencies
-  Example: /pm:utils:dependencies WORK-123
+  Example: /ccpm:utils:dependencies WORK-123
 
-/pm:utils:agents
+/ccpm:utils:agents
   List available subagents
-  Example: /pm:utils:agents
+  Example: /ccpm:utils:agents
 
-/pm:utils:help [issue-id]
+/ccpm:utils:help [issue-id]
   This help (context-aware)
-  Example: /pm:utils:help WORK-123
+  Example: /ccpm:utils:help WORK-123
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -218,7 +223,7 @@ function suggestCommands(context) {
   if (context.status === 'Planning') {
     if (!context.hasSpec && context.type === 'feature') {
       suggestions.push({
-        command: `/pm:spec:create feature "${context.title}" [epic-id]`,
+        command: `/ccpm:spec:create feature "${context.title}" [epic-id]`,
         reason: 'Create spec document for better planning',
         priority: 'high'
       })
@@ -226,13 +231,13 @@ function suggestCommands(context) {
 
     if (context.hasSpec) {
       suggestions.push({
-        command: `/pm:spec:write ${context.specDocId} all`,
+        command: `/ccpm:spec:write ${context.specDocId} all`,
         reason: 'Write comprehensive spec sections',
         priority: 'high'
       })
 
       suggestions.push({
-        command: `/pm:spec:review ${context.specDocId}`,
+        command: `/ccpm:spec:review ${context.specDocId}`,
         reason: 'Validate spec before implementation',
         priority: 'medium'
       })
@@ -240,7 +245,7 @@ function suggestCommands(context) {
 
     if (context.type === 'epic' && context.hasSpec) {
       suggestions.push({
-        command: `/pm:spec:break-down ${context.issueId}`,
+        command: `/ccpm:spec:break-down ${context.issueId}`,
         reason: 'Break epic into features',
         priority: 'high'
       })
@@ -248,7 +253,7 @@ function suggestCommands(context) {
 
     if (context.type === 'feature' && context.hasSpec) {
       suggestions.push({
-        command: `/pm:spec:break-down ${context.issueId}`,
+        command: `/ccpm:spec:break-down ${context.issueId}`,
         reason: 'Break feature into tasks',
         priority: 'high'
       })
@@ -256,13 +261,13 @@ function suggestCommands(context) {
 
     if (!context.hasSpec) {
       suggestions.push({
-        command: `/pm:implementation:start ${context.issueId}`,
+        command: `/ccpm:implementation:start ${context.issueId}`,
         reason: 'Start implementation (task-first approach)',
         priority: 'medium'
       })
 
       suggestions.push({
-        command: `/pm:utils:insights ${context.issueId}`,
+        command: `/ccpm:utils:insights ${context.issueId}`,
         reason: 'Get AI analysis before starting',
         priority: 'low'
       })
@@ -271,14 +276,20 @@ function suggestCommands(context) {
 
   if (context.status === 'In Progress') {
     suggestions.push({
-      command: `/pm:implementation:next ${context.issueId}`,
+      command: `/ccpm:implementation:next ${context.issueId}`,
       reason: 'Find optimal next action',
       priority: 'high'
     })
 
+    suggestions.push({
+      command: `/ccpm:implementation:sync ${context.issueId}`,
+      reason: 'Save current progress and findings',
+      priority: 'medium'
+    })
+
     if (context.progress.percentage >= 100) {
       suggestions.push({
-        command: `/pm:verification:check ${context.issueId}`,
+        command: `/ccpm:verification:check ${context.issueId}`,
         reason: 'All subtasks complete - run quality checks',
         priority: 'high'
       })
@@ -286,7 +297,7 @@ function suggestCommands(context) {
 
     if (context.hasSpec) {
       suggestions.push({
-        command: `/pm:spec:sync ${context.issueId}`,
+        command: `/ccpm:spec:sync ${context.issueId}`,
         reason: 'Check if implementation matches spec',
         priority: 'medium'
       })
@@ -295,7 +306,7 @@ function suggestCommands(context) {
 
   if (context.status === 'Verification') {
     suggestions.push({
-      command: `/pm:verification:verify ${context.issueId}`,
+      command: `/ccpm:verification:verify ${context.issueId}`,
       reason: 'Run final verification',
       priority: 'high'
     })
@@ -303,13 +314,13 @@ function suggestCommands(context) {
 
   if (context.labels.includes('blocked')) {
     suggestions.push({
-      command: `/pm:verification:fix ${context.issueId}`,
+      command: `/ccpm:verification:fix ${context.issueId}`,
       reason: 'Fix blocking issues',
       priority: 'high'
     })
 
     suggestions.push({
-      command: `/pm:utils:status ${context.issueId}`,
+      command: `/ccpm:utils:status ${context.issueId}`,
       reason: 'Review current status and blockers',
       priority: 'high'
     })
@@ -317,14 +328,14 @@ function suggestCommands(context) {
 
   if (context.status === 'Done') {
     suggestions.push({
-      command: `/pm:complete:finalize ${context.issueId}`,
+      command: `/ccpm:complete:finalize ${context.issueId}`,
       reason: 'Finalize with PR creation and notifications',
       priority: 'high'
     })
 
     if (context.hasSpec) {
       suggestions.push({
-        command: `/pm:spec:sync ${context.issueId}`,
+        command: `/ccpm:spec:sync ${context.issueId}`,
         reason: 'Final spec sync to document changes',
         priority: 'medium'
       })
@@ -369,24 +380,25 @@ Based on current status (${context.status}):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Spec-First Workflow (Recommended):**
-1. /pm:spec:create → Create Epic/Feature
-2. /pm:spec:write → Write spec sections
-3. /pm:spec:review → Validate spec
-4. /pm:spec:break-down → Generate tasks
-5. /pm:implementation:start → Begin work
-6. /pm:spec:sync → Keep in sync
+1. /ccpm:spec:create → Create Epic/Feature
+2. /ccpm:spec:write → Write spec sections
+3. /ccpm:spec:review → Validate spec
+4. /ccpm:spec:break-down → Generate tasks
+5. /ccpm:implementation:start → Begin work
+6. /ccpm:spec:sync → Keep in sync
 
 **Task-First Workflow (Quick):**
-1. /pm:planning:create → Create + plan
-2. /pm:implementation:start → Begin work
-3. /pm:verification:check → Quality checks
-4. /pm:verification:verify → Final review
-5. /pm:complete:finalize → Wrap up
+1. /ccpm:planning:create → Create + plan
+2. /ccpm:implementation:start → Begin work
+3. /ccpm:verification:check → Quality checks
+4. /ccpm:verification:verify → Final review
+5. /ccpm:complete:finalize → Wrap up
 
 **Daily Commands:**
-- /pm:utils:report <project> - Morning overview
-- /pm:utils:context <id> - Resume work
-- /pm:implementation:next <id> - What's next?
+- /ccpm:utils:report <project> - Morning overview
+- /ccpm:utils:context <id> - Resume work
+- /ccpm:implementation:next <id> - What's next?
+- /ccpm:implementation:sync <id> - Save progress
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -404,16 +416,16 @@ If issue ID provided, offer quick actions:
     options: [
       // Dynamically show top 3-4 suggestions
       {
-        label: suggestions[0].command.split(' ')[0].replace('/pm:', ''),
+        label: suggestions[0].command.split(' ')[0].replace('/ccpm:', ''),
         description: suggestions[0].reason
       },
       {
         label: "View Full Status",
-        description: "See detailed status (/pm:utils:status)"
+        description: "See detailed status (/ccpm:utils:status)"
       },
       {
         label: "Load Context",
-        description: "Load full task context (/pm:utils:context)"
+        description: "Load full task context (/ccpm:utils:context)"
       },
       {
         label: "Just Show Help",
@@ -435,23 +447,23 @@ If no issue ID:
     options: [
       {
         label: "Create New Epic/Feature",
-        description: "Start with spec-first approach (/pm:spec:create)"
+        description: "Start with spec-first approach (/ccpm:spec:create)"
       },
       {
         label: "Create New Task",
-        description: "Quick task-first approach (/pm:planning:create)"
+        description: "Quick task-first approach (/ccpm:planning:create)"
       },
       {
         label: "Migrate Existing Specs",
-        description: "Import markdown specs to Linear (/pm:spec:migrate)"
+        description: "Import markdown specs to Linear (/ccpm:spec:migrate)"
       },
       {
         label: "View Project Report",
-        description: "See project overview (/pm:utils:report)"
+        description: "See project overview (/ccpm:utils:report)"
       },
       {
         label: "List Agents",
-        description: "See available subagents (/pm:utils:agents)"
+        description: "See available subagents (/ccpm:utils:agents)"
       },
       {
         label: "Just Show Help",
@@ -486,7 +498,7 @@ If no issue ID:
 ### Example 1: General Help
 
 ```bash
-/pm:utils:help
+/ccpm:utils:help
 ```
 
 Shows:
@@ -497,7 +509,7 @@ Shows:
 ### Example 2: Context-Aware Help
 
 ```bash
-/pm:utils:help WORK-123
+/ccpm:utils:help WORK-123
 ```
 
 If WORK-123 is in "Planning" status with no spec:
@@ -513,14 +525,14 @@ Shows:
 ### Example 3: Help During Implementation
 
 ```bash
-/pm:utils:help WORK-123
+/ccpm:utils:help WORK-123
 ```
 
 If WORK-123 is "In Progress" (3/5 subtasks done):
 
 Shows:
 - Progress: 60% complete
-- **Suggested**: Continue with next task (/pm:implementation:next)
+- **Suggested**: Continue with next task (/ccpm:implementation:next)
 - **Suggested**: Sync spec if exists
 - All commands
 - Quick action menu
@@ -531,4 +543,4 @@ Shows:
 - Interactive quick actions for common workflows
 - Categorized command reference
 - Workflow guidance for new users
-- Always accessible via `/pm:utils:help` or `/pm:help`
+- Always accessible via `/ccpm:utils:help` or `/ccpm:help`

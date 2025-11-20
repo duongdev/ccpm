@@ -21,7 +21,7 @@ Use **Linear MCP** to verify:
 - All checklist items complete
 - No "blocked" label
 
-If not complete, suggest `/pm:verification:verify $1` first.
+If not complete, suggest `/ccpm:verification:verify $1` first.
 
 ### Step 2: Generate Completion Summary
 

@@ -1,7 +1,7 @@
 {
   "name": "ccpm",
   "version": "2.0.0",
-  "description": "Comprehensive Project Management plugin with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
+  "description": "Comprehensive Project Management plugin with Linear integration, smart agent auto-invocation, TDD enforcement, quality gates, and UI design planning. Manages Jira, Confluence, BitBucket, Slack workflows with spec management and interactive mode.",
   "author": {
     "name": "Dustin Do",
     "email": "dustin.do95@gmail.com",
@@ -20,10 +20,38 @@
     "quality-gates",
     "agents",
     "hooks",
-    "spec-management"
+    "spec-management",
+    "ui-design",
+    "design-systems",
+    "tailwind",
+    "shadcn-ui"
   ],
   "homepage": "https://github.com/duongdev/ccpm",
   "repository": "https://github.com/duongdev/ccpm",
   "license": "MIT",
+  "components": {
+    "commands": "./commands",
+    "agents": "./agents",
+    "hooks": "./hooks",
+    "scripts": "./scripts",
+    "skills": "./skills"
+  },
+  "features": [
+    "27 PM commands for complete project lifecycle",
+    "Smart agent auto-invocation with scoring algorithm",
+    "TDD enforcement through pre-tool-use hooks",
+    "Quality gates with automated code review",
+    "Linear integration for task tracking",
+    "Spec management with Linear Documents",
+    "Interactive mode with smart next actions",
+    "UI design workflow with wireframes and mockups",
+    "Skill: PM workflow guidance (auto-suggests commands)",
+    "Skill: External system safety guardrails",
+    "Skill: Spec-first development enforcement",
+    "Skill: TDD best practices"
+  ],
+  "requirements": {
+    "mcp_servers": ["linear", "github", "context7"]
+  },
   "hooks": "./hooks/hooks.json"
 }

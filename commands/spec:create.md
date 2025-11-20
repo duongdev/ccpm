@@ -173,7 +173,7 @@ Use **AskUserQuestion**:
     options: [
       {
         label: "Write Spec Content",
-        description: "Start writing the spec document with AI assistance (/pm:spec:write)"
+        description: "Start writing the spec document with AI assistance (/ccpm:spec:write)"
       },
       {
         label: "View in Linear",
@@ -193,7 +193,7 @@ Use **AskUserQuestion**:
 ```
 
 **Execute based on choice:**
-- Write Spec Content → Run `/pm:spec:write [doc-id] requirements`
+- Write Spec Content → Run `/ccpm:spec:write [doc-id] requirements`
 - View in Linear → Show URL and exit
 - Create Another → Ask for details and repeat
 - Done → Show quick commands and exit
@@ -262,7 +262,7 @@ What are we explicitly NOT doing?
 |---------|----------|------------|---------------|
 | Feature 1 | P0 | High | 2 weeks |
 
-**💡 Tip**: Use `/pm:spec:break-down [epic-id]` to auto-generate features from this spec.
+**💡 Tip**: Use `/ccpm:spec:break-down [epic-id]` to auto-generate features from this spec.
 
 ---
 
@@ -382,7 +382,7 @@ interface Model {
 
 **Total Estimate**: 6 hours (~1 day)
 
-**💡 Tip**: Use `/pm:spec:break-down [feature-id]` to create Linear tasks from this plan.
+**💡 Tip**: Use `/ccpm:spec:break-down [feature-id]` to create Linear tasks from this plan.
 
 ---
 
@@ -424,9 +424,9 @@ interface Model {
 📝 Quick Commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Write Spec:    /pm:spec:write [doc-id] [section]
-Review Spec:   /pm:spec:review [doc-id]
-Break Down:    /pm:spec:break-down [issue-id]
+Write Spec:    /ccpm:spec:write [doc-id] [section]
+Review Spec:   /ccpm:spec:review [doc-id]
+Break Down:    /ccpm:spec:break-down [issue-id]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -436,5 +436,5 @@ Break Down:    /pm:spec:break-down [issue-id]
 - Epic/Initiative are interchangeable (same Linear entity type)
 - Features are Parent Issues that can have Tasks as sub-issues
 - All specs start with `spec:draft` label
-- Use `/pm:spec:write` to populate sections with AI assistance
-- Use `/pm:spec:review` to validate completeness before approval
+- Use `/ccpm:spec:write` to populate sections with AI assistance
+- Use `/ccpm:spec:review` to validate completeness before approval

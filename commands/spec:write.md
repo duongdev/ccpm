@@ -717,7 +717,7 @@ Use **AskUserQuestion**:
       },
       {
         label: "Review Spec",
-        description: "Run AI review for completeness (/pm:spec:review)"
+        description: "Run AI review for completeness (/ccpm:spec:review)"
       },
       {
         label: "View in Linear",

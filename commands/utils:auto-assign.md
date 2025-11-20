@@ -66,7 +66,7 @@ Use **AskUserQuestion** to approve or modify plan
 ### Step 5: Add to Linear
 - Add comment with assignment plan
 - Update labels if needed
-- Show next action (/pm:implementation:start)
+- Show next action (/ccpm:implementation:start)
 
 ## Notes
 - Detects parallelization opportunities

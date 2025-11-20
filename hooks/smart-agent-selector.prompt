@@ -81,6 +81,13 @@ The `{{availableAgents}}` variable contains JSON array of all discovered agents:
    - Keywords: "document", "explain", "write docs"
    - Look for agents with: "docs", "documentation", "tutorial"
 
+10. **UI Design** (SPECIAL - requires frontend collaboration)
+   - Keywords: "UI design", "design UI", "wireframe", "mockup", "design screen", "design page", "design component visually"
+   - Look for agents with: "ui-designer", "designer"
+   - **CRITICAL**: ALWAYS pair with frontend agent first
+   - Execution: Sequential (frontend analysis → UI design)
+   - Reason: Designer needs architecture context to create feasible designs
+
 ### Step 3: Match Agents to Tech Stack
 
 **Detect Technology from Context:**
@@ -369,6 +376,79 @@ User request: "Validate new API endpoint"
 }
 ```
 
+**Example 4: UI Design with Frontend Collaboration** (CRITICAL PATTERN)
+
+Available agents scanned:
+- pm:ui-designer (project) ← UI/UX design specialist
+- frontend-mobile-development:frontend-developer (plugin)
+- frontend-mobile-development:mobile-developer (plugin)
+
+User request: "Design a user profile screen with stats and recent activity"
+
+```json
+{
+  "shouldInvokeAgents": true,
+  "selectedAgents": [
+    {
+      "name": "frontend-mobile-development:frontend-developer",
+      "type": "plugin",
+      "reason": "Must analyze frontend architecture FIRST before design. Matched 'screen' + 'profile' keywords. Needed to understand component patterns, state management, and conventions.",
+      "priority": "high",
+      "score": 95
+    },
+    {
+      "name": "pm:ui-designer",
+      "type": "project",
+      "reason": "UI design specialist (score +25 project boost). Matched 'design' + 'screen' keywords. Will use frontend analysis to create feasible designs.",
+      "priority": "high",
+      "score": 115
+    }
+  ],
+  "execution": "sequential",
+  "executionPlan": [
+    {
+      "step": 1,
+      "agents": ["frontend-mobile-development:frontend-developer"],
+      "description": "Analyze frontend architecture: component patterns, state management, styling approach, existing components, conventions, technical constraints"
+    },
+    {
+      "step": 2,
+      "agents": ["pm:ui-designer"],
+      "description": "Generate 2-3 UI design options using frontend context. Ensure designs reuse existing components, follow project conventions, align with architecture."
+    },
+    {
+      "step": 3,
+      "agents": [],
+      "description": "User reviews design options and provides feedback"
+    },
+    {
+      "step": 4,
+      "agents": ["pm:ui-designer"],
+      "description": "After user approval, generate comprehensive UI specifications for developers"
+    }
+  ],
+  "injectedInstructions": "UI Design workflow with frontend collaboration:\n\n**STEP 1: Frontend Architecture Analysis (REQUIRED FIRST)**\n\n1. INVOKE frontend-mobile-development:frontend-developer\n   Prompt: 'Analyze the frontend architecture for designing a user profile screen'\n   \n   Required analysis:\n   - Component structure patterns (atomic design, feature-based, etc.)\n   - State management approach (TanStack Query, Context, Redux)\n   - Styling patterns (Tailwind, NativeWind, CSS-in-JS)\n   - Existing components to reuse (list with file paths)\n   - Component composition patterns\n   - Data flow patterns\n   - Routing/navigation conventions\n   - Performance patterns (lazy loading, memoization)\n   - Accessibility patterns\n   - Technical constraints (platform limitations, performance budgets)\n   \n   OUTPUT: Comprehensive frontend context document\n\n**STEP 2: UI Design Generation**\n\n2. INVOKE pm:ui-designer\n   Prompt: 'Design user profile screen with stats and recent activity'\n   \n   Context to provide:\n   - User requirements (from initial request)\n   - Frontend architecture analysis (from Step 1)\n   - Design system config (Tailwind/NativeWind)\n   - Existing components (from frontend analysis)\n   - Project conventions (from frontend analysis)\n   \n   Designer will:\n   - Generate 2-3 design options\n   - Include ASCII wireframes\n   - Map to existing components (reuse > create new)\n   - Follow project conventions\n   - Ensure technical feasibility\n   - Provide pros/cons for each option\n   \n   OUTPUT: 2-3 design options with wireframes\n\n**STEP 3: User Feedback**\n\n3. Present design options to user\n   - Show wireframes and descriptions\n   - Highlight component reuse strategy\n   - Explain architecture alignment\n   - Collect user feedback\n\n**STEP 4: Generate Specifications (after approval)**\n\n4. INVOKE pm:ui-designer (again)\n   Prompt: 'Generate comprehensive UI specifications for approved design'\n   \n   Designer will:\n   - Create detailed component breakdown\n   - Provide TypeScript interfaces\n   - Map to existing components with import paths\n   - Document Tailwind classes for every element\n   - Specify responsive behavior\n   - Include accessibility guidelines\n   - Add dark mode support\n   - Provide implementation tips\n   \n   OUTPUT: Comprehensive UI specification document for Linear\n\n**WHY SEQUENTIAL?**\n- Designer NEEDS frontend context to create feasible designs\n- Designs must align with existing architecture\n- Component reuse depends on knowing what exists\n- Technical constraints inform design decisions\n- Ensures smooth implementation without surprises",
+  "reasoning": "UI design REQUIRES frontend architecture context. Sequential execution ensures designer has all technical information to create feasible, implementable designs that align with codebase patterns. Frontend agent scores 95 (keyword match + tech stack). UI designer scores 115 (keyword match + project-specific +25 bonus). Both are critical for quality design output.",
+  "techStackUsed": ["react", "react-native", "tailwind", "nativewind"],
+  "taskTypeDetected": "ui-design",
+  "alternativeAgents": [
+    {
+      "name": "frontend-mobile-development:mobile-developer",
+      "reason": "Could provide frontend context for React Native but frontend-developer covers both web and mobile React patterns"
+    }
+  ]
+}
+```
+
+**Key Takeaways for UI Design Tasks**:
+- ✅ ALWAYS invoke frontend agent FIRST
+- ✅ Use sequential execution (frontend → design)
+- ✅ Pass frontend analysis to UI designer
+- ✅ Ensure designs reuse existing components
+- ✅ Follow project conventions from frontend analysis
+- ❌ NEVER invoke UI designer without frontend context
+- ❌ NEVER propose designs without understanding architecture
+
 ## Important Rules
 
 1. **ALWAYS** use exact agent names from `{{availableAgents}}`
@@ -380,5 +460,10 @@ User request: "Validate new API endpoint"
 7. **PROVIDE** execution plan with clear steps
 8. **INJECT** detailed instructions Claude can follow
 9. **SKIP** agent invocation for simple questions/docs lookup (shouldInvokeAgents: false)
+10. **UI DESIGN** tasks (keywords: "design UI", "design screen", "wireframe", "mockup") REQUIRE frontend agent first:
+    - ALWAYS invoke frontend agent in step 1 (analyze architecture, patterns, components)
+    - ALWAYS invoke UI designer in step 2 (use frontend context to design)
+    - Use SEQUENTIAL execution (frontend → designer)
+    - Designer needs architecture context to create feasible designs
 
 Now analyze the user request with available agents and respond with the selection JSON.

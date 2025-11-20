@@ -78,7 +78,7 @@ Display:
 
 ### Step 2: Run Full Planning Workflow
 
-Now run the **same workflow as `/pm:planning:plan`** using the created issue ID:
+Now run the **same workflow as `/ccpm:planning:plan`** using the created issue ID:
 
 1. **Fetch Jira context** (if $3 provided):
    - Use Atlassian MCP to fetch Jira ticket: $3
@@ -254,19 +254,19 @@ Use **AskUserQuestion** tool:
     options: [
       {
         label: "Start Implementation",
-        description: "Begin working with agent coordination (/pm:implementation:start)"
+        description: "Begin working with agent coordination (/ccpm:implementation:start)"
       },
       {
         label: "Get AI Insights",
-        description: "Get AI analysis of complexity, risks, and timeline (/pm:utils:insights)"
+        description: "Get AI analysis of complexity, risks, and timeline (/ccpm:utils:insights)"
       },
       {
         label: "Review Planning",
-        description: "Review the planning details in Linear (/pm:utils:status)"
+        description: "Review the planning details in Linear (/ccpm:utils:status)"
       },
       {
         label: "Auto-Assign Agents",
-        description: "Let AI assign subtasks to optimal agents (/pm:utils:auto-assign)"
+        description: "Let AI assign subtasks to optimal agents (/ccpm:utils:auto-assign)"
       }
     ]
   }]
@@ -275,10 +275,10 @@ Use **AskUserQuestion** tool:
 
 **Execute the chosen action**:
 
-- If "Start Implementation" → Run `/pm:implementation:start [WORK-123]`
-- If "Get AI Insights" → Run `/pm:utils:insights [WORK-123]`
-- If "Review Planning" → Run `/pm:utils:status [WORK-123]`
-- If "Auto-Assign Agents" → Run `/pm:utils:auto-assign [WORK-123]`
+- If "Start Implementation" → Run `/ccpm:implementation:start [WORK-123]`
+- If "Get AI Insights" → Run `/ccpm:utils:insights [WORK-123]`
+- If "Review Planning" → Run `/ccpm:utils:status [WORK-123]`
+- If "Auto-Assign Agents" → Run `/ccpm:utils:auto-assign [WORK-123]`
 - If "Other" → Show quick commands and exit gracefully
 
 ```
@@ -286,10 +286,10 @@ Use **AskUserQuestion** tool:
 📝 Quick Commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Status:        /pm:utils:status [WORK-123]
-Start:         /pm:implementation:start [WORK-123]
-Insights:      /pm:utils:insights [WORK-123]
-Context:       /pm:utils:context [WORK-123]
+Status:        /ccpm:utils:status [WORK-123]
+Start:         /ccpm:implementation:start [WORK-123]
+Insights:      /ccpm:utils:insights [WORK-123]
+Context:       /ccpm:utils:context [WORK-123]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -308,13 +308,13 @@ Context:       /pm:utils:context [WORK-123]
 **With Jira:**
 
 ```bash
-/pm:planning:create "Add JWT authentication" trainer-guru TRAIN-456
+/ccpm:planning:create "Add JWT authentication" trainer-guru TRAIN-456
 ```
 
 **Without Jira (NV Internal):**
 
 ```bash
-/pm:planning:create "Add dark mode toggle" nv-internal
+/ccpm:planning:create "Add dark mode toggle" nv-internal
 ```
 
 ### Benefits

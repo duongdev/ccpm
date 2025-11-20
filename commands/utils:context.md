@@ -255,12 +255,12 @@ Use **AskUserQuestion** tool with detected options.
 📝 Quick Commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Status:        /pm:utils:status $1
-Next:          /pm:implementation:next $1
-Start:         /pm:implementation:start $1
-Update:        /pm:implementation:update $1 <idx> <status> "msg"
-Check:         /pm:verification:check $1
-Verify:        /pm:verification:verify $1
+Status:        /ccpm:utils:status $1
+Next:          /ccpm:implementation:next $1
+Start:         /ccpm:implementation:start $1
+Update:        /ccpm:implementation:update $1 <idx> <status> "msg"
+Check:         /ccpm:verification:check $1
+Verify:        /ccpm:verification:verify $1
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -289,13 +289,13 @@ Verify:        /pm:verification:verify $1
 
 ```bash
 # Load context for any task
-/pm:utils:context WORK-123
+/ccpm:utils:context WORK-123
 
 # Quick resume after break
-/pm:utils:context WORK-123
+/ccpm:utils:context WORK-123
 
 # Switch to different task
-/pm:utils:context WORK-456
+/ccpm:utils:context WORK-456
 ```
 
 ### Benefits
