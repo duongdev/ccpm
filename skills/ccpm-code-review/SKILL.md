@@ -1,6 +1,6 @@
 ---
 name: ccpm-code-review
-description: Enforces quality verification gates with four-step validation (tests pass, build succeeds, checklist complete, no blockers) before task completion, PR creation, or status updates. Auto-activates when user says "done", "complete", "finished", "ready to merge", or runs /ccpm:verification:verify or /ccpm:complete:finalize commands. Provides systematic verification workflow that prevents false completion claims and ensures production readiness. Blocks external system writes (Jira, Slack) until evidence collected. Integrates with external-system-safety for confirmation workflow. When verification fails, suggests /ccpm:verification:fix to debug issues systematically.
+description: Enforces quality verification gates with four-step validation (tests pass, build succeeds, checklist complete, no blockers) before task completion, PR creation, or status updates. Auto-activates when user says "done", "complete", "finished", "ready to merge", or runs /ccpm:verify or /ccpm:done commands. Provides systematic verification workflow that prevents false completion claims and ensures production readiness. Blocks external system writes (Jira, Slack) until evidence collected. Integrates with external-system-safety for confirmation workflow. When verification fails, suggests /ccpm:verification:fix to debug issues systematically.
 allowed-tools: read-file, grep, bash
 ---
 
@@ -13,12 +13,51 @@ Structured code review workflow integrated with CCPM's Linear-based project mana
 This skill auto-activates when:
 
 - User says **"done"**, **"complete"**, **"finished"**, **"ready to merge"**
-- Running **`/ccpm:verification:verify`** command
-- Running **`/ccpm:complete:finalize`** command
+- Running **`/ccpm:verify`** command (natural workflow - recommended)
+- Running **`/ccpm:done`** command (includes pre-flight verification)
+- Running **`/ccpm:verification:verify`** command (advanced)
 - Before updating Linear task status to "Done"
 - Before syncing Jira status
-- Before creating BitBucket PR
+- Before creating GitHub/BitBucket PR
 - Before sending Slack completion notifications
+
+## CCPM Verification Workflow
+
+CCPM v2.3+ provides a streamlined 3-step verification process:
+
+### Step 1: Quality Checks (Automated)
+Run linting, tests, and build checks to ensure technical correctness:
+
+```bash
+/ccpm:verify [issue-id]  # Auto-detects issue from git branch
+```
+
+**What it checks:**
+- ✅ Linting passes (no style errors)
+- ✅ Tests pass (all unit and integration tests)
+- ✅ Build succeeds (no compilation errors)
+- ✅ Checklist complete (100% of implementation items)
+
+**If checks fail:** Command automatically suggests `/ccpm:verification:fix` to debug systematically.
+
+### Step 2: Agent Code Review
+After quality checks pass, agent review analyzes:
+
+- ✅ Code quality and best practices
+- ✅ Security vulnerabilities
+- ✅ Performance implications
+- ✅ Requirement fulfillment
+- ✅ Regression risks
+
+### Step 3: Final Confirmation
+Four verification gates must pass:
+
+1. **Tests Pass** ✅ - Zero failures
+2. **Build Succeeds** ✅ - Exit status 0
+3. **Checklist Complete** ✅ - 100% checked
+4. **No Blockers** ✅ - No unresolved blockers in Linear
+
+**Only after all gates pass** can task proceed to finalization with `/ccpm:done`.
 
 ## Core Principles
 
@@ -51,41 +90,159 @@ When receiving feedback:
 
 ## Integration with CCPM Commands
 
-### Before `/ccpm:complete:finalize`
+### With `/ccpm:verify` (Natural Workflow - Recommended)
 
-**This skill blocks completion workflow until verified:**
+**This skill enforces verification during the streamlined verify command:**
 
+```bash
+# User runs natural verification command
+/ccpm:verify
+
+# Or with explicit issue ID
+/ccpm:verify AUTH-123
 ```
-User: "I'm done with AUTH-123, let's finalize"
+
+**Flow:**
+```
+User: "I'm done, let me verify"
 
 Claude: [ccpm-code-review activates]
 
-⚠️ VERIFICATION REQUIRED BEFORE COMPLETION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Smart Verify Command
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-I cannot run /ccpm:complete:finalize until verification evidence exists.
+📋 Issue: AUTH-123 - Add user authentication
+📊 Status: In Progress
+📋 Checklist: 100% (5/5 items)
 
-Required steps:
-1. /ccpm:verification:check AUTH-123
-   → Run tests, linting, build
-   → Show me the output
+Verification Flow:
+──────────────────
+1. Quality Checks (linting, tests, build)
+2. Final Verification (code review, security)
 
-2. /ccpm:verification:verify AUTH-123
-   → Code review
-   → Security audit
-   → Final sign-off
+═══════════════════════════════════════
+Step 1/2: Running Quality Checks
+═══════════════════════════════════════
 
-Only after BOTH pass can we:
-3. /ccpm:complete:finalize AUTH-123
-   → Create BitBucket PR
-   → Update Jira status (with confirmation)
-   → Send Slack notification (with confirmation)
+🔍 Running linting...
+✅ All files pass linting
 
-Shall I start with verification checks?
+🧪 Running tests...
+✅ All tests passed (28/28)
+
+🏗️  Running build...
+✅ Build successful
+
+📊 Quality Check Results:
+  ✅ Linting
+  ✅ Tests
+  ✅ Build
+
+═══════════════════════════════════════
+Step 2/2: Running Final Verification
+═══════════════════════════════════════
+
+[Code reviewer agent analyzes changes...]
+
+✅ All requirements met
+✅ Code quality standards met
+✅ Security best practices followed
+✅ Performance acceptable
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ All Verification Complete!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+All verifications passed! Ready to finalize.
+
+💡 What's Next?
+⭐ Recommended: /ccpm:done AUTH-123
 ```
 
-### During `/ccpm:verification:verify`
+**If verification fails:**
+```
+❌ Quality Checks Failed
 
-**This skill enforces verification checklist:**
+📊 Quality Check Results:
+  ✅ Linting
+  ❌ Tests (3 failures)
+  ✅ Build
+
+To debug and fix issues:
+  /ccpm:verification:fix AUTH-123
+
+Then run verification again:
+  /ccpm:verify AUTH-123
+```
+
+### With `/ccpm:done` (Pre-Flight Verification)
+
+**This skill ensures quality before finalization:**
+
+```bash
+# User attempts to finalize task
+/ccpm:done
+
+# Or with explicit issue ID
+/ccpm:done AUTH-123
+```
+
+**Pre-flight checks enforced by ccpm-code-review:**
+
+```
+User: "/ccpm:done AUTH-123"
+
+Claude: [ccpm-code-review activates for pre-flight]
+
+✅ All pre-flight checks passed!
+
+Checking completion readiness:
+
+□ Tests passing?
+  → ✅ All 52 tests passed
+
+□ Build successful?
+  → ✅ Build completed (exit 0)
+
+□ Linear checklist complete?
+  → ✅ 7/7 items checked
+
+□ No blockers?
+  → ✅ No blockers found
+
+VERIFICATION COMPLETE ✅
+
+📝 Creating GitHub Pull Request...
+✅ Pull Request created
+
+[Prompts for Jira/Slack updates with confirmation]
+
+✅ Linear issue updated to Done
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 Task Finalized: AUTH-123
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**If pre-flight fails:**
+```
+⛔ Cannot Finalize: Checklist Incomplete
+
+Progress: 80% (4/5 completed)
+
+❌ Remaining Items:
+  - [ ] Write integration tests
+
+🔧 Actions Required:
+1. Complete remaining checklist items
+2. Update checklist: /ccpm:utils:update-checklist AUTH-123
+3. Then run: /ccpm:done AUTH-123
+```
+
+### Advanced: With `/ccpm:verification:verify`
+
+**For manual verification step (advanced users):**
 
 ```
 Claude runs /ccpm:verification:verify AUTH-123
@@ -95,19 +252,15 @@ Claude runs /ccpm:verification:verify AUTH-123
 Checking verification evidence:
 
 □ Tests passing?
-  → Running test suite...
   → ✅ All 47 tests passed
 
 □ Build successful?
-  → Running build...
   → ✅ Build completed with exit code 0
 
 □ Linear checklist complete?
-  → Fetching AUTH-123...
   → ❌ 3 of 5 items checked
 
 □ No blockers?
-  → Checking Linear comments...
   → ⚠️ 1 blocker found: "Redis connection failing in staging"
 
 VERIFICATION FAILED:
@@ -122,46 +275,6 @@ Would you like to:
 A. Update checklist now
 B. Investigate Redis blocker
 C. Update task scope to exclude Redis
-```
-
-### When Creating BitBucket PR
-
-**This skill ensures PR quality:**
-
-```
-User: "/ccpm:complete:finalize AUTH-789"
-
-Claude: [ccpm-code-review + external-system-safety activate]
-
-Step 1: Verification check
-✅ Tests passing (52/52)
-✅ Build successful
-✅ Linear checklist complete (7/7)
-✅ No blockers
-
-Step 2: PR creation (external write detected)
-⚠️ EXTERNAL SYSTEM WRITE - BitBucket PR
-
-I will create PR with:
----
-Title: "Implement JWT authentication for API endpoints"
-Description: [Generated from Linear task + commits]
-Reviewers: @tech-lead, @security-team
-Link to: Linear AUTH-789, Jira PROJ-456
----
-
-Proceed with PR creation? (yes/no)
-
-[After user confirms "yes"]
-
-✅ Created PR #234 on BitBucket
-Link: https://bitbucket.org/company/repo/pull-requests/234
-
-Step 3: Jira sync
-[external-system-safety activates again for Jira update]
-
-Step 4: Slack notification
-[external-system-safety activates again for Slack post]
 ```
 
 ## Receiving Feedback Protocol
@@ -382,77 +495,99 @@ All external writes follow `../commands/SAFETY_RULES.md`:
 
 ## Examples
 
-### Example 1: Successful Completion Flow
+### Example 1: Successful Completion Flow (Natural Workflow)
 
 ```
 User: "Done with AUTH-123, ready to ship!"
 
 Claude: [ccpm-code-review activates]
 
-Let me verify before proceeding:
+Let me run verification first:
 
-1. Running /ccpm:verification:check AUTH-123...
-   ✅ Tests: 52/52 passing
-   ✅ Build: Successful (exit 0)
-   ✅ Linting: No errors
+Running /ccpm:verify AUTH-123...
 
-2. Checking Linear checklist...
-   ✅ All 7 items complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Smart Verify Command
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-3. Checking for blockers...
-   ✅ No blockers found
+📋 Checklist: 100% (7/7 items)
 
-4. Running /ccpm:verification:verify AUTH-123...
-   ✅ Code review: Passed
-   ✅ Security audit: Passed
-   ✅ Final sign-off: Approved
+═══════════════════════════════════════
+Step 1/2: Running Quality Checks
+═══════════════════════════════════════
 
-VERIFICATION COMPLETE ✅
+✅ Tests: 52/52 passing
+✅ Build: Successful (exit 0)
+✅ Linting: No errors
 
-Now ready for /ccpm:complete:finalize AUTH-123:
-1. Create BitBucket PR
-2. Update Jira status (will ask confirmation)
-3. Send Slack notification (will ask confirmation)
+═══════════════════════════════════════
+Step 2/2: Running Final Verification
+═══════════════════════════════════════
 
-Proceed with finalization? (yes/no)
+✅ Code review: Passed
+✅ Security audit: Passed
+✅ Requirements met: Passed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ All Verification Complete!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 What's Next?
+⭐ Recommended: /ccpm:done AUTH-123
+
+Ready to finalize! Shall I run /ccpm:done now?
 ```
 
-### Example 2: Failed Verification
+### Example 2: Failed Verification (Natural Workflow)
 
 ```
 User: "I'm done, let's merge"
 
 Claude: [ccpm-code-review activates]
 
-Let me verify:
+Running /ccpm:verify...
 
-1. Running tests...
-   ❌ 3 tests failing:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Smart Verify Command
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+═══════════════════════════════════════
+Step 1/2: Running Quality Checks
+═══════════════════════════════════════
+
+🧪 Running tests...
+❌ 3 tests failing:
    - test/auth/login.test.ts: "should handle invalid credentials"
    - test/auth/jwt.test.ts: "should refresh expired tokens"
    - test/api/protected.test.ts: "should reject missing tokens"
 
-2. Running build...
-   ❌ TypeScript error:
-   src/auth/jwt.ts:45:12 - error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'
+🏗️  Running build...
+❌ TypeScript error:
+   src/auth/jwt.ts:45:12 - error TS2345
 
-VERIFICATION FAILED ❌
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ Verification Failed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Cannot proceed with completion until:
-1. Fix 3 failing tests
-2. Fix TypeScript compilation error
+To debug and fix issues:
+  /ccpm:verification:fix AUTH-123
 
-Would you like me to run /ccpm:verification:fix to debug these issues?
+Then run verification again:
+  /ccpm:verify AUTH-123
+
+Would you like me to start debugging these issues?
 ```
 
-### Example 3: Incomplete Checklist
+### Example 3: Incomplete Checklist (Pre-Flight with /ccpm:done)
 
 ```
-User: "/ccpm:complete:finalize AUTH-456"
+User: "/ccpm:done AUTH-456"
 
-Claude: [ccpm-code-review activates]
+Claude: [ccpm-code-review activates for pre-flight]
 
-Checking verification gates:
+✅ All git pre-flight checks passed!
+
+Checking completion readiness:
 
 ✅ Tests passing (41/41)
 ✅ Build successful
@@ -464,14 +599,54 @@ Checking verification gates:
    ✗ Add integration tests
    ✗ Update API documentation
 
-CANNOT FINALIZE: Checklist incomplete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⛔ Cannot Finalize: Checklist Incomplete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Options:
-A. Complete remaining items (integration tests + docs)
-B. Update scope with /ccpm:planning:update to mark items as Phase 2
-C. Explain why items are not needed
+Progress: 67% (4/6 completed)
+
+🔧 Actions Required:
+1. Complete remaining checklist items
+2. Update checklist: /ccpm:utils:update-checklist AUTH-456
+3. Then run: /ccpm:done AUTH-456
+
+Or update scope with /ccpm:plan AUTH-456 "mark items as Phase 2"
 
 Which would you like to do?
+```
+
+### Example 4: Complete Natural Workflow (End-to-End)
+
+```
+User: "I finished the authentication feature"
+
+Claude: [ccpm-code-review guides through workflow]
+
+Great! Let's verify your work before finalizing.
+
+Step 1: Verification
+────────────────────
+/ccpm:verify
+
+✅ All quality checks passed
+✅ Code review complete
+✅ Security validated
+
+Step 2: Finalization
+────────────────────
+/ccpm:done
+
+✅ Git pre-flight checks passed
+✅ Checklist complete (5/5)
+✅ No blockers
+📝 GitHub PR created
+✅ Linear updated to Done
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 Task Finalized: AUTH-456
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+All done! Task completed successfully. 🎊
 ```
 
 ## Verification Checklist Template
@@ -510,24 +685,55 @@ Only after ALL checked:
 
 **Works alongside**:
 
-- **external-system-safety**: Enforces confirmation for external writes
-- **pm-workflow-guide**: Suggests verification commands at right time
-- **ccpm-debugging**: If verification fails, helps debug issues
+- **external-system-safety**: Enforces confirmation for external writes (Jira/Slack)
+- **pm-workflow-guide**: Suggests `/ccpm:verify` and `/ccpm:done` at right time
+- **ccpm-debugging**: Invoked via `/ccpm:verification:fix` when checks fail
 - **sequential-thinking**: For complex verification scenarios
 
 **Example combined activation**:
 ```
 User: "Ready to merge AUTH-123"
        ↓
-ccpm-code-review → Enforces verification gates
+ccpm-code-review → Suggests /ccpm:verify first
+       ↓
+/ccpm:verify → Runs quality checks + agent review
        ↓
 [If gates pass]
        ↓
-external-system-safety → Confirms PR/Jira/Slack writes
+Suggests /ccpm:done
+       ↓
+/ccpm:done → Pre-flight checks + PR creation
+       ↓
+external-system-safety → Confirms Jira/Slack writes
        ↓
 [If user confirms]
        ↓
 Complete! ✅
+```
+
+## Natural Workflow Commands (v2.3+)
+
+CCPM provides streamlined commands for the complete verification and finalization workflow:
+
+| Command | Purpose | Auto-detects Issue |
+|---------|---------|-------------------|
+| `/ccpm:verify` | Quality checks + agent review | ✅ From git branch |
+| `/ccpm:done` | Pre-flight + PR + finalize | ✅ From git branch |
+| `/ccpm:verification:fix` | Debug failed checks | ❌ Explicit ID required |
+
+**Recommended workflow:**
+```bash
+# 1. Complete implementation
+/ccpm:work
+
+# 2. Commit changes
+/ccpm:commit
+
+# 3. Verify quality (this skill activates)
+/ccpm:verify
+
+# 4. Finalize task (this skill activates for pre-flight)
+/ccpm:done
 ```
 
 ## Summary
@@ -536,14 +742,22 @@ This skill ensures:
 
 - ✅ No false completion claims
 - ✅ Evidence required before "done"
-- ✅ Quality gates enforced
+- ✅ Quality gates enforced (4-step validation)
 - ✅ Technical rigor over social comfort
-- ✅ Integration with CCPM workflows
+- ✅ Integration with CCPM v2.3+ natural workflow
+- ✅ Systematic debugging when failures occur
 
 **Philosophy**: Verification before completion, evidence over claims, quality over speed.
+
+**Key Features**:
+- Auto-activates on completion attempts
+- Enforces 4 verification gates
+- Integrates with `/ccpm:verify` and `/ccpm:done`
+- Suggests `/ccpm:verification:fix` for failures
+- Works with external-system-safety for confirmations
 
 ---
 
 **Source**: Adapted from [claudekit-skills/code-review](https://github.com/mrgoonie/claudekit-skills)
 **License**: MIT
-**CCPM Integration**: `/ccpm:verification:verify`, `/ccpm:complete:finalize`, quality-gate hook
+**CCPM Integration**: `/ccpm:verify`, `/ccpm:done`, `/ccpm:verification:verify`, quality-gate hook
