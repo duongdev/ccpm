@@ -16,25 +16,33 @@ Skills are **model-invoked** capabilities that Claude activates automatically wh
 ### Core PM Skills (CCPM-Specific)
 
 1. **external-system-safety** - Prevents accidental writes to Jira/Confluence/BitBucket/Slack
-2. **pm-workflow-guide** - Auto-suggests appropriate CCPM commands based on workflow phase
+2. **pm-workflow-guide** - Auto-suggests appropriate CCPM commands based on workflow phase (prioritizes natural commands)
+3. **natural-workflow** - Complete guide for 6-command workflow (plan/work/sync/commit/verify/done)
+4. **workflow-state-tracking** - State machine visualization and transition validation
+5. **figma-integration** - Guides design-to-code workflow using Figma designs
 
 ### Problem-Solving Skills
 
-3. **sequential-thinking** - Structured problem-solving through iterative reasoning
-4. **docs-seeker** - Documentation discovery and research
+6. **sequential-thinking** - Structured problem-solving through iterative reasoning
+7. **docs-seeker** - Documentation discovery and research
 
 ### Quality & Verification Skills
 
-5. **ccpm-code-review** - Verification enforcement before completion (adapted from claudekit-skills)
-6. **ccpm-debugging** - Systematic debugging with Linear tracking (adapted from claudekit-skills)
+8. **ccpm-code-review** - Verification enforcement before completion (updated for /ccpm:verify and /ccpm:done)
+9. **ccpm-debugging** - Systematic debugging with Linear tracking (adapted from claudekit-skills)
 
 ### Infrastructure Skills
 
-7. **ccpm-mcp-management** - MCP server discovery and troubleshooting (adapted from claudekit-skills)
+10. **ccpm-mcp-management** - MCP server discovery and troubleshooting (adapted from claudekit-skills)
+11. **hook-optimization** - Hook performance guidance and benchmarking
 
 ### Development Skills
 
-8. **ccpm-skill-creator** - Create custom CCPM skills with templates (adapted from claudekit-skills)
+12. **ccpm-skill-creator** - Create custom CCPM skills with templates (adapted from claudekit-skills)
+13. **project-detection** - Automatic project context detection in monorepos
+14. **project-operations** - Project setup and management with monorepo best practices
+15. **commit-assistant** - Conventional commits guidance and auto-generation
+16. **linear-subagent-guide** - Linear operations optimization patterns
 
 ## Skill Structure
 
@@ -138,11 +146,17 @@ Use the `ccpm-skill-creator` skill to create team-specific or project-specific s
 
 | Skill | CCPM Commands | When Activated |
 |-------|---------------|----------------|
+| natural-workflow | `/ccpm:plan`<br>`/ccpm:work`<br>`/ccpm:sync`<br>`/ccpm:commit`<br>`/ccpm:verify`<br>`/ccpm:done` | "how do I start", "workflow", "walk me through" |
 | pm-workflow-guide | All commands | "which command should I use" |
+| workflow-state-tracking | `/ccpm:utils:status`<br>`/ccpm:utils:dependencies` | "where am I", "what should I do next" |
 | sequential-thinking | `/ccpm:planning:create`<br>`/ccpm:spec:write` | "break down", "analyze" |
 | docs-seeker | `/ccpm:spec:write` | "documentation", "API docs" |
-| ccpm-code-review | `/ccpm:verification:verify`<br>`/ccpm:complete:finalize` | "done", "ready to merge" |
+| figma-integration | `/ccpm:planning:design-ui`<br>`/ccpm:planning:design-refine`<br>`/ccpm:planning:design-approve`<br>`/ccpm:utils:figma-refresh` | "Figma", "design-to-code", "component" |
+| commit-assistant | `/ccpm:commit` | "commit changes", "conventional commits" |
+| ccpm-code-review | `/ccpm:verify`<br>`/ccpm:done` | "done", "ready to merge" |
 | ccpm-debugging | `/ccpm:verification:fix` | "error", "failing", "broken" |
+| linear-subagent-guide | All Linear operations | When implementing commands with Linear |
+| hook-optimization | Hook development | "optimize hook", "benchmark hook" |
 
 ### Skills Work With Hooks
 
@@ -156,9 +170,15 @@ Use the `ccpm-skill-creator` skill to create team-specific or project-specific s
 
 | Skill A | Skill B | Synergy |
 |---------|---------|---------|
+| natural-workflow | workflow-state-tracking | Complete workflow + State validation |
+| natural-workflow | commit-assistant | Workflow steps + Git commits |
 | sequential-thinking | pm-workflow-guide | Reasoning + Command suggestions |
+| figma-integration | sequential-thinking | Design analysis + Task decomposition |
+| docs-seeker | figma-integration | Documentation + Design specs |
 | ccpm-code-review | external-system-safety | Verification + Confirmation |
 | ccpm-debugging | ccpm-code-review | Fix issues → Verify fixes |
+| linear-subagent-guide | pm-workflow-guide | Linear optimization + Command workflow |
+| hook-optimization | ccpm-skill-creator | Hook development + Skill creation |
 | docs-seeker | Context7 MCP | Search + Fetch documentation |
 
 ## Troubleshooting
@@ -206,16 +226,22 @@ Skills are designed to be **complementary**, not conflicting. If you notice conf
 
 ## Skill Sources
 
-### CCPM-Original Skills (2)
+### CCPM-Original Skills (8)
 
 Created specifically for CCPM:
-- `external-system-safety`
-- `pm-workflow-guide`
+- `external-system-safety` (v2.0)
+- `pm-workflow-guide` (v2.0, updated v2.2)
+- `figma-integration` (v2.2)
+- `natural-workflow` (v2.3)
+- `workflow-state-tracking` (v2.3)
+- `commit-assistant` (v2.3)
+- `linear-subagent-guide` (v2.3)
+- `hook-optimization` (v2.3)
 
 ### ClaudeKit-Skills Adaptations (4)
 
 Adapted from [claudekit-skills](https://github.com/mrgoonie/claudekit-skills):
-- `ccpm-code-review` (from `code-review`)
+- `ccpm-code-review` (from `code-review`, updated v2.3)
 - `ccpm-debugging` (from `debugging`)
 - `ccpm-mcp-management` (from `mcp-management`)
 - `ccpm-skill-creator` (from `skill-creator`)
@@ -225,6 +251,12 @@ Adapted from [claudekit-skills](https://github.com/mrgoonie/claudekit-skills):
 Copied directly without modification:
 - `sequential-thinking`
 - `docs-seeker`
+
+### Project-Specific Skills (2)
+
+CCPM infrastructure skills:
+- `project-detection` (v2.0)
+- `project-operations` (v2.0, updated v2.3)
 
 ## Best Practices
 
@@ -287,6 +319,7 @@ To contribute a new skill:
 
 ---
 
-**Total Skills**: 8 (2 CCPM-original + 4 adapted + 2 as-is)
+**Total Skills**: 16 (8 CCPM-original + 4 adapted + 2 as-is + 2 project-specific)
 **Philosophy**: Automatic activation, complementary design, safety-first
+**Version**: CCPM v2.3 (PSN-34: Phase 2 & 3 Complete)
 **Next**: See individual skill SKILL.md files for details

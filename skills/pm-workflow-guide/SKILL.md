@@ -1,11 +1,99 @@
 ---
 name: pm-workflow-guide
-description: Provides intelligent context-aware PM workflow guidance using automatic phase detection and command suggestion. Auto-activates when user mentions planning, implementation, verification, spec management, or asks "what command should I use". Detects workflow phase (Planning → Spec → Implementation → Verification → Completion) and suggests optimal command path. Provides learning mode for new users with explanations of each command. Prevents common mistakes (implementing without planning, completing without verification). Suggests next actions based on task status and dependencies. Works with pm-workflow state machine (IDEA → PLANNED → IMPLEMENTING → VERIFYING → VERIFIED → COMPLETE). Offers error prevention ("Run planning first" when needed) and smart automation recommendations.
+description: Provides intelligent context-aware PM workflow guidance with automatic phase detection. Prioritizes 6 natural workflow commands (plan, work, sync, commit, verify, done) for streamlined project management. Auto-activates when user mentions planning, implementation, verification, spec management, or asks "what command should I use". Detects workflow phase and suggests optimal command path. Provides learning mode for new users. Prevents common mistakes and offers error prevention. Works with pm-workflow state machine (IDEA → PLANNED → IMPLEMENTING → VERIFYING → VERIFIED → COMPLETE).
 ---
 
 # PM Workflow Guide
 
-This skill helps you navigate CCPM's 27 commands by automatically detecting your current workflow phase and suggesting the most appropriate commands.
+This skill helps you navigate CCPM's 49+ commands by automatically detecting your current workflow phase and suggesting the most appropriate commands.
+
+## Natural Workflow Commands (RECOMMENDED)
+
+**Start here!** CCPM provides 6 simple, chainable commands that cover the complete workflow:
+
+### Quick Reference Card
+
+```
+Planning      → /ccpm:plan "title"              Create & plan a new task
+Working       → /ccpm:work                       Start/resume implementation
+Progressing   → /ccpm:sync "summary"             Save progress to Linear
+Committing    → /ccpm:commit                     Create git commit (conventional)
+Verifying     → /ccpm:verify                     Run quality checks
+Finalizing    → /ccpm:done                       Create PR & finalize
+```
+
+### Complete Workflow Examples
+
+**Example 1: New feature from scratch**
+```
+/ccpm:plan "Add two-factor authentication" my-app
+/ccpm:work                                # Start implementation
+/ccpm:sync "Implemented authenticator logic"
+/ccpm:commit                              # Auto-formats: feat(auth): implement 2FA
+/ccpm:verify                              # Run tests, linting, build
+/ccpm:done                                # Create PR and finalize
+```
+
+**Example 2: Fixing a bug**
+```
+/ccpm:plan BUG-456                        # Plan existing bug ticket
+/ccpm:work                                # Resume where you left off
+/ccpm:sync "Fixed race condition"
+/ccpm:commit                              # Auto-formats: fix(cache): prevent race condition
+/ccpm:verify                              # Ensure fix doesn't break tests
+/ccpm:done                                # Ship the fix
+```
+
+**Example 3: Documentation update**
+```
+/ccpm:plan "Update API documentation" my-app
+/ccpm:work
+/ccpm:sync "Added deployment guide"
+/ccpm:commit                              # Auto-formats: docs(api): add deployment guide
+/ccpm:verify
+/ccpm:done
+```
+
+### Command Details
+
+1. **`/ccpm:plan`** - Smart planning (PREFERRED over `/ccpm:planning:create`)
+   - Create new task: `/ccpm:plan "title" <project>`
+   - Plan existing issue: `/ccpm:plan <issue-id>`
+   - Update plan: `/ccpm:plan <issue-id> "changes"`
+
+2. **`/ccpm:work`** - Smart work (PREFERRED over `/ccpm:implementation:start`)
+   - Auto-detects: Not started → start, In progress → resume
+   - Auto-detects issue from git branch name
+
+3. **`/ccpm:sync`** - Save progress (PREFERRED over `/ccpm:implementation:sync`)
+   - Auto-detects issue from git branch
+   - Shows git changes summary
+   - Updates Linear with findings
+
+4. **`/ccpm:commit`** - Git integration (NEW in v2.2)
+   - Conventional commits format (feat/fix/docs/refactor/etc)
+   - Links commits to Linear issues automatically
+   - Example: `fix(auth): handle token expiration`
+
+5. **`/ccpm:verify`** - Quality checks (PREFERRED over manual verification)
+   - Auto-detects issue from branch
+   - Runs tests, linting, build checks sequentially
+   - Fails fast if checks don't pass
+
+6. **`/ccpm:done`** - Finalize (PREFERRED over `/ccpm:complete:finalize`)
+   - Pre-flight safety checks
+   - Creates PR with auto-generated description
+   - Syncs Linear status to Jira
+   - Requires confirmation for external writes (safety)
+
+### When to Use Extended Commands
+
+The 6 natural commands cover 90% of workflows. Use extended commands for:
+- **Complex planning**: `/ccpm:planning:plan <issue-id>` (more control, context gathering)
+- **Quick internal tasks**: `/ccpm:planning:quick-plan "task"` (skip external PM sync)
+- **Spec management**: `/ccpm:spec:*` (write architecture docs, break down epics)
+- **UI design**: `/ccpm:planning:design-ui` (generate mockups, iterate designs)
+- **Special workflows**: `/ccpm:utils:*` (status, insights, context, dependencies)
 
 ## Instructions
 
@@ -25,23 +113,23 @@ This skill activates when user mentions workflow-related keywords and provides c
 
 **Recommended commands**:
 
-1. **Starting from scratch** → `/ccpm:planning:create "Task title" <project> <jira-id>`
+1. **Natural command (PREFERRED)** → `/ccpm:plan "Task title" <project>`
+   - Simple, chainable planning
    - Creates Linear issue
    - Gathers context from Jira/Confluence/Slack
    - Analyzes codebase
    - Generates comprehensive plan
-   - Updates Linear with checklist
 
-2. **Existing Linear issue** → `/ccpm:planning:plan <linear-issue-id> <jira-ticket-id>`
-   - Same as above but for existing issue
-   - Use when issue created separately
+2. **Extended planning** → `/ccpm:planning:plan <linear-issue-id> <jira-ticket-id>`
+   - Use for more control and detailed context gathering
+   - Same as above but with additional configuration options
 
 3. **Quick internal task** → `/ccpm:planning:quick-plan "<task-description>" <project>`
    - Lightweight planning without external PM
-   - Ideal for quick fixes or quick fixes
+   - Ideal for quick fixes and internal tasks
 
-4. **Requirements changed** → `/ccpm:planning:update <linear-issue-id> "<update-request>"`
-   - Modifies existing plan
+4. **Update existing plan** → `/ccpm:planning:update <linear-issue-id> "<update-request>"`
+   - Requirements changed during implementation
    - Interactive clarification
    - Impact analysis
    - Side-by-side comparison
@@ -52,14 +140,15 @@ User: "I need to plan the new user authentication feature"
 
 Claude: [pm-workflow-guide activates]
 
-I'll help you plan this task. First, let me ask:
+I'll help you plan this. Here's what to use:
 
-Do you have:
-1. A Jira ticket with requirements? → Use /ccpm:planning:create
-2. An existing Linear issue? → Use /ccpm:planning:plan
-3. Just a quick internal task? → Use /ccpm:planning:quick-plan
+1. NEW TASK → /ccpm:plan "User authentication" my-app
+2. EXISTING ISSUE → /ccpm:plan <issue-id>
+3. QUICK INTERNAL → /ccpm:planning:quick-plan "task" my-app
 
-Which applies?
+The first option is recommended - it's simple and chainable!
+
+Which applies to your situation?
 ```
 
 ### Spec Management Phase
@@ -133,34 +222,35 @@ Would you like to start with spec creation?
 - "let's build this"
 - "what should I work on"
 - "ready to code"
+- "save my progress"
+- "commit this code"
 
 **Recommended commands**:
 
-1. **Start implementation** → `/ccpm:implementation:start <linear-issue-id>`
-   - Fetches task context
+1. **Natural command (PREFERRED)** → `/ccpm:work`
+   - Start or resume implementation
+   - Auto-detects issue from git branch
+   - Fetches full task context
    - Lists available agents
-   - Analyzes subtasks
-   - Assigns agents to subtasks
    - Coordinates parallel work
 
-2. **Smart next action** → `/ccpm:implementation:next <linear-issue-id>`
-   - Analyzes task status
-   - Checks dependencies
-   - Reviews progress
-   - Suggests optimal next step
-   - Considers blockers
-
-3. **Update progress** → `/ccpm:implementation:update <linear-issue-id> <subtask-index> <status> "<summary>"`
-   - Status: pending, in_progress, completed
-   - Adds work summary to Linear
-   - Updates progress tracking
-   - Maintains context
-
-4. **Sync progress** → `/ccpm:implementation:sync <linear-issue-id> [summary]`
-   - Syncs implementation findings
+2. **Save progress** → `/ccpm:sync "summary"`
+   - Save work-in-progress to Linear
+   - Auto-detects issue from git branch
    - Documents changes made
    - Updates Linear context
    - Maintains full history
+
+3. **Commit code** → `/ccpm:commit`
+   - Create conventional git commit
+   - Auto-formats commit message
+   - Links to Linear issue
+   - Example: `feat(auth): add 2FA support`
+
+4. **Extended start** → `/ccpm:implementation:start <linear-issue-id>`
+   - Use for more control over setup
+   - Analyzes subtasks in detail
+   - Can assign agents explicitly
 
 **Example conversation**:
 ```
@@ -168,17 +258,15 @@ User: "Let's start working on AUTH-123"
 
 Claude: [pm-workflow-guide activates]
 
-I'll help you start implementation. Use:
+Perfect! Use the natural workflow:
 
-/ccpm:implementation:start AUTH-123
+/ccpm:work                    # Start implementation (auto-detects AUTH-123)
+/ccpm:sync "progress note"    # Save progress as you work
+/ccpm:commit                  # Create conventional commits
+/ccpm:verify                  # Check quality when done
+/ccpm:done                    # Create PR and finalize
 
-This will:
-✓ Load full task context
-✓ Identify required agents (backend, frontend, security)
-✓ Assign subtasks to agents
-✓ Coordinate parallel work
-✓ Start with highest priority subtask
-
+Start with: /ccpm:work
 Ready to proceed?
 ```
 
@@ -193,26 +281,26 @@ Ready to proceed?
 
 **Recommended commands**:
 
-1. **Quality checks** → `/ccpm:verification:check <linear-issue-id>`
+1. **Natural command (PREFERRED)** → `/ccpm:verify`
+   - Run all quality checks
+   - Auto-detects issue from git branch
+   - Runs tests, linting, build checks
+   - Comprehensive code review
+   - Final approval when passing
+
+2. **Extended quality checks** → `/ccpm:verification:check <linear-issue-id>`
+   - Use for manual issue specification
    - Resolves IDE warnings
    - Runs linting (ESLint, Prettier)
    - Executes test suite
    - Checks build success
-   - Reports all issues
 
-2. **Fix failures** → `/ccpm:verification:fix <linear-issue-id>`
+3. **Fix failures** → `/ccpm:verification:fix <linear-issue-id>`
    - Identifies verification failures
    - Analyzes error messages
    - Invokes relevant agents
    - Fixes issues automatically
    - Re-runs verification
-
-3. **Final verification** → `/ccpm:verification:verify <linear-issue-id>`
-   - Comprehensive code review
-   - Security audit
-   - Performance check
-   - Documentation review
-   - Final sign-off
 
 **Example conversation**:
 ```
@@ -220,21 +308,18 @@ User: "I'm done implementing, ready to test"
 
 Claude: [pm-workflow-guide activates]
 
-Great! Let's verify your work:
+Perfect! Let's verify your work:
 
-Step 1: /ccpm:verification:check <issue-id>
-- Runs all automated checks
-- Identifies any issues
+/ccpm:verify
 
-If issues found:
-Step 2: /ccpm:verification:fix <issue-id>
-- Automatically fixes common issues
+This will:
+✓ Run all automated checks (tests, linting, build)
+✓ Perform comprehensive code review
+✓ Security audit
+✓ Performance check
+✓ Final approval when passing
 
-Final step: /ccpm:verification:verify <issue-id>
-- Comprehensive review
-- Final approval
-
-Shall I start with the quality checks?
+Ready to proceed?
 ```
 
 ### Completion Phase
@@ -248,12 +333,19 @@ Shall I start with the quality checks?
 
 **Recommended commands**:
 
-1. **Finalize task** → `/ccpm:complete:finalize <linear-issue-id>`
-   - Creates BitBucket PR
-   - Syncs status to Jira
+1. **Natural command (PREFERRED)** → `/ccpm:done`
+   - Auto-detects issue from git branch
+   - Creates PR with auto-generated description
+   - Syncs Linear status to Jira
    - Sends Slack notification
-   - Cleans up local state
    - Marks Linear issue complete
+   - Requires confirmation for external writes (safety)
+
+2. **Extended finalization** → `/ccpm:complete:finalize <linear-issue-id>`
+   - Use for manual issue specification
+   - Creates BitBucket PR with full details
+   - Syncs to all external systems
+   - Cleans up local branches
 
 **Example conversation**:
 ```
@@ -263,15 +355,15 @@ Claude: [pm-workflow-guide + external-system-safety activate]
 
 Perfect! Let's finalize:
 
-/ccpm:complete:finalize <issue-id>
+/ccpm:done
 
 This will:
-1. Create BitBucket PR with description
-2. Sync Jira status to "Done"
-3. Send Slack notification to team
-4. Clean up local branches
+1. Create BitBucket PR with auto-description
+2. Update Linear status to "Complete"
+3. Sync Jira status to "Done"
+4. Send Slack notification to team
 
-⚠️ Note: Steps 2-3 require confirmation (external system writes)
+⚠️ Note: External system writes require your confirmation
 
 Ready to proceed?
 ```
@@ -446,6 +538,36 @@ This skill works alongside:
 ❌ User: "/ccpm:complete:finalize before verification"
 ✅ Claude: "Run /ccpm:verification:verify first to ensure quality checks pass."
 
+### Natural Workflow Activation Triggers
+
+This skill activates with high priority when users ask about the natural workflow:
+
+**Planning triggers**:
+- "how do I plan"
+- "start a new task"
+- "create a task"
+- "plan something"
+
+**Implementation triggers**:
+- "start work" / "start working"
+- "save my progress"
+- "commit this" / "create a commit"
+- "how do I commit"
+
+**Verification triggers**:
+- "how do I test"
+- "verify my work"
+- "run checks"
+- "before I ship"
+
+**Completion triggers**:
+- "ready to ship"
+- "create a PR"
+- "finalize this"
+- "mark complete"
+
+When these triggers appear, recommend the natural 6-command workflow first.
+
 ### Learning Mode
 
 For new users, provide extra context:
@@ -455,16 +577,18 @@ User: "How do I plan a task?"
 
 Claude: [pm-workflow-guide activates - detects new user]
 
-CCPM provides several planning commands:
+CCPM has a simple 6-command workflow:
 
-📋 /ccpm:planning:create - Complete workflow (Jira → Linear → Plan)
-   Best for: New tasks with Jira tickets
+1. /ccpm:plan "task title" <project>   - Create & plan
+2. /ccpm:work                           - Start coding
+3. /ccpm:sync "summary"                 - Save progress
+4. /ccpm:commit                         - Git commit
+5. /ccpm:verify                         - Quality checks
+6. /ccpm:done                           - Create PR
 
-⚡ /ccpm:planning:quick-plan - Fast planning without Jira
-   Best for: Internal tasks, quick fixes
+These commands are chainable and auto-detect your issue from git branch!
 
-🔄 /ccpm:planning:update - Update existing plan
-   Best for: Changed requirements, new information
+For more control, extended commands like /ccpm:planning:create also available.
 
 Which matches your situation?
 
@@ -480,17 +604,26 @@ User: "I need to implement a new export feature for reports"
 
 Claude: [pm-workflow-guide + spec-first-development activate]
 
-This sounds like a new feature. Let's start right:
+Perfect! Let's use the natural workflow:
 
-1. Do you have a Jira ticket?
-   → Yes: Use /ccpm:planning:create "Export reports feature" <project> <jira-id>
-   → No: Use /ccpm:planning:quick-plan "Export reports feature" <project>
+/ccpm:plan "Export reports feature" my-app
 
-2. Is this complex enough for a spec?
-   → Yes: Start with /ccpm:spec:create feature "Report Export"
-   → No: Proceed with planning
+This will:
+✓ Create Linear issue
+✓ Gather context from Jira/Slack/Confluence
+✓ Analyze codebase
+✓ Generate comprehensive plan
 
-Which path fits your needs?
+Then continue with:
+/ccpm:work           # Start coding
+/ccpm:sync "notes"   # Save progress
+/ccpm:commit         # Git commit
+/ccpm:verify         # Quality checks
+/ccpm:done           # Create PR & ship
+
+For complex features, add /ccpm:spec:create before /ccpm:work
+
+Shall I start planning?
 ```
 
 ### Example 2: Mid-Implementation Questions
@@ -500,19 +633,13 @@ User: "I'm stuck on this auth task, not sure what to do next"
 
 Claude: [pm-workflow-guide activates]
 
-Let me help you find the next step:
+Let me help! Continue with the natural workflow:
 
-/ccpm:implementation:next <your-issue-id>
+/ccpm:sync "stuck on session management"    # Save progress with note
 
-This will analyze:
-✓ What subtasks are complete
-✓ What's blocked vs available
-✓ Dependencies between subtasks
-✓ Best next action
+Then I can help debug and suggest next steps.
 
-It will suggest exactly what to work on next.
-
-What's your issue ID?
+What's your issue ID or branch name?
 ```
 
 ### Example 3: Ready to Ship
@@ -522,21 +649,17 @@ User: "I think I'm done, how do I finish this?"
 
 Claude: [pm-workflow-guide activates]
 
-Great! Here's the completion checklist:
+Great! Use the natural workflow:
 
-✅ Step 1: Quality checks
-   /ccpm:verification:check <issue-id>
+/ccpm:verify          # Run all quality checks
 
-✅ Step 2: Fix any issues
-   /ccpm:verification:fix <issue-id>
+Once passing, continue:
 
-✅ Step 3: Final review
-   /ccpm:verification:verify <issue-id>
+/ccpm:done            # Create PR, sync Jira, ship
 
-✅ Step 4: Finalize & ship
-   /ccpm:complete:finalize <issue-id>
+That's it! The natural workflow handles everything.
 
-Shall I start with quality checks?
+Ready to verify?
 ```
 
 ## Command Reference Quick Access
@@ -548,10 +671,24 @@ Shall I start with quality checks?
 ## Summary
 
 This skill helps you:
-- ✅ Never wonder "which command should I use?"
-- ✅ Follow the optimal workflow for each phase
-- ✅ Avoid common mistakes
-- ✅ Learn CCPM as you go
-- ✅ Stay productive without memorizing 27 commands
+- ✅ **Use 6 simple commands** for the complete workflow (plan, work, sync, commit, verify, done)
+- ✅ **Chain commands naturally** - they auto-detect context from git branch
+- ✅ **Never worry about options** - natural commands make the best choice
+- ✅ **Follow optimal workflows** - each phase has a clear recommended path
+- ✅ **Avoid common mistakes** - skill prevents implementing without planning, shipping without verification
+- ✅ **Explore 49+ commands** when you need more control (extended options always available)
 
-The skill activates automatically when you mention planning, implementation, verification, or completion - providing intelligent command suggestions based on your exact context.
+### Quick Start: The 6-Command Workflow
+
+```
+/ccpm:plan "title" <project>   →  Create and plan a task
+/ccpm:work                     →  Start or resume coding
+/ccpm:sync "summary"           →  Save progress
+/ccpm:commit                   →  Create conventional git commit
+/ccpm:verify                   →  Run quality checks
+/ccpm:done                     →  Create PR and finalize
+```
+
+**That's it!** These 6 commands cover 90% of all CCPM workflows. The skill activates automatically when you mention planning, implementation, verification, or completion—providing intelligent suggestions based on your exact context.
+
+For advanced workflows (specs, UI design, multi-agent projects), extended commands are always available.
