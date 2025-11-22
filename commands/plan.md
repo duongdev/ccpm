@@ -1,36 +1,44 @@
 ---
-description: Smart planning command - create, plan, or update tasks (optimized)
+description: Smart planning - create, plan, or update tasks with v1.0 workflow rules
 allowed-tools: [Bash, Task, AskUserQuestion]
 argument-hint: "[title]" OR <issue-id> OR <issue-id> "[changes]"
 ---
 
-# /ccpm:plan - Smart Planning Command
-
-**Token Budget:** ~2,450 tokens (vs ~7,000 baseline) | **65% reduction**
+# /ccpm:plan - Smart Planning
 
 Intelligent command that creates new tasks, plans existing tasks, or updates plans based on context.
 
+## 🎯 v1.0 Interactive Workflow Rules
+
+**PLAN Mode Philosophy:**
+- **Seek details** - Consider multiple approaches, don't assume
+- **Deep research** - Codebase, Linear, external PM, git history
+- **Update description** - Keep plan consolidated (not scattered in comments)
+- **Stay in plan mode** - Don't rush to implementation
+- **Get confirmation** - Explicit approval before proceeding
+- **Hybrid Q&A** - Critical questions via AskUserQuestion, clarifications via output
+
 ## Mode Detection
 
-The command has **3 modes** with clear, unambiguous detection:
+Three modes with clear detection:
 
-- **CREATE**: `plan "title" [project] [jira-ticket]` → Creates new task and plans it
-- **PLAN**: `plan WORK-123` → Plans existing task
-- **UPDATE**: `plan WORK-123 "changes"` → Updates existing plan
+- **CREATE**: `/ccpm:plan "title" [project] [jira]` → Create + plan new task
+- **PLAN**: `/ccpm:plan WORK-123` → Plan existing task
+- **UPDATE**: `/ccpm:plan WORK-123 "changes"` → Update existing plan
 
 ## Usage
 
 ```bash
-# Mode 1: CREATE - New task
+# CREATE - New task
 /ccpm:plan "Add user authentication"
 /ccpm:plan "Add dark mode" my-app TRAIN-456
 
-# Mode 2: PLAN - Plan existing
+# PLAN - Plan existing
 /ccpm:plan PSN-27
 
-# Mode 3: UPDATE - Update plan
+# UPDATE - Update plan
 /ccpm:plan PSN-27 "Add email notifications too"
-/ccpm:plan PSN-27 "Use Redis instead of in-memory cache"
+/ccpm:plan PSN-27 "Use Redis instead of in-memory"
 ```
 
 ## Implementation
@@ -43,7 +51,6 @@ const arg1 = args[0];
 const arg2 = args[1];
 const arg3 = args[2];
 
-// Issue ID pattern: PROJECT-NUMBER (e.g., PSN-27, WORK-123)
 const ISSUE_ID_PATTERN = /^[A-Z]+-\d+$/;
 
 if (!arg1) {
@@ -57,20 +64,13 @@ Usage:
   `);
 }
 
-// Detect mode
 let mode, issueId, title, project, jiraTicket, updateText;
 
 if (ISSUE_ID_PATTERN.test(arg1)) {
-  // Starts with issue ID
   issueId = arg1;
-  if (arg2) {
-    mode = 'update';
-    updateText = arg2;
-  } else {
-    mode = 'plan';
-  }
+  mode = arg2 ? 'update' : 'plan';
+  updateText = arg2;
 } else {
-  // First arg is not issue ID = CREATE mode
   mode = 'create';
   title = arg1;
   project = arg2 || null;
@@ -85,7 +85,7 @@ console.log(`\n🎯 Mode: ${mode.toUpperCase()}`);
 ```yaml
 ## CREATE: Create new task and plan it
 
-1. Detect/load project configuration:
+1. Load project configuration:
 
 Task(project-context-manager): `
 ${project ? `Get context for project: ${project}` : 'Get active project context'}
@@ -125,38 +125,94 @@ Invoke the `ccpm:linear-operations` subagent:
     mode: "create"
   ```
 
-Store: issue.id, issue.identifier (e.g., PSN-30)
+Store: issue.id, issue.identifier
 
 Display: "✅ Created issue: ${issue.identifier}"
 
-3. Gather context (smart agent selection):
+3. Deep research (v1.0 workflow):
+
+**Search for context (parallel):**
+a) Search Linear for similar issues
+b) If Jira provided, research ticket + Confluence docs
+c) Search codebase for similar implementations
+d) Analyze recent git commits for related work
+
+**Smart agent planning:**
 
 Task: `
 Plan implementation for: ${title}
 
-${jiraTicket ? `Jira Ticket: ${jiraTicket}\n` : ''}
+Context gathered:
+- Linear similar issues: [if found]
+- Jira context: [if provided]
+- Codebase patterns: [found implementations]
+- Recent commits: [related work]
 
 Your task:
-1. If Jira ticket provided, research it and related Confluence docs
-2. Analyze codebase to identify files to modify
+1. Consider multiple implementation approaches
+2. Analyze trade-offs for each approach
 3. Research best practices using Context7 MCP
 4. Create detailed implementation checklist (5-10 items)
-5. Estimate complexity (low/medium/high)
-6. Identify potential risks or challenges
+5. Estimate complexity (low/medium/high) with reasoning
+6. Identify risks, dependencies, unknowns
+7. Suggest testing strategy
 
 Provide structured plan with:
-- Implementation checklist (actionable subtasks)
-- Files to modify (with brief rationale)
-- Dependencies and prerequisites
-- Testing approach
-- Complexity estimate and reasoning
+- **Recommended approach** and alternatives considered
+- **Implementation checklist** (specific, actionable items)
+- **Files to modify** (with rationale)
+- **Dependencies** and prerequisites
+- **Uncertainties** that need clarification
+- **Testing strategy**
+- **Complexity** with reasoning
 `
 
-Note: Smart-agent-selector automatically chooses optimal agent based on task type
+Note: Smart-agent-selector automatically chooses optimal agent
 
-4. Update Linear issue with plan:
+4. Present plan for confirmation (v1.0 workflow):
 
-**Use the Task tool to update the issue description with the plan:**
+Display the complete plan with:
+- Recommended approach + alternatives
+- Full checklist
+- Files to modify
+- Uncertainties identified
+
+**Get explicit confirmation before proceeding:**
+
+Output:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Proposed Plan for ${title}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Recommended Approach:
+[approach description]
+
+💡 Alternatives Considered:
+[alternatives and why not chosen]
+
+✅ Implementation Checklist:
+[checklist items]
+
+📁 Files to Modify:
+[files with rationale]
+
+⚠️ Uncertainties:
+[questions/unknowns identified]
+
+🧪 Testing Strategy:
+[testing approach]
+
+⚡ Complexity: [Low/Medium/High] - [reasoning]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Then ask: "Does this plan look good? Any adjustments needed?"
+
+5. Update Linear issue with confirmed plan:
+
+**Use the Task tool to update the issue description:**
 
 Invoke the `ccpm:linear-operations` subagent:
 - **Tool**: Task
@@ -165,33 +221,37 @@ Invoke the `ccpm:linear-operations` subagent:
   ```
   operation: update_issue_description
   params:
-    issueId: "{issue identifier from step 2}"
+    issueId: "{issue identifier}"
     description: |
       ## Implementation Checklist
 
-      {checklist generated from planning result in step 3}
+      {checklist from planning result}
 
-      > **Complexity**: {complexity from step 3} | **Estimated**: {estimate from step 3}
+      > **Complexity**: {complexity} | **Approach**: {approach summary}
 
       ---
 
       ## Task
 
-      {task title}
+      {title}
 
-      {if Jira ticket: **Jira**: [{jiraTicket}](url)}
+      {if Jira: **Jira**: [{jiraTicket}](url)}
+
+      ## Recommended Approach
+
+      {approach details and alternatives}
 
       ## Files to Modify
 
-      {files list from planning result in step 3}
+      {files list with rationale}
 
-      ## Research & Context
+      ## Uncertainties / Open Questions
 
-      {research from planning result in step 3}
+      {uncertainties identified}
 
       ## Testing Strategy
 
-      {testing strategy from planning result in step 3}
+      {testing approach}
 
       ---
 
@@ -200,25 +260,22 @@ Invoke the `ccpm:linear-operations` subagent:
     command: "plan"
   ```
 
-5. Update issue status and labels:
+6. Update status and labels:
 
-**Use the Task tool to update the issue status:**
+**Use the Task tool:**
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: update_issue
-  params:
-    issueId: "{issue identifier from step 2}"
-    state: "Planned"
-    labels: ["planned", "ready"]
-  context:
-    command: "plan"
-  ```
+Invoke `ccpm:linear-operations`:
+```
+operation: update_issue
+params:
+  issueId: "{issue identifier}"
+  state: "Planned"
+  labels: ["planned", "ready"]
+context:
+  command: "plan"
+```
 
-6. Display completion:
+7. Display completion:
 
 console.log('\n═══════════════════════════════════════');
 console.log('✅ Task Created & Planned!');
@@ -239,22 +296,19 @@ console.log(`\n💡 Next: /ccpm:work ${issue.identifier}`);
 
 1. Fetch issue via subagent:
 
-**Use the Task tool to fetch the issue from Linear:**
+**Use the Task tool:**
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: get_issue
-  params:
-    issueId: "{issue ID from arguments}"
-  context:
-    cache: true
-    command: "plan"
-  ```
+Invoke `ccpm:linear-operations`:
+```
+operation: get_issue
+params:
+  issueId: "{issue ID}"
+context:
+  cache: true
+  command: "plan"
+```
 
-Store: issue.id, issue.title, issue.description, issue.state, issue.team
+Store: issue details
 
 Display: "📋 Planning: ${issue.identifier} - ${issue.title}"
 
@@ -270,13 +324,15 @@ if (hasChecklist && isPlanned) {
   return;
 }
 
-3. Extract context from description:
+3. Deep research (v1.0 workflow):
 
-// Check for Jira reference
-const jiraMatch = issue.description.match(/\*\*Jira.*?\*\*:\s*([A-Z]+-\d+)/);
-const jiraTicket = jiraMatch ? jiraMatch[1] : null;
+**Search for context (parallel):**
+a) Search Linear for similar issues
+b) Extract Jira reference from description, research if found
+c) Search codebase for similar implementations
+d) Analyze git history for related work
 
-4. Gather planning context (smart agent selection):
+**Smart agent planning:**
 
 Task: `
 Create implementation plan for: ${issue.title}
@@ -284,83 +340,90 @@ Create implementation plan for: ${issue.title}
 Current description:
 ${issue.description}
 
-${jiraTicket ? `Jira ticket: ${jiraTicket}\n` : ''}
+Context gathered:
+- Linear similar issues: [if found]
+- Jira context: [if found]
+- Codebase patterns: [implementations]
+- Recent commits: [related work]
 
 Your task:
-1. ${jiraTicket ? 'Research Jira ticket and related Confluence docs' : 'Use current description as requirements'}
-2. Analyze codebase to identify files to modify
+1. Consider multiple implementation approaches
+2. Analyze trade-offs for each
 3. Research best practices using Context7 MCP
-4. Create detailed implementation checklist (5-10 items)
-5. Estimate complexity (low/medium/high)
-6. Identify potential risks
+4. Create detailed checklist (5-10 items)
+5. Estimate complexity with reasoning
+6. Identify risks, dependencies, unknowns
 
 Provide structured plan with:
-- Implementation checklist (specific, actionable items)
-- Files to modify with rationale
-- Dependencies and prerequisites
-- Testing strategy
-- Complexity and estimate
+- **Recommended approach** + alternatives
+- **Implementation checklist** (actionable)
+- **Files to modify** with rationale
+- **Uncertainties** to clarify
+- **Testing strategy**
+- **Complexity** with reasoning
 `
 
-5. Update issue description with plan:
+4. Present plan for confirmation (v1.0 workflow):
 
-**Use the Task tool to update the issue description:**
+Display complete plan and ask: "Does this plan look good? Any adjustments needed?"
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: update_issue_description
-  params:
-    issueId: "{issue ID from step 1}"
-    description: |
-      ## Implementation Checklist
+5. Update issue description with confirmed plan:
 
-      {checklist generated from planning result in step 4}
+**Use the Task tool:**
 
-      > **Complexity**: {complexity from step 4} | **Estimated**: {estimate from step 4}
+Invoke `ccpm:linear-operations`:
+```
+operation: update_issue_description
+params:
+  issueId: "{issue ID}"
+  description: |
+    ## Implementation Checklist
 
-      ---
+    {checklist}
 
-      {original issue description from step 1}
+    > **Complexity**: {complexity} | **Approach**: {approach}
 
-      ## Files to Modify
+    ---
 
-      {files list from planning result in step 4}
+    {original description}
 
-      ## Research & Context
+    ## Recommended Approach
 
-      {research from planning result in step 4}
+    {approach + alternatives}
 
-      ## Testing Strategy
+    ## Files to Modify
 
-      {testing strategy from planning result in step 4}
+    {files with rationale}
 
-      ---
+    ## Uncertainties / Open Questions
 
-      *Planned via /ccpm:plan*
-  context:
-    command: "plan"
-  ```
+    {uncertainties}
+
+    ## Testing Strategy
+
+    {testing approach}
+
+    ---
+
+    *Planned via /ccpm:plan*
+context:
+  command: "plan"
+```
 
 6. Update status and labels:
 
-**Use the Task tool to update the issue status:**
+**Use the Task tool:**
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: update_issue
-  params:
-    issueId: "{issue ID from step 1}"
-    state: "Planned"
-    labels: ["planned", "ready"]
-  context:
-    command: "plan"
-  ```
+Invoke `ccpm:linear-operations`:
+```
+operation: update_issue
+params:
+  issueId: "{issue ID}"
+  state: "Planned"
+  labels: ["planned", "ready"]
+context:
+  command: "plan"
+```
 
 7. Display completion:
 
@@ -383,22 +446,17 @@ console.log(`\n💡 Next: /ccpm:work ${issueId}`);
 
 1. Fetch current plan:
 
-**Use the Task tool to fetch the issue from Linear:**
+**Use the Task tool:**
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: get_issue
-  params:
-    issueId: "{issue ID from arguments}"
-  context:
-    cache: true
-    command: "plan"
-  ```
-
-Store: issue with full description, checklist, state
+Invoke `ccpm:linear-operations`:
+```
+operation: get_issue
+params:
+  issueId: "{issue ID}"
+context:
+  cache: true
+  command: "plan"
+```
 
 2. Display current plan summary:
 
@@ -434,19 +492,42 @@ console.log('\n━━━━━━━━━━━━━━━━━━━━━�
 const changeType = detectChangeType(updateText);
 // Returns: 'scope_change', 'approach_change', 'simplification', 'blocker', 'clarification'
 
-4. Interactive clarification (if needed):
+4. Interactive clarification (v1.0 workflow - hybrid approach):
+
+**Critical questions:** Use AskUserQuestion for interactive response
+**Clarifications:** Output questions, wait for user response
 
 if (requiresClarification(changeType, updateText)) {
-  const questions = generateClarificationQuestions(changeType, updateText, issue);
+  // For scope changes, approach changes - ask interactively
+  if (changeType === 'scope_change' || changeType === 'approach_change') {
+    const questions = generateClarificationQuestions(changeType, updateText, issue);
 
-  AskUserQuestion({
-    questions: questions  // 1-4 targeted questions based on update
-  });
+    AskUserQuestion({
+      questions: questions  // 1-4 targeted questions
+    });
 
-  // Use answers to refine update request
+    // Store answers for refinement
+  }
+
+  // For clarifications - output questions
+  if (changeType === 'clarification') {
+    console.log('\n💡 Questions to clarify:');
+    const questions = generateClarificationQuestions(changeType, updateText, issue);
+    questions.forEach((q, i) => console.log(`  ${i+1}. ${q.question}`));
+    console.log('\nPlease provide clarification, then run the update again.');
+    return;
+  }
 }
 
-5. Generate updated plan with smart agent:
+5. Deep research for update (v1.0 workflow):
+
+**Research changes needed (parallel):**
+a) Search codebase for new requirements
+b) Search Linear for related issues
+c) If approach change, research alternatives via Context7
+d) Check git history for relevant patterns
+
+**Generate updated plan with smart agent:**
 
 Task: `
 Update implementation plan for: ${issue.title}
@@ -458,22 +539,30 @@ ${clarification ? `Clarification: ${JSON.stringify(clarification)}` : ''}
 Current plan:
 ${issue.description}
 
+Context gathered:
+- Codebase research: [results]
+- Similar issues: [if found]
+- Alternative approaches: [if relevant]
+- Git patterns: [if relevant]
+
 Your task:
-1. Analyze the update request and current plan
-2. Determine what needs to change (keep/modify/add/remove)
-3. Research any new requirements using Context7 MCP
-4. Update implementation checklist accordingly
-5. Adjust complexity estimate if needed
-6. Document the changes made
+1. Analyze update request and current plan
+2. Consider impact and alternatives
+3. Determine what changes (keep/modify/add/remove)
+4. Research new requirements via Context7
+5. Update checklist accordingly
+6. Adjust complexity if needed
+7. Document changes and rationale
 
 Provide:
 - Updated checklist with changes highlighted
-- Change summary (what was kept/modified/added/removed)
+- Change summary (kept/modified/added/removed)
 - Updated complexity if changed
-- Rationale for changes
+- Rationale for all changes
+- New uncertainties if any
 `
 
-6. Display change preview:
+6. Display change preview (v1.0 workflow):
 
 console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('📝 Proposed Changes');
@@ -489,7 +578,7 @@ if (removedItems.length > 0) {
   removedItems.forEach(i => console.log(`  • ${i}`));
 }
 
-7. Confirm and update:
+7. Get explicit confirmation (v1.0 workflow):
 
 AskUserQuestion({
   questions: [{
@@ -503,49 +592,50 @@ AskUserQuestion({
   }]
 });
 
-if (confirmed) {
-  // Use the Task tool to update the issue description
-  Invoke the `ccpm:linear-operations` subagent:
-  - **Tool**: Task
-  - **Subagent**: ccpm:linear-operations
-  - **Prompt**:
-    ```
-    operation: update_issue_description
-    params:
-      issueId: "{issue ID from step 1}"
-      description: {updated description from step 5}
-    context:
-      command: "plan"
-      changeType: "{change type from step 3}"
-    ```
-
-  // Use the Task tool to add comment documenting the change
-  Invoke the `ccpm:linear-operations` subagent:
-  - **Tool**: Task
-  - **Subagent**: ccpm:linear-operations
-  - **Prompt**:
-    ```
-    operation: create_comment
-    params:
-      issueId: "{issue ID from step 1}"
-      body: |
-        ## 📝 Plan Updated
-
-        **Change Type**: {change type from step 3}
-        **Request**: {update text from arguments}
-
-        ### Changes Made
-
-        {change summary from step 5}
-
-        ---
-        *Updated via /ccpm:plan*
-    context:
-      command: "plan"
-    ```
+if (!confirmed) {
+  console.log('\n⏸️  Update cancelled. Run the command again with refined changes.');
+  return;
 }
 
-8. Display completion:
+8. Update Linear with confirmed changes:
+
+**Use the Task tool to update description:**
+
+Invoke `ccpm:linear-operations`:
+```
+operation: update_issue_description
+params:
+  issueId: "{issue ID}"
+  description: {updated description}
+context:
+  command: "plan"
+  changeType: "{change type}"
+```
+
+**Use the Task tool to add comment:**
+
+Invoke `ccpm:linear-operations`:
+```
+operation: create_comment
+params:
+  issueId: "{issue ID}"
+  body: |
+    ## 📝 Plan Updated
+
+    **Change Type**: {change type}
+    **Request**: {update text}
+
+    ### Changes Made
+
+    {change summary}
+
+    ---
+    *Updated via /ccpm:plan*
+context:
+  command: "plan"
+```
+
+9. Display completion:
 
 console.log('\n✅ Plan Updated!');
 console.log(`📋 Issue: ${issueId} - ${issue.title}`);
@@ -567,27 +657,11 @@ function detectChangeType(text) {
   if (/(blocked|can't|doesn't work|issue|problem)/i.test(lower)) return 'blocker';
   return 'clarification';
 }
-
-// Generate checklist from planning result
-function generateChecklist(plan) {
-  return plan.subtasks.map(task => `- [ ] ${task}`).join('\n');
-}
-
-// Format files list
-function formatFilesList(files) {
-  return files.map(f => `- **${f.path}**: ${f.rationale}`).join('\n');
-}
-
-// Generate clarification questions based on change type
-function generateClarificationQuestions(changeType, updateText, issue) {
-  // Returns 1-4 AskUserQuestion-formatted questions
-  // Based on change type and context
-}
 ```
 
 ## Error Handling
 
-### Invalid Issue ID Format
+### Invalid Issue ID
 ```
 ❌ Invalid issue ID format: proj123
 Expected format: PROJ-123
@@ -623,7 +697,7 @@ Suggestions:
 
 ## Examples
 
-### Example 1: CREATE Mode
+### Example 1: CREATE with v1.0 workflow
 
 ```bash
 /ccpm:plan "Add user authentication"
@@ -634,51 +708,41 @@ Suggestions:
 # ✅ Created issue: PSN-30
 # 📋 Planning: PSN-30 - Add user authentication
 #
-# [Smart agent analyzes requirements...]
+# [Deep research: codebase, Linear, git history...]
+# [Smart agent analyzes and considers approaches...]
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📋 Proposed Plan for Add user authentication
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# 🎯 Recommended Approach:
+# JWT-based authentication with refresh tokens...
+#
+# 💡 Alternatives Considered:
+# 1. Session-based auth - rejected (scalability)
+# 2. OAuth only - rejected (adds complexity)
+#
+# ✅ Implementation Checklist:
+# - [ ] Create auth endpoints (/login, /logout, /refresh)
+# - [ ] Add JWT validation middleware
+# ...
+#
+# ⚠️ Uncertainties:
+# - Which OAuth providers to support?
+# - Password reset flow requirements?
+#
+# Does this plan look good? Any adjustments needed?
+# [User confirms]
 #
 # ═══════════════════════════════════════
 # ✅ Task Created & Planned!
 # ═══════════════════════════════════════
 #
 # 📋 Issue: PSN-30 - Add user authentication
-# 🔗 https://linear.app/.../PSN-30
-#
-# 📊 Plan Summary:
-#   ✅ 7 subtasks created
-#   📁 5 files to modify
-#   ⚡ Complexity: Medium
-#
 # 💡 Next: /ccpm:work PSN-30
 ```
 
-### Example 2: PLAN Mode
-
-```bash
-/ccpm:plan PSN-29
-
-# Output:
-# 🎯 Mode: PLAN
-#
-# 📋 Planning: PSN-29 - Implement dark mode
-#
-# [Smart agent creates plan...]
-#
-# ═══════════════════════════════════════
-# ✅ Planning Complete!
-# ═══════════════════════════════════════
-#
-# 📋 Issue: PSN-29 - Implement dark mode
-# 🔗 https://linear.app/.../PSN-29
-#
-# 📊 Plan Added:
-#   ✅ 6 subtasks
-#   📁 8 files to modify
-#   ⚡ Complexity: Low
-#
-# 💡 Next: /ccpm:work PSN-29
-```
-
-### Example 3: UPDATE Mode
+### Example 2: UPDATE with interactive clarification
 
 ```bash
 /ccpm:plan PSN-29 "Also add email notifications"
@@ -691,60 +755,60 @@ Suggestions:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #
 # 🏷️  Title: Implement dark mode
-# 📊 Status: Planned
 # 🎯 Progress: 0/6 items
 #
-# [Shows clarification questions...]
+# [Shows clarification questions via AskUserQuestion]
+#
+# 1. Which events should trigger notifications?
+#    • Theme change only
+#    • All user preference changes
+#
+# 2. Notification delivery method?
+#    • Email
+#    • In-app
+#    • Both
+#
+# [User answers interactively]
+#
+# [Deep research: email services, templates, best practices...]
 #
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 📝 Proposed Changes
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #
-# ✅ Kept: 6 items
+# ✅ Kept: 6 original items
 # ➕ Added:
-#   • Set up email service integration
-#   • Add notification templates
+#   • Set up email service integration (SendGrid)
+#   • Create notification templates
+#   • Add notification preferences to user settings
 #
-# [Confirmation prompt...]
+# Apply these changes to the plan?
+# [User confirms]
 #
 # ✅ Plan Updated!
-# 📊 Changes: 2 added, 0 modified, 0 removed
+# 📊 Changes: 3 added, 0 modified, 0 removed
 ```
-
-## Token Budget Breakdown
-
-| Section | Tokens | Notes |
-|---------|--------|-------|
-| Frontmatter & description | 100 | Minimal metadata |
-| Step 1: Parse & detect mode | 200 | Argument parsing |
-| Step 2A: CREATE mode | 600 | Create + plan workflow |
-| Step 2B: PLAN mode | 550 | Plan existing workflow |
-| Step 2C: UPDATE mode | 500 | Update workflow with clarification |
-| Helper functions | 150 | Reusable utilities |
-| Error handling | 100 | 4 error scenarios |
-| Examples | 250 | 3 concise examples |
-| **Total** | **~2,450** | **vs ~7,000 baseline (65% reduction)** |
 
 ## Key Optimizations
 
-1. ✅ **No routing overhead** - All 3 modes implemented directly
-2. ✅ **Linear subagent** - All Linear ops cached (85-95% hit rate)
-3. ✅ **Smart agent selection** - Automatic optimal agent for planning
-4. ✅ **Batch operations** - Single update_issue call (state + labels + description)
-5. ✅ **Concise examples** - Only 3 essential examples
-6. ✅ **Focused scope** - Simplified planning workflow (no full external PM research by default)
+1. ✅ **Direct implementation** - No routing overhead, all modes in one file
+2. ✅ **Linear subagent** - All ops cached (85-95% hit rate)
+3. ✅ **Smart agent selection** - Automatic optimal agent choice
+4. ✅ **v1.0 workflow** - Deep research, explicit confirmation, hybrid Q&A
+5. ✅ **Parallel research** - Codebase + Linear + git + external PM
+6. ✅ **Consolidated plan** - All in description, not scattered in comments
 
-## Integration with Other Commands
+## Integration
 
-- **After planning** → Use /ccpm:work to start implementation
-- **During work** → Use /ccpm:sync to save progress
-- **Before completion** → Use /ccpm:verify for quality checks
-- **Finalize** → Use /ccpm:done to create PR and complete
+- **After planning** → `/ccpm:work` to start implementation
+- **During work** → `/ccpm:sync` to save progress
+- **Before completion** → `/ccpm:verify` for quality checks
+- **Finalize** → `/ccpm:done` to create PR and complete
 
 ## Notes
 
-- **Mode detection**: Clear, unambiguous patterns (issue ID vs quoted string)
-- **Smart agents**: Automatic selection based on task type (backend/frontend/mobile)
-- **Project detection**: Auto-detects or uses explicit project argument
-- **Caching**: Linear subagent caches all data for 85-95% faster operations
-- **Error recovery**: Structured error messages with actionable suggestions
+- **v1.0 workflow**: Deep research, multiple approaches, explicit confirmation
+- **Hybrid Q&A**: Interactive (AskUserQuestion) for critical, output for clarifications
+- **Description updates**: All plan content in description, comments for history only
+- **Smart agents**: Automatic selection based on task type
+- **Caching**: Linear subagent caches for 85-95% faster operations
