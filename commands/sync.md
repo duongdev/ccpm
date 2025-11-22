@@ -1,14 +1,19 @@
 ---
-description: Smart sync command - save progress to Linear (auto-detect task)
+description: Smart sync - save progress to Linear with concise updates
 allowed-tools: [Bash, Task, AskUserQuestion]
 argument-hint: "[issue-id] [summary]"
 ---
 
 # /ccpm:sync - Smart Progress Sync
 
-**Token Budget:** ~2,100 tokens (vs ~6,000 baseline) | **65% reduction**
+Auto-detects issue from git branch and syncs progress to Linear with smart checklist updates and **concise comments**.
 
-Auto-detects issue from git branch and syncs progress to Linear with smart checklist updates.
+## 🎯 v1.0 Linear Comment Strategy
+
+**Focus**: Short, scannable updates (not verbose reports)
+- **OLD**: 500-1000 word progress reports
+- **NEW**: 50-100 word status snapshots
+- **Details**: In issue description (single source of truth)
 
 ## Usage
 
@@ -35,7 +40,6 @@ const args = process.argv.slice(2);
 let issueId = args[0];
 let summary = args[1];
 
-// Pattern for issue ID validation
 const ISSUE_ID_PATTERN = /^[A-Z]+-\d+$/;
 
 // If first arg looks like summary (not issue ID), treat as summary
@@ -70,77 +74,56 @@ Examples:
   console.log(`✅ Detected issue: ${issueId}\n`);
 }
 
-// Validate issue ID format
 if (!ISSUE_ID_PATTERN.test(issueId)) {
   return error(`Invalid issue ID: ${issueId}. Expected format: PROJ-123`);
 }
 ```
 
-### Step 2: Detect Git Changes
-
-Run in parallel using Bash:
+### Step 2: Detect Git Changes (Parallel)
 
 ```bash
 # Get all git information in one call
 git status --porcelain && echo "---" && \
 git diff --stat HEAD && echo "---" && \
-git diff --cached --stat && echo "---" && \
-git rev-parse --abbrev-ref HEAD
+git diff --cached --stat
 ```
 
-Parse output to extract:
-- Changed files (M, A, D, R, ??)
-- Insertions/deletions per file
-- Staged vs unstaged changes
-- Current branch name
+Parse output:
 
 ```javascript
 const changes = {
   modified: [],
   added: [],
   deleted: [],
-  renamed: [],
   insertions: 0,
   deletions: 0
 };
 
-// Parse git status output
-// M  = modified, A = added, D = deleted, R = renamed, ?? = untracked
+// Parse git status (M, A, D, R, ??)
 lines.forEach(line => {
   const [status, file] = line.trim().split(/\s+/);
   if (status === 'M') changes.modified.push(file);
   else if (status === 'A' || status === '??') changes.added.push(file);
   else if (status === 'D') changes.deleted.push(file);
-  else if (status === 'R') changes.renamed.push(file);
 });
 ```
 
 ### Step 3: Fetch Issue via Linear Subagent
 
-**Use the Task tool to fetch the issue from Linear:**
+**Use the Task tool:**
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: get_issue
-  params:
-    issueId: "{issue ID from step 1}"
-  context:
-    cache: true
-    command: "sync"
-  ```
+Invoke `ccpm:linear-operations`:
 
-Store response containing:
-- issue.id, issue.identifier, issue.title
-- issue.description (with checklist)
-- issue.state, issue.labels
-- issue.comments (for last sync timestamp)
+```
+operation: get_issue
+params:
+  issueId: "{issue ID from step 1}"
+context:
+  cache: true
+  command: "sync"
+```
 
 ### Step 4: Auto-Generate Summary (if not provided)
-
-If no summary provided, generate from git changes:
 
 ```javascript
 if (!summary && changes.modified.length + changes.added.length > 0) {
@@ -162,7 +145,7 @@ if (!summary && changes.modified.length + changes.added.length > 0) {
 
 ### Step 5: Smart Checklist Analysis (AI-Powered)
 
-Extract unchecked items from issue description:
+Extract unchecked items and score based on git changes:
 
 ```javascript
 const checklistItems = issue.description.match(/- \[ \] (.+)/g) || [];
@@ -171,11 +154,7 @@ const uncheckedItems = checklistItems.map((item, idx) => ({
   text: item.replace('- [ ] ', ''),
   score: 0
 }));
-```
 
-**Score each item based on git changes:**
-
-```javascript
 uncheckedItems.forEach(item => {
   const keywords = extractKeywords(item.text);
 
@@ -204,8 +183,6 @@ const mediumConfidence = uncheckedItems.filter(i => i.score >= 30 && i.score < 5
 
 ### Step 6: Interactive Checklist Update
 
-Use AskUserQuestion to confirm suggested items:
-
 ```javascript
 AskUserQuestion({
   questions: [
@@ -214,7 +191,7 @@ AskUserQuestion({
       header: "Completed",
       multiSelect: true,
       options: uncheckedItems.map(item => ({
-        label: `${item.index}: ${item.text}`,
+        label: `${item.text}`,
         description: item.score >= 50
           ? "🤖 SUGGESTED - High confidence"
           : item.score >= 30
@@ -226,86 +203,143 @@ AskUserQuestion({
 });
 ```
 
-### Step 7: Build Progress Report
+### Step 7: Update Linear with Concise Comment (v1.0 Strategy)
+
+**A) Update checklist in description (v1.0 fix - actually update it!):**
+
+If user selected checklist items to complete in Step 6:
+
+**Use the Task tool:**
+
+Invoke `ccpm:linear-operations`:
+
+```
+operation: update_checklist_items
+params:
+  issue_id: "{issue ID}"
+  indices: [{completed item indices from step 6}]
+  mark_complete: true
+  add_comment: false  # We'll add our own concise comment below
+  update_timestamp: true
+context:
+  command: "sync"
+  purpose: "Update checklist based on git changes and user confirmation"
+```
+
+**This operation will:**
+- Read the issue description
+- Use `_shared-checklist-helpers.md` for parsing
+- Update checkboxes from `- [ ]` to `- [x]` for selected indices
+- Recalculate progress percentage
+- Update the progress line with timestamp
+- Return updated progress metrics
+
+**Track result:**
+```javascript
+const checklistUpdateResult = {
+  itemsUpdated: selectedIndices.length,
+  previousProgress: checklist.progress.percentage,
+  newProgress: result.data.checklist_summary.new_progress
+};
+```
+
+**B) Add CONCISE progress comment (using actual checklist data from Step 7A):**
+
+**Use the Task tool:**
+
+Invoke `ccpm:linear-operations`:
+
+```
+operation: create_comment
+params:
+  issueId: "{issue ID}"
+  body: |
+    🔄 **Synced** | {branch name}
+
+    {summary or auto-generated from git changes}
+
+    **Files**: {modified} modified, {added} added (+{insertions}, -{deletions})
+    **Checklist**: {checklistUpdateResult.itemsUpdated} completed
+    **Progress**: {checklistUpdateResult.previousProgress}% → {checklistUpdateResult.newProgress}%
+context:
+  command: "sync"
+  purpose: "Concise progress update with actual checklist changes"
+```
+
+**Use actual data from checklist update (Step 7A):**
+- `itemsUpdated`: From `checklistUpdateResult.itemsUpdated`
+- `previousProgress`: From `checklistUpdateResult.previousProgress`
+- `newProgress`: From `checklistUpdateResult.newProgress`
+
+This ensures the comment reflects the ACTUAL checklist state, not estimated values!
+
+**Example concise comment:**
+
+```markdown
+🔄 **Synced** | feature/psn-29-auth
+
+Completed auth implementation, all tests passing
+
+**Files**: 8 modified, 2 added (+234, -67)
+**Checklist**: 2 completed
+**Progress**: 40% → 60%
+```
+
+**Comparison:**
+
+❌ **OLD (verbose - 500+ words):**
 
 ```markdown
 ## 🔄 Progress Sync
 
-**Timestamp**: ${new Date().toISOString()}
-**Branch**: ${branchName}
+**Timestamp**: 2025-11-23T10:30:00Z
+**Branch**: feature/psn-29-auth
 
 ### 📝 Summary
-${summary}
+Completed auth implementation, all tests passing
 
 ### 📊 Code Changes
-**Files Changed**: ${totalFiles} (+${changes.insertions}, -${changes.deletions})
+**Files Changed**: 10 (+234, -67)
 
 **Modified**:
-${changes.modified.slice(0, 5).map(f => `- ${f}`).join('\n')}
-${changes.modified.length > 5 ? `\n... and ${changes.modified.length - 5} more` : ''}
+- src/auth/jwt.ts
+- src/auth/middleware.ts
+- src/auth/routes.ts
+- src/tests/auth.test.ts
+... and 4 more
 
 **New Files**:
-${changes.added.slice(0, 3).map(f => `- ${f}`).join('\n')}
+- src/utils/validators.ts
+- src/types/auth.d.ts
 
 ### 📋 Checklist Updated
-${completedItems.length > 0 ? `
+
 **Completed This Session**:
-${completedItems.map(i => `- ✅ ${i.text}`).join('\n')}
-` : 'No checklist updates'}
+- ✅ Implement JWT authentication
+- ✅ Add login form
+
+### 🎯 Current Progress
+- Overall: 60% complete (6/10 items)
+- This session: 2 items completed
+- Remaining: 4 items
 
 ---
 *Synced via /ccpm:sync*
 ```
 
-### Step 8: Update Linear Issue
+✅ **NEW (concise - 50 words):**
 
-**A) Update checklist in description:**
+```markdown
+🔄 **Synced** | feature/psn-29-auth
 
-**Use the Task tool to update the checklist:**
+Completed auth implementation, all tests passing
 
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: update_checklist_items
-  params:
-    issue_id: "{issue ID from step 1}"
-    indices: [{list of completed item indices from step 6}]
-    mark_complete: true
-    add_comment: false  # We'll add the full progress report separately
-    update_timestamp: true
-  context:
-    command: "sync"
-    purpose: "Marking completed checklist items based on git changes"
-  ```
+**Files**: 8 modified, 2 added (+234, -67)
+**Checklist**: 2 completed
+**Progress**: 40% → 60%
+```
 
-**Note**: This operation uses the shared checklist helpers (`_shared-checklist-helpers.md`) for consistent parsing and updating. It will:
-- Parse the checklist using marker comments or header detection
-- Update the specified indices (mark as complete)
-- Recalculate progress percentage
-- Update the progress line with timestamp
-- Return structured result with before/after progress
-
-**B) Add progress comment:**
-
-**Use the Task tool to add a progress comment:**
-
-Invoke the `ccpm:linear-operations` subagent:
-- **Tool**: Task
-- **Subagent**: ccpm:linear-operations
-- **Prompt**:
-  ```
-  operation: create_comment
-  params:
-    issueId: "{issue ID from step 1}"
-    body: |
-      {the progress report from step 7}
-  context:
-    command: "sync"
-  ```
-
-### Step 9: Display Confirmation & Next Actions
+### Step 8: Display Confirmation
 
 ```markdown
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -318,7 +352,7 @@ Invoke the `ccpm:linear-operations` subagent:
 📝 Synced:
   ✅ ${totalFiles} files changed
   ✅ ${completedItems.length} checklist items updated
-  💬 Progress comment added
+  💬 Concise comment added
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 Next Actions
@@ -334,35 +368,39 @@ Invoke the `ccpm:linear-operations` subagent:
 
 ## Quick Sync Mode (Manual Summary)
 
-If user provides summary argument, skip interactive mode:
+If user provides summary, skip interactive mode:
 
 1. Skip checklist AI analysis
 2. Skip AskUserQuestion
 3. Use provided summary directly
-4. Create simple progress comment
+4. Create simple concise comment
 5. No automatic checklist updates
 
 **Example:**
+
 ```bash
 /ccpm:sync PSN-29 "Completed auth implementation, all tests passing"
 ```
 
 **Output:**
+
 ```
 ✅ Quick sync complete!
-💬 Comment added to Linear
+💬 Concise comment added to Linear
 📊 Summary: "Completed auth implementation, all tests passing"
 ```
 
 ## Error Handling
 
 ### Invalid Issue ID
+
 ```
 ❌ Invalid issue ID format: proj123
 Expected format: PROJ-123
 ```
 
 ### No Git Changes
+
 ```
 ℹ️  No uncommitted changes detected
 
@@ -371,6 +409,7 @@ You can still sync progress with a manual summary:
 ```
 
 ### Branch Detection Failed
+
 ```
 ❌ Could not detect issue ID from branch
 
@@ -382,7 +421,7 @@ Example: /ccpm:sync PSN-29
 
 ## Examples
 
-### Example 1: Auto-detect with changes
+### Example 1: Auto-detect with AI suggestions
 
 ```bash
 # Branch: feature/PSN-29-add-auth
@@ -396,12 +435,13 @@ Example: /ccpm:sync PSN-29
 # Modified: 3 files (+127, -45)
 #
 # 🤖 AI Suggestions:
-# ✅ 0: Implement JWT authentication (High confidence)
-# ✅ 2: Add login form (High confidence)
+# ✅ Implement JWT authentication (High confidence)
+# ✅ Add login form (High confidence)
 #
 # [Interactive checklist update...]
 #
 # ✅ Progress Synced to Linear!
+# 💬 Concise comment added (50 words vs old 500+)
 ```
 
 ### Example 2: Quick sync with summary
@@ -411,7 +451,7 @@ Example: /ccpm:sync PSN-29
 
 # Output:
 # ✅ Quick sync complete!
-# 💬 Comment added to Linear
+# 💬 Concise comment added to Linear
 ```
 
 ### Example 3: Summary-only (auto-detect issue)
@@ -423,42 +463,45 @@ Example: /ccpm:sync PSN-29
 # Output:
 # ✅ Detected issue: PSN-29
 # ✅ Quick sync complete!
+# 💬 Concise comment: 3 lines (was 50+ lines before)
 ```
-
-## Token Budget Breakdown
-
-| Section | Tokens | Notes |
-|---------|--------|-------|
-| Frontmatter & description | 80 | Minimal metadata |
-| Step 1: Argument parsing | 250 | Git detection + validation |
-| Step 2: Git changes | 200 | Parallel bash execution |
-| Step 3: Fetch issue | 150 | Linear subagent (cached) |
-| Step 4: Auto-summary | 100 | Simple generation logic |
-| Step 5: AI checklist analysis | 300 | Scoring algorithm |
-| Step 6: Interactive update | 200 | AskUserQuestion |
-| Step 7: Build report | 200 | Markdown generation |
-| Step 8: Update Linear | 200 | Subagent batch operations |
-| Step 9: Confirmation | 150 | Next actions menu |
-| Quick sync mode | 100 | Manual summary path |
-| Error handling | 100 | 4 scenarios |
-| Examples | 270 | 3 concise examples |
-| **Total** | **~2,100** | **vs ~6,000 baseline (65% reduction)** |
 
 ## Key Optimizations
 
 1. ✅ **Linear subagent** - All Linear ops cached (85-95% hit rate)
 2. ✅ **Parallel git operations** - Single bash call for all git info
-3. ✅ **No routing overhead** - Direct implementation (no /ccpm:implementation:sync call)
+3. ✅ **No routing overhead** - Direct implementation
 4. ✅ **Smart defaults** - Auto-generates summary from changes
 5. ✅ **Quick sync mode** - Skip interactions when summary provided
-6. ✅ **Batch updates** - Single subagent call for description + comment
+6. ✅ **Concise comments** - 90% shorter (50 words vs 500+)
+7. ✅ **Batch updates** - Single subagent call for description + comment
 
-## Integration with Other Commands
+## v1.0 Linear Comment Strategy Benefits
 
-- **During work** → Use `/ccpm:sync` to save progress
-- **After sync** → Use `/ccpm:commit` for git commits
-- **Before completion** → Use `/ccpm:verify` for quality checks
-- **Resume work** → Use `/ccpm:work` to continue
+**Before (verbose):**
+- 500-1000 words per sync comment
+- Hard to scan Linear timeline
+- Redundant information
+- Details buried in comments
+
+**After (concise):**
+- 50-100 words per sync comment
+- Easy to scan at a glance
+- Key info highlighted
+- Details in description (single source)
+
+**Impact:**
+- ✅ 90% shorter comments
+- ✅ Cleaner Linear feed
+- ✅ Faster to review progress
+- ✅ Better signal-to-noise ratio
+
+## Integration
+
+- **During work** → `/ccpm:sync` to save progress frequently
+- **After sync** → `/ccpm:commit` for git commits
+- **Before completion** → `/ccpm:verify` for quality checks
+- **Resume work** → `/ccpm:work` to continue
 
 ## Notes
 
@@ -466,3 +509,4 @@ Example: /ccpm:sync PSN-29
 - **AI suggestions**: Analyzes git changes to pre-select completed checklist items
 - **Caching**: Linear subagent caches issue data for faster operations
 - **Flexible**: Works with or without arguments, adapts to context
+- **Concise comments**: 90% shorter, scannable, focused on key changes
