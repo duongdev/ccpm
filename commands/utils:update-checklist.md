@@ -179,54 +179,58 @@ Use **AskUserQuestion** with multi-select to let user choose which items to unch
 - Store as array of indices
 - Store mode: "complete" or "rollback"
 
-### Step 6: Update Description
+### Step 6: Update Checklist via Linear Operations Subagent
 
-**Generate updated description:**
+**Use the Task tool to update the checklist:**
 
-1. Split description into lines
-2. Find checklist section (between markers or under header)
-3. For each selected index:
-   - **If mode is "complete"**: Change `- [ ]` to `- [x]` at that line
-   - **If mode is "rollback"**: Change `- [x]` to `- [ ]` at that line
-4. Calculate new completion percentage
-5. Update progress line if it exists, or add it after checklist
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_checklist_items
+  params:
+    issue_id: "{issue ID from step 1}"
+    indices: [{selected indices from step 5}]
+    mark_complete: {true if mode is "complete", false if mode is "rollback"}
+    add_comment: true  # Document the change with a comment
+    update_timestamp: true
+  context:
+    command: "utils:update-checklist"
+    purpose: "Manual checklist update by user"
+  ```
 
-**Format:**
-```markdown
-## ✅ Implementation Checklist
+**This operation will:**
+1. Use shared checklist helpers (`_shared-checklist-helpers.md`) for parsing
+2. Update the specified checkbox states (✓ or uncheck)
+3. Recalculate progress percentage automatically
+4. Update the progress line with current timestamp
+5. Add a comment documenting the changes
+6. Return structured result with before/after progress
 
-<!-- ccpm-checklist-start -->
-- [ ] Task 1: Description
-- [x] Task 2: Description
-- [x] Task 3: Description ← UPDATED!
-- [ ] Task 4: Description
-<!-- ccpm-checklist-end -->
-
-Progress: 40% (2/5 completed) ← UPDATED!
-Last updated: 2025-01-20 14:30 UTC
+**Example response:**
+```yaml
+success: true
+data:
+  checklist_summary:
+    items_updated: 2
+    previous_progress: 20
+    new_progress: 60
+    completed: 3
+    total: 5
+  changed_items:
+    - index: 1
+      content: "Task 2: Description"
+      previous_state: unchecked
+      new_state: checked
+metadata:
+  duration_ms: 320
+  used_shared_helpers: true
 ```
 
-**Preserve other content:**
-- Keep all text before checklist
-- Keep all text after checklist
-- Only modify checkbox states within checklist section
+### Step 7: Display Confirmation
 
-### Step 7: Update Linear Issue
-
-Use **Linear MCP** to:
-
-1. **Update description** with new checklist
-2. **Add comment** documenting the change:
-
-**If mode is "complete":**
-```markdown
-## 📝 Checklist Updated
-
-**Progress**: X% → Y% (+Z%)
-
-**Completed Items**:
-- ✅ Task 2: Description
-- ✅ Task 3: Description
+Show success message with details
 
 **Timestamp**: [current date/time]
 ```
