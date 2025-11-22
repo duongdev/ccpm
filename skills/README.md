@@ -25,24 +25,25 @@ Skills are **model-invoked** capabilities that Claude activates automatically wh
 
 6. **sequential-thinking** - Structured problem-solving through iterative reasoning
 7. **docs-seeker** - Documentation discovery and research
+8. **planning-strategy-guide** - Intelligent planning with 6 phases (complexity, scope, dependencies, risks, breakdown, estimation)
 
 ### Quality & Verification Skills
 
-8. **ccpm-code-review** - Verification enforcement before completion (updated for /ccpm:verify and /ccpm:done)
-9. **ccpm-debugging** - Systematic debugging with Linear tracking (adapted from claudekit-skills)
+9. **ccpm-code-review** - Verification enforcement before completion (updated for /ccpm:verify and /ccpm:done)
+10. **ccpm-debugging** - Systematic debugging with Linear tracking (adapted from claudekit-skills)
 
 ### Infrastructure Skills
 
-10. **ccpm-mcp-management** - MCP server discovery and troubleshooting (adapted from claudekit-skills)
-11. **hook-optimization** - Hook performance guidance and benchmarking
+11. **ccpm-mcp-management** - MCP server discovery and troubleshooting (adapted from claudekit-skills)
+12. **hook-optimization** - Hook performance guidance and benchmarking
 
 ### Development Skills
 
-12. **ccpm-skill-creator** - Create custom CCPM skills with templates (adapted from claudekit-skills)
-13. **project-detection** - Automatic project context detection in monorepos
-14. **project-operations** - Project setup and management with monorepo best practices
-15. **commit-assistant** - Conventional commits guidance and auto-generation
-16. **linear-subagent-guide** - Linear operations optimization patterns
+13. **ccpm-skill-creator** - Create custom CCPM skills with templates (adapted from claudekit-skills)
+14. **project-detection** - Automatic project context detection in monorepos
+15. **project-operations** - Project setup and management with monorepo best practices
+16. **commit-assistant** - Conventional commits guidance and auto-generation
+17. **linear-subagent-guide** - Linear operations optimization patterns
 
 ## Skill Structure
 
@@ -319,7 +320,7 @@ To contribute a new skill:
 
 ---
 
-**Total Skills**: 16 (8 CCPM-original + 4 adapted + 2 as-is + 2 project-specific)
+**Total Skills**: 17 (8 CCPM-original + 4 adapted + 3 as-is + 2 project-specific)
 **Philosophy**: Automatic activation, complementary design, safety-first
 **Version**: CCPM v2.3 (PSN-34: Phase 2 & 3 Complete)
 **Next**: See individual skill SKILL.md files for details

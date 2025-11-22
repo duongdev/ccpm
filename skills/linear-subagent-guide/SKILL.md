@@ -131,7 +131,34 @@ params:
 
 ## Using the Linear Subagent
 
-### Basic Syntax
+### ⚠️ IMPORTANT: Command File Invocation Format
+
+When writing **CCPM command files** (files in `commands/`), you MUST use explicit execution instructions, NOT the YAML template format shown in the examples below.
+
+**Command files must use this format:**
+
+```markdown
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{the issue ID from previous step}"
+  context:
+    cache: true
+    command: "work"
+  ```
+```
+
+**Why?** Claude Code interprets command markdown files as **executable prompts**, not documentation. YAML template syntax appears as an **example** rather than an instruction to execute. Explicit instructions (e.g., "Use the Task tool to...") are unambiguous execution directives that ensure Claude invokes the subagent correctly.
+
+### Basic Syntax (For Documentation/Examples Only)
+
+The examples below use YAML template format for readability. **Do NOT use this format in command files**—use the explicit format shown above instead.
 
 ```markdown
 Task(ccpm:linear-operations): `

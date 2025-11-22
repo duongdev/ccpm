@@ -117,16 +117,20 @@ lines.forEach(line => {
 
 ### Step 3: Fetch Issue via Linear Subagent
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: get_issue
-params:
-  issueId: "${issueId}"
-context:
-  cache: true
-  command: "sync"
-`
-```
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{issue ID from step 1}"
+  context:
+    cache: true
+    command: "sync"
+  ```
 
 Store response containing:
 - issue.id, issue.identifier, issue.title
@@ -257,33 +261,41 @@ ${completedItems.map(i => `- ✅ ${i.text}`).join('\n')}
 
 **A) Update checklist in description:**
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: update_issue_description
-params:
-  issueId: "${issueId}"
-  updates:
-    - type: checklist_items
-      indices: [${completedIndices}]
-      markComplete: true
-context:
-  command: "sync"
-`
-```
+**Use the Task tool to update the checklist:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue_description
+  params:
+    issueId: "{issue ID from step 1}"
+    updates:
+      - type: checklist_items
+        indices: [{list of completed item indices from step 6}]
+        markComplete: true
+  context:
+    command: "sync"
+  ```
 
 **B) Add progress comment:**
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: create_comment
-params:
-  issueId: "${issueId}"
-  body: |
-    ${progressReport}
-context:
-  command: "sync"
-`
-```
+**Use the Task tool to add a progress comment:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: create_comment
+  params:
+    issueId: "{issue ID from step 1}"
+    body: |
+      {the progress report from step 7}
+  context:
+    command: "sync"
+  ```
 
 ### Step 9: Display Confirmation & Next Actions
 

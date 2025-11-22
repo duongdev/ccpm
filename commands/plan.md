@@ -97,27 +97,33 @@ Store: projectId, teamId, projectLinearId, defaultLabels, externalPM config
 
 2. Create Linear issue via subagent:
 
-Task(ccpm:linear-operations): `
-operation: create_issue
-params:
-  team: "${teamId}"
-  title: "${title}"
-  project: "${projectLinearId}"
-  state: "Backlog"
-  labels: ${JSON.stringify(defaultLabels)}
-  description: |
-    ## Task
+**Use the Task tool to create a new Linear issue:**
 
-    ${title}
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: create_issue
+  params:
+    team: "{team ID from step 1}"
+    title: "{task title from arguments}"
+    project: "{project Linear ID from step 1}"
+    state: "Backlog"
+    labels: {default labels from step 1}
+    description: |
+      ## Task
 
-    ${jiraTicket ? `**Jira Reference**: ${jiraTicket}\n\n` : ''}
-    ---
+      {task title}
 
-    _Planning in progress..._
-context:
-  command: "plan"
-  mode: "create"
-`
+      {if Jira ticket provided: **Jira Reference**: {jiraTicket}}
+      ---
+
+      _Planning in progress..._
+  context:
+    command: "plan"
+    mode: "create"
+  ```
 
 Store: issue.id, issue.identifier (e.g., PSN-30)
 
@@ -150,55 +156,67 @@ Note: Smart-agent-selector automatically chooses optimal agent based on task typ
 
 4. Update Linear issue with plan:
 
-Task(ccpm:linear-operations): `
-operation: update_issue_description
-params:
-  issueId: "${issue.identifier}"
-  description: |
-    ## Implementation Checklist
+**Use the Task tool to update the issue description with the plan:**
 
-    ${generateChecklist(planningResult)}
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue_description
+  params:
+    issueId: "{issue identifier from step 2}"
+    description: |
+      ## Implementation Checklist
 
-    > **Complexity**: ${complexity} | **Estimated**: ${estimate}
+      {checklist generated from planning result in step 3}
 
-    ---
+      > **Complexity**: {complexity from step 3} | **Estimated**: {estimate from step 3}
 
-    ## Task
+      ---
 
-    ${title}
+      ## Task
 
-    ${jiraTicket ? `**Jira**: [${jiraTicket}](url)\n\n` : ''}
+      {task title}
 
-    ## Files to Modify
+      {if Jira ticket: **Jira**: [{jiraTicket}](url)}
 
-    ${formatFilesList(planningResult.files)}
+      ## Files to Modify
 
-    ## Research & Context
+      {files list from planning result in step 3}
 
-    ${planningResult.research}
+      ## Research & Context
 
-    ## Testing Strategy
+      {research from planning result in step 3}
 
-    ${planningResult.testing}
+      ## Testing Strategy
 
-    ---
+      {testing strategy from planning result in step 3}
 
-    *Planned via /ccpm:plan*
-context:
-  command: "plan"
-`
+      ---
+
+      *Planned via /ccpm:plan*
+  context:
+    command: "plan"
+  ```
 
 5. Update issue status and labels:
 
-Task(ccpm:linear-operations): `
-operation: update_issue
-params:
-  issueId: "${issue.identifier}"
-  state: "Planned"
-  labels: ["planned", "ready"]
-context:
-  command: "plan"
-`
+**Use the Task tool to update the issue status:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: "{issue identifier from step 2}"
+    state: "Planned"
+    labels: ["planned", "ready"]
+  context:
+    command: "plan"
+  ```
 
 6. Display completion:
 
@@ -221,14 +239,20 @@ console.log(`\n💡 Next: /ccpm:work ${issue.identifier}`);
 
 1. Fetch issue via subagent:
 
-Task(ccpm:linear-operations): `
-operation: get_issue
-params:
-  issueId: "${issueId}"
-context:
-  cache: true
-  command: "plan"
-`
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{issue ID from arguments}"
+  context:
+    cache: true
+    command: "plan"
+  ```
 
 Store: issue.id, issue.title, issue.description, issue.state, issue.team
 
@@ -280,51 +304,63 @@ Provide structured plan with:
 
 5. Update issue description with plan:
 
-Task(ccpm:linear-operations): `
-operation: update_issue_description
-params:
-  issueId: "${issueId}"
-  description: |
-    ## Implementation Checklist
+**Use the Task tool to update the issue description:**
 
-    ${generateChecklist(planningResult)}
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue_description
+  params:
+    issueId: "{issue ID from step 1}"
+    description: |
+      ## Implementation Checklist
 
-    > **Complexity**: ${complexity} | **Estimated**: ${estimate}
+      {checklist generated from planning result in step 4}
 
-    ---
+      > **Complexity**: {complexity from step 4} | **Estimated**: {estimate from step 4}
 
-    ${issue.description}
+      ---
 
-    ## Files to Modify
+      {original issue description from step 1}
 
-    ${formatFilesList(planningResult.files)}
+      ## Files to Modify
 
-    ## Research & Context
+      {files list from planning result in step 4}
 
-    ${planningResult.research}
+      ## Research & Context
 
-    ## Testing Strategy
+      {research from planning result in step 4}
 
-    ${planningResult.testing}
+      ## Testing Strategy
 
-    ---
+      {testing strategy from planning result in step 4}
 
-    *Planned via /ccpm:plan*
-context:
-  command: "plan"
-`
+      ---
+
+      *Planned via /ccpm:plan*
+  context:
+    command: "plan"
+  ```
 
 6. Update status and labels:
 
-Task(ccpm:linear-operations): `
-operation: update_issue
-params:
-  issueId: "${issueId}"
-  state: "Planned"
-  labels: ["planned", "ready"]
-context:
-  command: "plan"
-`
+**Use the Task tool to update the issue status:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: "{issue ID from step 1}"
+    state: "Planned"
+    labels: ["planned", "ready"]
+  context:
+    command: "plan"
+  ```
 
 7. Display completion:
 
@@ -347,14 +383,20 @@ console.log(`\n💡 Next: /ccpm:work ${issueId}`);
 
 1. Fetch current plan:
 
-Task(ccpm:linear-operations): `
-operation: get_issue
-params:
-  issueId: "${issueId}"
-context:
-  cache: true
-  command: "plan"
-`
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{issue ID from arguments}"
+  context:
+    cache: true
+    command: "plan"
+  ```
 
 Store: issue with full description, checklist, state
 
@@ -462,36 +504,45 @@ AskUserQuestion({
 });
 
 if (confirmed) {
-  Task(ccpm:linear-operations): `
-operation: update_issue_description
-params:
-  issueId: "${issueId}"
-  description: ${updatedDescription}
-context:
-  command: "plan"
-  changeType: "${changeType}"
-`
+  // Use the Task tool to update the issue description
+  Invoke the `ccpm:linear-operations` subagent:
+  - **Tool**: Task
+  - **Subagent**: ccpm:linear-operations
+  - **Prompt**:
+    ```
+    operation: update_issue_description
+    params:
+      issueId: "{issue ID from step 1}"
+      description: {updated description from step 5}
+    context:
+      command: "plan"
+      changeType: "{change type from step 3}"
+    ```
 
-  // Add comment documenting the change
-  Task(ccpm:linear-operations): `
-operation: create_comment
-params:
-  issueId: "${issueId}"
-  body: |
-    ## 📝 Plan Updated
+  // Use the Task tool to add comment documenting the change
+  Invoke the `ccpm:linear-operations` subagent:
+  - **Tool**: Task
+  - **Subagent**: ccpm:linear-operations
+  - **Prompt**:
+    ```
+    operation: create_comment
+    params:
+      issueId: "{issue ID from step 1}"
+      body: |
+        ## 📝 Plan Updated
 
-    **Change Type**: ${changeType}
-    **Request**: ${updateText}
+        **Change Type**: {change type from step 3}
+        **Request**: {update text from arguments}
 
-    ### Changes Made
+        ### Changes Made
 
-    ${formatChangeSummary(changes)}
+        {change summary from step 5}
 
-    ---
-    *Updated via /ccpm:plan*
-context:
-  command: "plan"
-`
+        ---
+        *Updated via /ccpm:plan*
+    context:
+      command: "plan"
+    ```
 }
 
 8. Display completion:
