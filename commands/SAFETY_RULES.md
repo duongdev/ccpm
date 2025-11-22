@@ -4,28 +4,38 @@
 
 ### ⛔ ABSOLUTE PROHIBITION - External PM Systems
 
-**NEVER submit, post, update, or modify ANYTHING to the following systems without EXPLICIT user confirmation:**
+**NEVER submit, post, update, or modify ANYTHING to external PM/collaboration systems without EXPLICIT user confirmation.**
 
-- ✖️ **Jira** (issues, comments, attachments, status changes)
-- ✖️ **Confluence** (pages, comments, edits)
-- ✖️ **BitBucket** (pull requests, comments, repository changes)
-- ✖️ **Slack** (messages, posts, reactions)
+**This applies to ANY external system that stores team data, including but not limited to:**
+
+- ✖️ **Issue Tracking** (Jira, Azure DevOps, GitHub Issues, etc.)
+- ✖️ **Documentation** (Confluence, Notion, SharePoint, etc.)
+- ✖️ **Code Hosting** (BitBucket, GitLab beyond Linear's use, etc.)
+- ✖️ **Team Communication** (Slack, Teams, Discord, etc.)
+
+**Prohibited operations:**
+- Creating/updating issues, tickets, or work items
+- Posting comments or attachments
+- Changing status, labels, or assignments
+- Sending messages or notifications
+- Creating/editing documentation pages
+- Making repository changes (except via Linear's GitHub integration)
 
 **This applies even in bypass permission mode.**
 
-### ✅ Allowed Actions (Read-Only)
+###  ✅ Allowed Actions (Read-Only)
 
 The following read-only operations are permitted without confirmation:
 
-- ✅ **Fetching/Reading** Jira tickets
-- ✅ **Searching** Confluence documentation
-- ✅ **Viewing** BitBucket pull requests and commits
-- ✅ **Searching** Slack messages and conversations
+- ✅ **Fetching/Reading** tickets and issues
+- ✅ **Searching** documentation and wikis
+- ✅ **Viewing** pull requests, commits, and code
+- ✅ **Searching** messages and conversations
 - ✅ **Browsing** with Playwright MCP (read-only)
 
 ### 📝 Linear Operations
 
-Linear operations are permitted but should follow confirmation workflow:
+Linear is CCPM's internal tracking system. Operations are permitted but should follow confirmation workflow for bulk operations:
 
 - ✅ **Creating** Linear issues (confirm if creating multiple)
 - ✅ **Updating** Linear issues (confirm if significant changes)
@@ -46,7 +56,7 @@ Example:
 ```text
 🚨 CONFIRMATION REQUIRED
 
-I want to post the following comment to Jira ticket TRAIN-123:
+I want to post the following comment to [SYSTEM] ticket PROJ-123:
 
 ---
 Implementation complete. Moving to QA.
@@ -61,11 +71,11 @@ Do you want me to proceed? (yes/no)
 
 **DO NOT:**
 
-- ❌ Auto-post status updates to Jira after completing work
-- ❌ Auto-update Confluence with implementation notes
-- ❌ Auto-comment on BitBucket PRs with review feedback
-- ❌ Auto-send Slack notifications about task completion
-- ❌ Assume "go ahead and finish" means "post to Jira"
+- ❌ Auto-post status updates to external issue trackers
+- ❌ Auto-update external documentation with implementation notes
+- ❌ Auto-comment on external PRs with review feedback
+- ❌ Auto-send team notifications about task completion
+- ❌ Assume "go ahead and finish" means "post externally"
 
 **DO:**
 
@@ -85,3 +95,14 @@ Do you want me to proceed? (yes/no)
 - **Maintain** full transparency with the user
 
 **When in doubt, ASK first.**
+
+### 🔧 Extending to New Tools
+
+CCPM is designed to work with ANY external PM tool via MCP servers. When integrating a new tool:
+
+1. **Classify operations** as read (allowed) or write (requires confirmation)
+2. **Follow the pattern** established by existing integrations (Jira, Confluence)
+3. **Preserve abstraction** - use pm-operations-orchestrator for tool-agnostic operations
+4. **Document safety rules** for the specific tool if needed
+
+The safety rules apply universally to ALL external systems, not just those explicitly listed above.
