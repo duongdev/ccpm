@@ -32,52 +32,462 @@ The **Linear subagent** (`ccpm:linear-operations`) is a dedicated MCP handler th
 
 ---
 
-## Available Linear MCP Tools (Validated List)
+## Available Linear MCP Tools (Complete Reference)
 
-CCPM validates all Linear MCP operations against this complete list of **23 tools**. Using tools outside this list will fail.
+Linear MCP provides **23 tools** for interacting with Linear. This is the complete, validated list.
 
-### Comments (2 tools)
-- `list_comments` - List comments on an issue or document
-- `create_comment` - Add a comment to an issue or document
+---
 
-### Cycles (1 tool)
-- `list_cycles` - List all cycles in a team
+### 1. Comments (2 tools)
 
-### Documents (2 tools)
-- `get_document` - Fetch a Linear document by ID
-- `list_documents` - List documents in a project or team
+#### `list_comments`
+List comments for a specific Linear issue.
 
-### Issues (4 tools)
-- `get_issue` - Fetch an issue by ID or key
-- `list_issues` - Search and list issues (supports filtering)
-- `create_issue` - Create a new issue
-- `update_issue` - Update issue fields (status, labels, assignee, etc.)
+**Parameters:**
+- `issueId` (string, required) - The issue ID
 
-### Issue Statuses (2 tools)
-- `list_issue_statuses` - List all statuses in a team
-- `get_issue_status` - Get a specific status by ID
+**Example:**
+```javascript
+mcp__linear__list_comments({ issueId: "PSN-41" })
+```
 
-### Labels (3 tools)
-- `list_issue_labels` - List labels in a team
-- `create_issue_label` - Create a new label
-- `list_project_labels` - List labels in a project
+#### `create_comment`
+Create a comment on a specific Linear issue.
 
-### Projects (4 tools)
-- `list_projects` - List projects in a team
-- `get_project` - Fetch a project by ID
-- `create_project` - Create a new project
-- `update_project` - Update project details
+**Parameters:**
+- `issueId` (string, required) - The issue ID
+- `body` (string, required) - The content of the comment as Markdown
+- `parentId` (string, optional) - A parent comment ID to reply to
 
-### Teams (2 tools)
-- `list_teams` - List all accessible teams
-- `get_team` - Fetch a team by ID
+**Example:**
+```javascript
+mcp__linear__create_comment({
+  issueId: "PSN-41",
+  body: "## Progress Update\n\nCompleted first phase."
+})
+```
 
-### Users (2 tools)
-- `list_users` - List users in a team or workspace
-- `get_user` - Fetch a user by ID or email
+---
 
-### Documentation (1 tool)
-- `search_documentation` - Search Linear documentation (for help queries)
+### 2. Cycles (1 tool)
+
+#### `list_cycles`
+Retrieve cycles for a specific Linear team.
+
+**Parameters:**
+- `teamId` (string, required) - The team ID
+- `type` (string, optional) - "current", "previous", or "next"
+
+**Example:**
+```javascript
+mcp__linear__list_cycles({ teamId: "team-123", type: "current" })
+```
+
+---
+
+### 3. Documents (2 tools)
+
+#### `get_document`
+Retrieve a Linear document by ID or slug.
+
+**Parameters:**
+- `id` (string, required) - The document ID or slug
+
+**Example:**
+```javascript
+mcp__linear__get_document({ id: "doc-abc-123" })
+```
+
+#### `list_documents`
+List documents in the user's Linear workspace.
+
+**Parameters:**
+- `limit` (number, optional, max 250, default 50)
+- `before` (string, optional) - An ID to end at
+- `after` (string, optional) - An ID to start from
+- `orderBy` (string, optional) - "createdAt" or "updatedAt" (default: "updatedAt")
+- `query` (string, optional) - Search query
+- `projectId` (string, optional) - Filter by project ID
+- `initiativeId` (string, optional) - Filter by initiative ID
+- `creatorId` (string, optional) - Filter by creator ID
+- `createdAt` (string, optional) - ISO-8601 date-time or duration (e.g., "-P1D")
+- `updatedAt` (string, optional) - ISO-8601 date-time or duration
+- `includeArchived` (boolean, optional, default false)
+
+**Example:**
+```javascript
+mcp__linear__list_documents({ projectId: "proj-123", limit: 20 })
+```
+
+---
+
+### 4. Issues (4 tools)
+
+#### `get_issue`
+Retrieve detailed information about an issue by ID.
+
+**Parameters:**
+- `id` (string, required) - The issue ID (e.g., "PSN-41")
+
+**Example:**
+```javascript
+mcp__linear__get_issue({ id: "PSN-41" })
+```
+
+#### `list_issues`
+List issues in the user's Linear workspace. Use "me" for assignee to get your issues.
+
+**Parameters:**
+- `limit` (number, optional, max 250, default 50)
+- `before` (string, optional)
+- `after` (string, optional)
+- `orderBy` (string, optional) - "createdAt" or "updatedAt"
+- `query` (string, optional) - Search title or description
+- `team` (string, optional) - Team name or ID
+- `state` (string, optional) - State name or ID
+- `cycle` (string, optional) - Cycle name or ID
+- `label` (string, optional) - Label name or ID
+- `assignee` (string, optional) - User ID, name, email, or "me"
+- `delegate` (string, optional) - Agent name or ID
+- `project` (string, optional) - Project name or ID
+- `parentId` (string, optional) - Parent issue ID
+- `createdAt` (string, optional) - ISO-8601 date-time or duration
+- `updatedAt` (string, optional) - ISO-8601 date-time or duration
+- `includeArchived` (boolean, optional, default true)
+
+**Example:**
+```javascript
+mcp__linear__list_issues({ assignee: "me", state: "In Progress" })
+```
+
+#### `create_issue`
+Create a new Linear issue.
+
+**Parameters:**
+- `title` (string, required)
+- `team` (string, required) - Team name or ID
+- `description` (string, optional) - Markdown description
+- `cycle` (string, optional) - Cycle name, number, or ID
+- `priority` (number, optional) - 0=None, 1=Urgent, 2=High, 3=Normal, 4=Low
+- `project` (string, optional) - Project name or ID
+- `state` (string, optional) - State type, name, or ID
+- `assignee` (string, optional) - User ID, name, email, or "me"
+- `delegate` (string, optional) - Agent name, displayName, or ID
+- `labels` (array of strings, optional) - Label names or IDs
+- `dueDate` (string, optional) - ISO format date
+- `parentId` (string, optional) - Parent issue ID for sub-issues
+- `links` (array of objects, optional) - Each object needs `url` and `title`
+
+**Example:**
+```javascript
+mcp__linear__create_issue({
+  title: "Fix authentication bug",
+  team: "Engineering",
+  description: "## Problem\n\nUsers cannot login",
+  state: "Todo",
+  labels: ["bug", "critical"],
+  assignee: "me"
+})
+```
+
+#### `update_issue`
+Update an existing Linear issue.
+
+**Parameters:**
+- `id` (string, required) - The issue ID
+- `title` (string, optional)
+- `description` (string, optional) - Markdown
+- `priority` (number, optional) - 0-4
+- `project` (string, optional) - Project name or ID
+- `state` (string, optional) - State type, name, or ID
+- `cycle` (string, optional) - Cycle name, number, or ID
+- `assignee` (string, optional) - User ID, name, email, or "me"
+- `delegate` (string, optional) - Agent name, displayName, or ID
+- `labels` (array of strings, optional) - Label names or IDs (replaces existing)
+- `parentId` (string, optional)
+- `dueDate` (string, optional) - ISO format
+- `estimate` (number, optional) - Numerical estimate value
+- `links` (array of objects, optional)
+
+**Example:**
+```javascript
+mcp__linear__update_issue({
+  id: "PSN-41",
+  state: "In Progress",
+  labels: ["planning", "implementation"]
+})
+```
+
+---
+
+### 5. Issue Statuses (2 tools)
+
+#### `list_issue_statuses`
+List available issue statuses in a Linear team.
+
+**Parameters:**
+- `team` (string, required) - Team name or ID
+
+**Example:**
+```javascript
+mcp__linear__list_issue_statuses({ team: "Engineering" })
+```
+
+#### `get_issue_status`
+Retrieve detailed information about an issue status by name or ID.
+
+**Parameters:**
+- `id` (string, required) - Status ID
+- `name` (string, required) - Status name
+- `team` (string, required) - Team name or ID
+
+**Example:**
+```javascript
+mcp__linear__get_issue_status({ name: "In Progress", team: "Engineering" })
+```
+
+---
+
+### 6. Labels (3 tools)
+
+#### `list_issue_labels`
+List available issue labels in a workspace or team.
+
+**Parameters:**
+- `limit` (number, optional, max 250, default 50)
+- `before` (string, optional)
+- `after` (string, optional)
+- `orderBy` (string, optional) - "createdAt" or "updatedAt"
+- `name` (string, optional) - Filter by label name
+- `team` (string, optional) - Team name or ID
+
+**Example:**
+```javascript
+mcp__linear__list_issue_labels({ team: "Engineering" })
+```
+
+#### `create_issue_label`
+Create a new Linear issue label.
+
+**Parameters:**
+- `name` (string, required)
+- `description` (string, optional)
+- `color` (string, optional) - Hex color code
+- `teamId` (string, optional) - Team UUID (workspace label if omitted)
+- `parentId` (string, optional) - Parent label UUID for groups
+- `isGroup` (boolean, optional, default false) - Whether this is a label group
+
+**Example:**
+```javascript
+mcp__linear__create_issue_label({
+  name: "feature-request",
+  color: "#bb87fc",
+  teamId: "team-123"
+})
+```
+
+#### `list_project_labels`
+List available project labels in the Linear workspace.
+
+**Parameters:**
+- `limit` (number, optional, max 250, default 50)
+- `before` (string, optional)
+- `after` (string, optional)
+- `orderBy` (string, optional)
+- `name` (string, optional)
+
+**Example:**
+```javascript
+mcp__linear__list_project_labels({ limit: 100 })
+```
+
+---
+
+### 7. Projects (4 tools)
+
+#### `list_projects`
+List projects in the user's Linear workspace.
+
+**Parameters:**
+- `limit` (number, optional, max 250, default 50)
+- `before` (string, optional)
+- `after` (string, optional)
+- `orderBy` (string, optional)
+- `query` (string, optional) - Search project name
+- `state` (string, optional) - State name or ID
+- `initiative` (string, optional) - Initiative name or ID
+- `team` (string, optional) - Team name or ID
+- `member` (string, optional) - User ID, name, email, or "me"
+- `createdAt` (string, optional)
+- `updatedAt` (string, optional)
+- `includeArchived` (boolean, optional, default false)
+
+**Example:**
+```javascript
+mcp__linear__list_projects({ team: "Engineering", state: "started" })
+```
+
+#### `get_project`
+Retrieve details of a specific project.
+
+**Parameters:**
+- `query` (string, required) - Project ID or name
+
+**Example:**
+```javascript
+mcp__linear__get_project({ query: "CCPM" })
+```
+
+#### `create_project`
+Create a new project in Linear.
+
+**Parameters:**
+- `name` (string, required)
+- `team` (string, required) - Team name or ID
+- `summary` (string, optional) - Max 255 chars
+- `description` (string, optional) - Markdown
+- `state` (string, optional)
+- `startDate` (string, optional) - ISO format
+- `targetDate` (string, optional) - ISO format
+- `priority` (integer, optional) - 0-4
+- `labels` (array of strings, optional)
+- `lead` (string, optional) - User ID, name, email, or "me"
+
+**Example:**
+```javascript
+mcp__linear__create_project({
+  name: "Q1 Authentication",
+  team: "Engineering",
+  description: "## Goals\n\n- OAuth integration\n- SSO support",
+  lead: "me"
+})
+```
+
+#### `update_project`
+Update an existing Linear project.
+
+**Parameters:**
+- `id` (string, required)
+- `name` (string, optional)
+- `summary` (string, optional)
+- `description` (string, optional)
+- `state` (string, optional)
+- `startDate` (string, optional)
+- `targetDate` (string, optional)
+- `priority` (integer, optional) - 0-4
+- `labels` (array of strings, optional)
+- `lead` (string, optional)
+
+**Example:**
+```javascript
+mcp__linear__update_project({
+  id: "proj-123",
+  state: "completed"
+})
+```
+
+---
+
+### 8. Teams (2 tools)
+
+#### `list_teams`
+List teams in the user's Linear workspace.
+
+**Parameters:**
+- `limit` (number, optional, max 250, default 50)
+- `before` (string, optional)
+- `after` (string, optional)
+- `orderBy` (string, optional)
+- `query` (string, optional) - Search query
+- `includeArchived` (boolean, optional, default false)
+- `createdAt` (string, optional)
+- `updatedAt` (string, optional)
+
+**Example:**
+```javascript
+mcp__linear__list_teams({ includeArchived: false })
+```
+
+#### `get_team`
+Retrieve details of a specific Linear team.
+
+**Parameters:**
+- `query` (string, required) - Team UUID, key, or name
+
+**Example:**
+```javascript
+mcp__linear__get_team({ query: "Engineering" })
+```
+
+---
+
+### 9. Users (2 tools)
+
+#### `list_users`
+Retrieve users in the Linear workspace.
+
+**Parameters:**
+- `query` (string, optional) - Filter by name or email
+
+**Example:**
+```javascript
+mcp__linear__list_users({ query: "john" })
+```
+
+#### `get_user`
+Retrieve details of a specific Linear user.
+
+**Parameters:**
+- `query` (string, required) - User ID, name, email, or "me"
+
+**Example:**
+```javascript
+mcp__linear__get_user({ query: "me" })
+```
+
+---
+
+### 10. Documentation (1 tool)
+
+#### `search_documentation`
+Search Linear's documentation to learn about features and usage.
+
+**Parameters:**
+- `query` (string, required) - Search query
+- `page` (number, optional, default 0) - Page number
+
+**Example:**
+```javascript
+mcp__linear__search_documentation({ query: "issue statuses", page: 0 })
+```
+
+---
+
+## Summary: All 23 Tools
+
+1. `list_comments` - List comments on issue
+2. `create_comment` - Add comment to issue
+3. `list_cycles` - Get team cycles
+4. `get_document` - Fetch Linear document
+5. `list_documents` - List documents
+6. `get_issue` - Fetch single issue
+7. `list_issues` - Search/list issues
+8. `create_issue` - Create new issue
+9. `update_issue` - Update existing issue
+10. `list_issue_statuses` - List workflow states
+11. `get_issue_status` - Get specific status
+12. `list_issue_labels` - List labels
+13. `create_issue_label` - Create new label
+14. `list_project_labels` - List project labels
+15. `list_projects` - List projects
+16. `get_project` - Get specific project
+17. `create_project` - Create new project
+18. `update_project` - Update existing project
+19. `list_teams` - List all teams
+20. `get_team` - Get specific team
+21. `list_users` - List workspace users
+22. `get_user` - Get specific user
+23. `search_documentation` - Search Linear docs
 
 ---
 

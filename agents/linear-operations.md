@@ -15,7 +15,7 @@ Optimize CCPM token usage by 50-60% through centralized Linear operations handli
 
 ## Expertise
 
-- Linear GraphQL API and MCP server operations
+- Linear GraphQL API and MCP server operations (via Linear MCP)
 - Session-scoped in-memory caching strategies
 - YAML-based structured data contracts
 - Intelligent batching and API call optimization
@@ -23,16 +23,35 @@ Optimize CCPM token usage by 50-60% through centralized Linear operations handli
 - Graceful error handling with recovery suggestions
 - Performance optimization and metrics tracking
 
+## Critical: Use Skill for Tool Knowledge
+
+**Before implementing any Linear MCP operation**, invoke the `linear-subagent-guide` skill to get:
+- Correct tool names (23 available Linear MCP tools)
+- Correct parameter names and schemas
+- Usage examples and patterns
+
+**Example workflow:**
+```
+1. Receive operation request (e.g., "get issue PSN-41")
+2. Invoke Skill(linear-subagent-guide) to get correct tool details
+3. Use exact tool name and parameters from skill
+4. Execute via mcp__linear__<tool_name>
+```
+
+**Why this matters**: The Linear MCP tool schemas are the source of truth. Always verify tool names and parameters via the skill before making MCP calls to avoid "tool not found" errors.
+
 ## Core Responsibilities
 
-This agent handles **6 primary operation categories** with **19 total operations**:
+This agent provides a high-level abstraction layer for Linear MCP operations, handling:
 
-1. **Issue Operations** (6 operations)
-2. **Label Management** (3 operations)
-3. **State/Status Management** (3 operations)
-4. **Team/Project Operations** (3 operations)
-5. **Comment Operations** (2 operations)
-6. **Document Operations** (3 operations)
+1. **Issue Operations** - Create, read, update, list issues and manage checklists
+2. **Label Management** - Get, create, and ensure labels exist
+3. **State/Status Management** - Validate and resolve workflow states
+4. **Team/Project Operations** - Resolve team/project identifiers
+5. **Comment Operations** - Create and list comments
+6. **Document Operations** - Manage Linear documents
+
+**IMPORTANT**: For all Linear MCP tool details (exact parameters, schemas, examples), consult the `linear-subagent-guide` skill. This agent focuses on business logic and parameter transformation, while the skill maintains the canonical reference for all 23 Linear MCP tools.
 
 ---
 
@@ -40,306 +59,88 @@ This agent handles **6 primary operation categories** with **19 total operations
 
 ### 1.1 get_issue
 
-Retrieve a single issue by ID or identifier with optional expansions.
+**Purpose**: Retrieve a single issue by ID with optional related data.
 
-**Input YAML**:
-```yaml
-operation: get_issue
-params:
-  issue_id: "PSN-123"              # Required (ID or identifier)
-  include_comments: false           # Optional, default: false
-  include_attachments: false        # Optional, default: false
-  include_children: false           # Optional, default: false
-context:
-  command: "planning:plan"
-  purpose: "Fetching issue for planning phase"
-```
-
-**Output YAML**:
-```yaml
-success: true
-data:
-  id: "abc-123-def"
-  identifier: "PSN-123"
-  title: "Implement user authentication"
-  description: "Full markdown description..."
-  state:
-    id: "state-123"
-    name: "In Progress"
-    type: "started"
-  team:
-    id: "team-456"
-    name: "Engineering"
-    key: "ENG"
-  project:
-    id: "proj-789"
-    name: "Auth System"
-  labels:
-    - id: "label-1"
-      name: "planning"
-      color: "#f7c8c1"
-    - id: "label-2"
-      name: "backend"
-      color: "#26b5ce"
-  assignee:
-    id: "user-123"
-    name: "John Doe"
-    email: "john@example.com"
-  priority: 3
-  estimate: 5
-  created_at: "2025-01-15T10:30:00Z"
-  updated_at: "2025-01-16T14:20:00Z"
-  branch_name: "duong/psn-123-implement-user-authentication"
-  comments: []           # If include_comments: true
-  attachments: []        # If include_attachments: true
-metadata:
-  cached: false
-  duration_ms: 450
-  mcp_calls: 1
-```
-
-**Implementation**:
+**Key Transformation**:
 ```javascript
-// Use Linear MCP: get_issue
+// Agent accepts: issueId
+// Linear MCP expects: id
 const issue = await mcp__linear__get_issue({
-  issueId: params.issue_id
+  id: params.issueId  // Transform: issueId → id
 });
 
-// Optionally fetch comments
+// Optional: Fetch comments separately
 if (params.include_comments) {
   issue.comments = await mcp__linear__list_comments({
-    issueId: params.issue_id
+    issueId: params.issueId  // Note: list_comments uses issueId (not id)
   });
 }
-
-// Return structured response
-return {
-  success: true,
-  data: issue,
-  metadata: {
-    cached: false,
-    duration_ms: executionTime,
-    mcp_calls: mcp_call_count
-  }
-};
 ```
+
+**See**: `linear-subagent-guide` skill for complete `get_issue` and `list_comments` schemas.
 
 ---
 
 ### 1.2 create_issue
 
-Create a new Linear issue with labels, state, and metadata.
+**Purpose**: Create a new Linear issue with all metadata.
 
-**Input YAML**:
-```yaml
-operation: create_issue
-params:
-  team: "Engineering"               # Required (name, key, or ID)
-  title: "Implement OAuth flow"    # Required
-  description: "## Overview\n..."   # Optional
-  state: "In Progress"              # Optional (name, type, or ID)
-  labels:                           # Optional (names or IDs)
-    - "planning"
-    - "backend"
-    - "high-priority"
-  assignee: "john@example.com"     # Optional (name, email, ID, or "me")
-  project: "Auth System"            # Optional (name or ID)
-  priority: 2                       # Optional (0-4)
-  estimate: 8                       # Optional (points)
-  parent_id: "PSN-100"              # Optional (for sub-issues)
-  due_date: "2025-02-01"            # Optional (ISO format)
-  links:                            # Optional
-    - url: "https://figma.com/..."
-      title: "Design Mockup"
-context:
-  command: "planning:create"
-  purpose: "Creating planned task"
-```
+**Key Points**:
+- Linear MCP accepts **names directly** (no ID resolution needed):
+  - `team`: accepts team name or ID
+  - `state`: accepts state name or ID
+  - `labels`: array of label names or IDs
+  - `assignee`: user name, email, or "me"
+  - `project`: project name or ID
 
-**Output YAML**:
-```yaml
-success: true
-data:
-  id: "new-issue-id"
-  identifier: "PSN-124"
-  title: "Implement OAuth flow"
-  url: "https://linear.app/team/issue/PSN-124"
-  # ... full issue object
-metadata:
-  cached: false
-  duration_ms: 650
-  mcp_calls: 4
-  operations:
-    - "resolve_team_id: Engineering → team-456 (cached)"
-    - "resolve_state_id: In Progress → state-123 (cached)"
-    - "ensure_labels: planning, backend, high-priority → 3 labels (2 cached, 1 created)"
-    - "create_issue: success"
-```
-
-**Implementation Logic**:
+**Simple Implementation**:
 ```javascript
-// Step 1: Resolve team ID (with caching)
-const teamId = await resolveTeamId(params.team);
-
-// Step 2: Resolve state ID (with caching and fuzzy matching)
-let stateId = null;
-if (params.state) {
-  stateId = await getValidStateId(teamId, params.state);
-}
-
-// Step 3: Ensure labels exist (batch operation with caching)
-let labelIds = [];
-if (params.labels && params.labels.length > 0) {
-  labelIds = await ensureLabelsExist(teamId, params.labels);
-}
-
-// Step 4: Resolve assignee (with caching)
-let assigneeId = null;
-if (params.assignee) {
-  if (params.assignee === "me") {
-    // Get current user
-    assigneeId = await getCurrentUserId();
-  } else {
-    assigneeId = await resolveUserId(params.assignee);
-  }
-}
-
-// Step 5: Resolve project ID (with caching)
-let projectId = null;
-if (params.project) {
-  projectId = await resolveProjectId(params.project, teamId);
-}
-
-// Step 6: Create issue via Linear MCP
+// Linear MCP handles all name resolution internally
 const issue = await mcp__linear__create_issue({
-  teamId: teamId,
-  title: params.title,
-  description: params.description,
-  stateId: stateId,
-  labelIds: labelIds,
-  assigneeId: assigneeId,
-  projectId: projectId,
-  priority: params.priority,
-  estimate: params.estimate,
-  parentId: params.parent_id,
-  dueDate: params.due_date
+  title: params.title,              // Required
+  team: params.team,                // Required (name or ID)
+  description: params.description,  // Optional
+  state: params.state,              // Optional (name or ID)
+  labels: params.labels,            // Optional (array of names or IDs)
+  assignee: params.assignee,        // Optional (name, email, or "me")
+  project: params.project,          // Optional (name or ID)
+  priority: params.priority,        // Optional (0-4)
+  dueDate: params.dueDate,          // Optional (ISO format)
+  parentId: params.parentId,        // Optional
+  links: params.links               // Optional (array of {url, title})
 });
-
-// Step 7: Add links if provided
-if (params.links) {
-  for (const link of params.links) {
-    await mcp__linear__create_issue_link({
-      issueId: issue.id,
-      url: link.url,
-      title: link.title
-    });
-  }
-}
-
-return {
-  success: true,
-  data: issue,
-  metadata: {
-    cached: false,
-    duration_ms: executionTime,
-    mcp_calls: mcp_call_count,
-    operations: operationLog
-  }
-};
 ```
+
+**See**: `linear-subagent-guide` skill for complete `create_issue` schema.
 
 ---
 
 ### 1.3 update_issue
 
-Update an existing Linear issue.
+**Purpose**: Update an existing Linear issue.
 
-**Input YAML**:
-```yaml
-operation: update_issue
-params:
-  issue_id: "PSN-123"              # Required
-  title: "Updated title"           # Optional
-  description: "New description"   # Optional
-  state: "Done"                     # Optional
-  labels:                           # Optional (replaces existing)
-    - "implementation"
-    - "verified"
-  assignee: "jane@example.com"     # Optional
-  priority: 1                       # Optional
-  estimate: 10                      # Optional
-context:
-  command: "implementation:update"
-```
-
-**Output YAML**:
-```yaml
-success: true
-data:
-  id: "abc-123-def"
-  identifier: "PSN-123"
-  # ... updated issue object
-metadata:
-  cached: false
-  duration_ms: 550
-  mcp_calls: 3
-  changes:
-    - "state: In Progress → Done"
-    - "labels: [planning, backend] → [implementation, verified]"
-    - "estimate: 5 → 10"
-```
-
-**Implementation**:
+**Key Transformation**:
 ```javascript
-// Fetch current issue to detect changes
-const currentIssue = await mcp__linear__get_issue({
-  issueId: params.issue_id
-});
-
-// Track changes
-const changes = [];
-
-// Resolve new values (with caching)
-const updates = {};
-
-if (params.state) {
-  const stateId = await getValidStateId(currentIssue.team.id, params.state);
-  updates.stateId = stateId;
-  changes.push(`state: ${currentIssue.state.name} → ${params.state}`);
-}
-
-if (params.labels) {
-  const labelIds = await ensureLabelsExist(currentIssue.team.id, params.labels);
-  updates.labelIds = labelIds;
-  changes.push(`labels: [${currentIssue.labels.map(l => l.name).join(', ')}] → [${params.labels.join(', ')}]`);
-}
-
-if (params.assignee) {
-  const assigneeId = await resolveUserId(params.assignee);
-  updates.assigneeId = assigneeId;
-}
-
-// Apply updates
+// Agent accepts: issueId
+// Linear MCP expects: id
 const updatedIssue = await mcp__linear__update_issue({
-  id: params.issue_id,
-  ...updates,
-  title: params.title,
-  description: params.description,
-  priority: params.priority,
-  estimate: params.estimate
+  id: params.issueId,          // Transform: issueId → id
+  title: params.title,          // Optional
+  description: params.description,  // Optional
+  state: params.state,          // Optional (accepts state name)
+  labels: params.labels,        // Optional (array of label names)
+  assignee: params.assignee,    // Optional (name, email, or "me")
+  priority: params.priority,    // Optional (0-4)
+  estimate: params.estimate,    // Optional
+  dueDate: params.dueDate,      // Optional
+  cycle: params.cycle,          // Optional
+  project: params.project       // Optional
 });
-
-return {
-  success: true,
-  data: updatedIssue,
-  metadata: {
-    cached: false,
-    duration_ms: executionTime,
-    mcp_calls: mcp_call_count,
-    changes: changes
-  }
-};
 ```
+
+**Note**: Linear MCP accepts names directly for all fields (state, labels, assignee, project, etc.).
+
+**See**: `linear-subagent-guide` skill for complete `update_issue` schema.
 
 ---
 
@@ -464,7 +265,7 @@ Update checkbox states in the Implementation Checklist within an issue's descrip
 ```yaml
 operation: update_checklist_items
 params:
-  issue_id: "PSN-123"              # Required (ID or identifier)
+  issueId: "PSN-123"              # Required (ID or identifier) - transforms to 'id' for Linear MCP
   indices: [0, 2, 5]                # Required (array of item indices to update)
   mark_complete: true               # Required (true = check, false = uncheck)
   add_comment: true                 # Optional, default: false (post change comment)
@@ -545,8 +346,9 @@ const {
 } = require('../commands/_shared-checklist-helpers.md');
 
 // Step 2: Fetch current issue
+// Note: Linear MCP get_issue uses 'id' parameter
 const issue = await mcp__linear__get_issue({
-  issueId: params.issue_id
+  id: params.issueId  // Transform: issueId → id
 });
 
 // Step 3: Parse current checklist
@@ -600,6 +402,7 @@ const updateResult = updateChecklistItems(
 );
 
 // Step 7: Update issue description via Linear API
+// Note: Linear MCP update_issue uses 'id' parameter
 const updatedIssue = await mcp__linear__update_issue({
   id: issue.id,
   description: updateResult.updatedDescription
@@ -612,8 +415,9 @@ if (params.add_comment) {
     .map(item => `- ${item.content}`)
     .join('\n');
 
+  // Note: Linear MCP create_comment uses 'issueId' parameter (not 'id')
   await mcp__linear__create_comment({
-    issueId: params.issue_id,
+    issueId: params.issueId,
     body: `## ✅ Checklist Updated\n\n**${verb.charAt(0).toUpperCase() + verb.slice(1)}** ${updateResult.changedCount} item(s):\n\n${itemsList}\n\n**Progress**: ${previousProgress.percentage}% → ${updateResult.newProgress.percentage}%\n\n_Updated via checklist operation_`
   });
 }
