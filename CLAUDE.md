@@ -152,19 +152,34 @@ Commands → Linear Subagent → Linear MCP → Linear API
 ```
 
 **Usage in Commands**:
-Commands delegate to the subagent via the Task tool:
+
+Commands delegate to the subagent via the Task tool. **IMPORTANT**: Command files must use explicit execution instructions, NOT YAML template syntax.
+
+**Correct format (explicit invocation):**
 ```markdown
-Task(linear-operations): `
-operation: update_issue
-params:
-  issueId: PSN-29
-  state: "In Progress"
-  labels: ["planning", "implementation"]
-context:
-  cache: true
-  command: "planning:plan"
-`
+**Use the Task tool to update the Linear issue:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: PSN-29
+    state: "In Progress"
+    labels: ["planning", "implementation"]
+  context:
+    cache: true
+    command: "planning:plan"
+  ```
 ```
+
+**Why this format?**
+- Claude Code interprets command markdown files as **executable prompts**, not documentation
+- YAML template syntax (e.g., `Task(linear-operations): \`...`) appears as an **example**, not an instruction
+- Explicit instructions (e.g., "Use the Task tool to...") are unambiguous execution directives
+- This ensures Claude actually invokes the subagent instead of calling MCP tools directly
 
 **Shared Helpers**:
 The `_shared-linear-helpers.md` file provides convenience functions that delegate to the subagent:

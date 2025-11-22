@@ -101,16 +101,20 @@ console.log('✅ All pre-flight checks passed!\n');
 
 ### Step 3: Fetch Issue & Verify Completion
 
-```yaml
-Task(linear-operations): `
-operation: get_issue
-params:
-  issueId: "${issueId}"
-context:
-  cache: true
-  command: "done"
-`
-```
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{issue ID from step 1}"
+  context:
+    cache: true
+    command: "done"
+  ```
 
 **Error handling:**
 ```javascript
@@ -281,46 +285,55 @@ if (notifySlack) {
 
 ### Step 6: Update Linear Status (Automatic)
 
-```yaml
-Task(linear-operations): `
-operation: update_issue
-params:
-  issueId: "${issueId}"
-  state: "Done"
-  labels: ["done"]
-context:
-  cache: true
-  command: "done"
-  purpose: "Marking task as complete"
-`
+**Use the Task tool to update Linear issue to Done:**
 
-# Add completion comment
-Task(linear-operations): `
-operation: create_comment
-params:
-  issueId: "${issueId}"
-  body: |
-    ## 🎉 Task Completed and Finalized
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: "{issue ID from step 1}"
+    state: "Done"
+    labels: ["done"]
+  context:
+    cache: true
+    command: "done"
+    purpose: "Marking task as complete"
+  ```
 
-    **Completion Time:** ${new Date().toISOString()}
+**Use the Task tool to add completion comment:**
 
-    ### Actions Taken:
-    ✅ Pull Request created: ${prUrl}
-    ${updateJira ? '✅ Jira status updated to Done' : '⏭️ Jira update skipped'}
-    ${notifySlack ? '✅ Team notified in Slack' : '⏭️ Slack notification skipped'}
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: create_comment
+  params:
+    issueId: "{issue ID from step 1}"
+    body: |
+      ## 🎉 Task Completed and Finalized
 
-    ### Final Status:
-    - Linear: Done ✅
-    - Workflow labels cleaned up
-    - Task marked as complete
+      **Completion Time:** {current timestamp}
 
-    ---
+      ### Actions Taken:
+      ✅ Pull Request created: {PR URL from step 4}
+      {if Jira updated: ✅ Jira status updated to Done, else: ⏭️ Jira update skipped}
+      {if Slack notified: ✅ Team notified in Slack, else: ⏭️ Slack notification skipped}
 
-    **This task is now closed.** 🎊
-context:
-  command: "done"
-`
-```
+      ### Final Status:
+      - Linear: Done ✅
+      - Workflow labels cleaned up
+      - Task marked as complete
+
+      ---
+
+      **This task is now closed.** 🎊
+  context:
+    command: "done"
+  ```
 
 **Display:**
 ```javascript

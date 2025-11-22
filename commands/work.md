@@ -59,16 +59,20 @@ if (!/^[A-Z]+-\d+$/.test(issueId)) {
 
 ### Step 2: Fetch Issue via Linear Subagent
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: get_issue
-params:
-  issueId: "${issueId}"
-context:
-  cache: true
-  command: "work"
-`
-```
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent with these parameters:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**: Use this exact format:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{the issue ID from step 1}"
+  context:
+    cache: true
+    command: "work"
+  ```
 
 **Store response as `issue` object** containing:
 - `issue.id` - Internal Linear ID
@@ -128,16 +132,22 @@ console.log(`📊 Status: ${status}\n`);
 
 1. Update issue status and labels (batch operation):
 
-Task(ccpm:linear-operations): `
-operation: update_issue
-params:
-  issueId: "${issueId}"
-  state: "In Progress"
-  labels: ["implementation"]
-context:
-  cache: true
-  command: "work"
-`
+**Use the Task tool to update the Linear issue:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: "{issue ID from step 1}"
+    state: "In Progress"
+    labels: ["implementation"]
+  context:
+    cache: true
+    command: "work"
+  ```
 
 Display: "✅ Updated status: Planning → In Progress"
 
@@ -169,24 +179,30 @@ Note: The smart-agent-selector hook will automatically choose the optimal agent:
 
 3. Store the plan and add comment via Linear subagent:
 
-Task(ccpm:linear-operations): `
-operation: create_comment
-params:
-  issueId: "${issueId}"
-  body: |
-    ## 🚀 Implementation Started
+**Use the Task tool to add a comment to Linear:**
 
-    **Status:** Planning → In Progress
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: create_comment
+  params:
+    issueId: "{issue ID from step 1}"
+    body: |
+      ## 🚀 Implementation Started
 
-    ### Implementation Plan
+      **Status:** Planning → In Progress
 
-    ${analysisResult}
+      ### Implementation Plan
 
-    ---
-    *Started via /ccpm:work*
-context:
-  command: "work"
-`
+      {paste the analysis result from step 2 here}
+
+      ---
+      *Started via /ccpm:work*
+  context:
+    command: "work"
+  ```
 
 Display: "✅ Added implementation plan to Linear"
 

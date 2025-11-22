@@ -58,16 +58,20 @@ Examples:
 
 ### Step 2: Fetch Issue via Linear Subagent
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: get_issue
-params:
-  issueId: "${issueId}"
-context:
-  cache: true
-  command: "verify"
-`
-```
+**Use the Task tool to fetch the issue from Linear:**
+
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: get_issue
+  params:
+    issueId: "{issue ID from step 1}"
+  context:
+    cache: true
+    command: "verify"
+  ```
 
 **Store response as `issue` object** containing:
 - `issue.id`, `issue.identifier`, `issue.title`
@@ -270,7 +274,11 @@ if (!allPassed) {
   console.log(`  /ccpm:verify ${issueId}\n`);
 
   // Update Linear with failure
-  await Task('ccpm:linear-operations', `
+  // Use the Task tool to add failure comment
+  await Task({
+    subagent_type: 'ccpm:linear-operations',
+    description: 'Add quality check failure comment',
+    prompt: `
 operation: create_comment
 params:
   issueId: "${issueId}"
@@ -289,7 +297,8 @@ params:
     *Via /ccpm:verify*
 context:
   command: "verify"
-  `);
+    `
+  });
 
   return;
 }
@@ -347,79 +356,99 @@ const verificationPassed = !response.includes('❌ FAIL') &&
 
 **If verification PASSED:**
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: update_issue
-params:
-  issueId: "${issueId}"
-  state: "Done"
-  labels: ["verified"]
-context:
-  command: "verify"
-`
+**Use the Task tool to update Linear issue to Done:**
 
-Task(ccpm:linear-operations): `
-operation: create_comment
-params:
-  issueId: "${issueId}"
-  body: |
-    ## ✅ Verification Complete
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: "{issue ID from step 1}"
+    state: "Done"
+    labels: ["verified"]
+  context:
+    command: "verify"
+  ```
 
-    **Quality Checks:**
-    - ✅ Linting: PASS
-    - ✅ Tests: PASS
-    - ✅ Build: PASS
+**Use the Task tool to add success comment:**
 
-    **Final Verification:**
-    - ✅ Code review: PASS
-    - ✅ Requirements met
-    - ✅ Security validated
-    - ✅ Performance acceptable
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: create_comment
+  params:
+    issueId: "{issue ID from step 1}"
+    body: |
+      ## ✅ Verification Complete
 
-    **Task completed successfully!** 🎉
+      **Quality Checks:**
+      - ✅ Linting: PASS
+      - ✅ Tests: PASS
+      - ✅ Build: PASS
 
-    ---
-    *Via /ccpm:verify*
-context:
-  command: "verify"
-`
-```
+      **Final Verification:**
+      - ✅ Code review: PASS
+      - ✅ Requirements met
+      - ✅ Security validated
+      - ✅ Performance acceptable
+
+      **Task completed successfully!** 🎉
+
+      ---
+      *Via /ccpm:verify*
+  context:
+    command: "verify"
+  ```
 
 **If verification FAILED:**
 
-```yaml
-Task(ccpm:linear-operations): `
-operation: update_issue
-params:
-  issueId: "${issueId}"
-  labels: ["blocked", "needs-revision"]
-context:
-  command: "verify"
-`
+**Use the Task tool to add failure labels:**
 
-Task(ccpm:linear-operations): `
-operation: create_comment
-params:
-  issueId: "${issueId}"
-  body: |
-    ## ❌ Verification Failed
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: update_issue
+  params:
+    issueId: "{issue ID from step 1}"
+    labels: ["blocked", "needs-revision"]
+  context:
+    command: "verify"
+  ```
 
-    **Quality Checks:** ✅ PASS
+**Use the Task tool to add failure comment:**
 
-    **Final Verification:** ❌ FAIL
+Invoke the `ccpm:linear-operations` subagent:
+- **Tool**: Task
+- **Subagent**: ccpm:linear-operations
+- **Prompt**:
+  ```
+  operation: create_comment
+  params:
+    issueId: "{issue ID from step 1}"
+    body: |
+      ## ❌ Verification Failed
 
-    **Issues Found:**
-    ${verificationIssues}
+      **Quality Checks:** ✅ PASS
 
-    **Action Required:**
-    Fix the issues above, then run \`/ccpm:verify\` again.
+      **Final Verification:** ❌ FAIL
 
-    ---
-    *Via /ccpm:verify*
-context:
-  command: "verify"
-`
-```
+      **Issues Found:**
+      {verification issues from step 6}
+
+      **Action Required:**
+      Fix the issues above, then run \`/ccpm:verify\` again.
+
+      ---
+      *Via /ccpm:verify*
+  context:
+    command: "verify"
+  ```
 
 ### Step 8: Display Results & Next Actions
 
