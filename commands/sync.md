@@ -268,16 +268,24 @@ Invoke the `ccpm:linear-operations` subagent:
 - **Subagent**: ccpm:linear-operations
 - **Prompt**:
   ```
-  operation: update_issue_description
+  operation: update_checklist_items
   params:
-    issueId: "{issue ID from step 1}"
-    updates:
-      - type: checklist_items
-        indices: [{list of completed item indices from step 6}]
-        markComplete: true
+    issue_id: "{issue ID from step 1}"
+    indices: [{list of completed item indices from step 6}]
+    mark_complete: true
+    add_comment: false  # We'll add the full progress report separately
+    update_timestamp: true
   context:
     command: "sync"
+    purpose: "Marking completed checklist items based on git changes"
   ```
+
+**Note**: This operation uses the shared checklist helpers (`_shared-checklist-helpers.md`) for consistent parsing and updating. It will:
+- Parse the checklist using marker comments or header detection
+- Update the specified indices (mark as complete)
+- Recalculate progress percentage
+- Update the progress line with timestamp
+- Return structured result with before/after progress
 
 **B) Add progress comment:**
 

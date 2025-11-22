@@ -1,3 +1,5 @@
+<!-- cSpell:words ccpm CCPM -->
+
 # Shared Checklist Utilities (Unified Parsing & Update Logic)
 
 This file provides reusable utility functions for checklist management across CCPM commands. **These functions implement robust parsing, updating, and progress calculation for Implementation Checklists in Linear issue descriptions.**
@@ -13,12 +15,14 @@ All CCPM commands that interact with checklists should use these utilities to en
 - `validateChecklistStructure()` - Checks checklist integrity
 
 **Key Benefits**:
+
 - **Consistent parsing** - Handles both marker comments and header-based formats
 - **Robust updates** - Atomic checkbox state changes with progress calculation
 - **Error resilience** - Graceful handling of malformed or missing checklists
 - **Maintainability** - Single source of truth for checklist logic
 
 **Usage in commands:** Reference this file at the start of command execution:
+
 ```markdown
 READ: commands/_shared-checklist-helpers.md
 ```
@@ -169,6 +173,7 @@ function parseChecklist(description) {
 ```
 
 **Usage Example:**
+
 ```javascript
 const description = `
 ## ✅ Implementation Checklist
@@ -199,6 +204,7 @@ if (!checklist) {
 ```
 
 **Edge Cases Handled:**
+
 - **No checklist** → Returns `null`
 - **Marker comments only** → Prefers marker-based parsing
 - **Header only** → Falls back to header detection
@@ -317,6 +323,7 @@ function updateChecklistItems(description, indices, markComplete, options = {}) 
 ```
 
 **Usage Example:**
+
 ```javascript
 const description = `
 ## ✅ Implementation Checklist
@@ -346,6 +353,7 @@ console.log(result.updatedDescription);
 ```
 
 **Edge Cases Handled:**
+
 - **Invalid indices** → Throws error with details
 - **Already in target state** → Skips update (idempotent)
 - **No progress line** → Inserts new one
@@ -389,6 +397,7 @@ function calculateProgress(items) {
 ```
 
 **Usage Example:**
+
 ```javascript
 const items = [
   { index: 0, checked: true, content: 'Task 1' },
@@ -402,6 +411,7 @@ console.log(`${progress.percentage}% (${progress.completed}/${progress.total})`)
 ```
 
 **Edge Cases Handled:**
+
 - **Empty array** → Returns 0% (0/0)
 - **Null items** → Returns 0% (0/0)
 - **All complete** → Returns 100%
@@ -436,6 +446,7 @@ function formatProgressLine(completed, total, includeTimestamp = true) {
 ```
 
 **Usage Example:**
+
 ```javascript
 // With timestamp
 const line1 = formatProgressLine(2, 5);
@@ -555,6 +566,7 @@ function validateChecklistStructure(description) {
 ```
 
 **Usage Example:**
+
 ```javascript
 const description = `
 ## Implementation Checklist

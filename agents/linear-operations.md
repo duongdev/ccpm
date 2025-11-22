@@ -25,9 +25,9 @@ Optimize CCPM token usage by 50-60% through centralized Linear operations handli
 
 ## Core Responsibilities
 
-This agent handles **6 primary operation categories** with **18 total operations**:
+This agent handles **6 primary operation categories** with **19 total operations**:
 
-1. **Issue Operations** (5 operations)
+1. **Issue Operations** (6 operations)
 2. **Label Management** (3 operations)
 3. **State/Status Management** (3 operations)
 4. **Team/Project Operations** (3 operations)
@@ -451,6 +451,251 @@ context:
 **Output**: Same as list_issues
 
 **Implementation**: Delegates to list_issues with enhanced query parsing.
+
+---
+
+### 1.6 update_checklist_items
+
+Update checkbox states in the Implementation Checklist within an issue's description.
+
+**Purpose**: Provides atomic checklist item updates with automatic progress recalculation. Uses the shared checklist helpers for consistent parsing and updating across all commands.
+
+**Input YAML**:
+```yaml
+operation: update_checklist_items
+params:
+  issue_id: "PSN-123"              # Required (ID or identifier)
+  indices: [0, 2, 5]                # Required (array of item indices to update)
+  mark_complete: true               # Required (true = check, false = uncheck)
+  add_comment: true                 # Optional, default: false (post change comment)
+  update_timestamp: true            # Optional, default: true (update progress line timestamp)
+context:
+  command: "sync"
+  purpose: "Marking completed checklist items"
+```
+
+**Output YAML**:
+```yaml
+success: true
+data:
+  id: "abc-123-def"
+  identifier: "PSN-123"
+  updated_description: "<!-- ccpm-checklist-start -->..."  # Full updated description
+  checklist_summary:
+    items_updated: 3
+    previous_progress: 20          # Previous percentage
+    new_progress: 60               # New percentage
+    completed: 3
+    total: 5
+  changed_items:
+    - index: 0
+      content: "Task 1: Description"
+      previous_state: unchecked
+      new_state: checked
+    - index: 2
+      content: "Task 3: Description"
+      previous_state: unchecked
+      new_state: checked
+metadata:
+  cached: false
+  duration_ms: 320
+  mcp_calls: 2                     # get_issue + update_issue
+  used_shared_helpers: true
+```
+
+**Error Cases**:
+```yaml
+# Invalid indices
+success: false
+error:
+  code: "INVALID_INDICES"
+  message: "Invalid checklist indices: [10, 15]"
+  details:
+    available_indices: [0, 1, 2, 3, 4]
+    invalid_indices: [10, 15]
+  suggestions:
+    - "Indices must be between 0 and 4"
+    - "Use parseChecklist() to get valid indices"
+
+# No checklist found
+success: false
+error:
+  code: "NO_CHECKLIST"
+  message: "No Implementation Checklist found in issue description"
+  suggestions:
+    - "Ensure issue has been planned with /ccpm:plan"
+    - "Check if description contains checklist markers"
+
+# Idempotent update (items already in target state)
+success: true
+data:
+  # ... normal response
+  checklist_summary:
+    items_updated: 0              # No actual changes
+    items_already_correct: 3      # Items already in target state
+```
+
+**Implementation**:
+```javascript
+// Step 1: Read shared helpers
+const {
+  parseChecklist,
+  updateChecklistItems,
+  calculateProgress
+} = require('../commands/_shared-checklist-helpers.md');
+
+// Step 2: Fetch current issue
+const issue = await mcp__linear__get_issue({
+  issueId: params.issue_id
+});
+
+// Step 3: Parse current checklist
+const parsed = parseChecklist(issue.description);
+
+if (!parsed) {
+  return {
+    success: false,
+    error: {
+      code: "NO_CHECKLIST",
+      message: "No Implementation Checklist found in issue description",
+      suggestions: [
+        "Ensure issue has been planned with /ccpm:plan",
+        "Check if description contains checklist markers"
+      ]
+    }
+  };
+}
+
+// Step 4: Validate indices
+const invalidIndices = params.indices.filter(i => i < 0 || i >= parsed.items.length);
+if (invalidIndices.length > 0) {
+  return {
+    success: false,
+    error: {
+      code: "INVALID_INDICES",
+      message: `Invalid checklist indices: [${invalidIndices.join(', ')}]`,
+      details: {
+        available_indices: parsed.items.map((_, i) => i),
+        invalid_indices: invalidIndices
+      },
+      suggestions: [
+        `Indices must be between 0 and ${parsed.items.length - 1}`,
+        "Use parseChecklist() to get valid indices"
+      ]
+    }
+  };
+}
+
+// Step 5: Calculate previous progress
+const previousProgress = calculateProgress(parsed.items);
+
+// Step 6: Update checklist items
+const updateResult = updateChecklistItems(
+  issue.description,
+  params.indices,
+  params.mark_complete,
+  {
+    updateTimestamp: params.update_timestamp !== false
+  }
+);
+
+// Step 7: Update issue description via Linear API
+const updatedIssue = await mcp__linear__update_issue({
+  id: issue.id,
+  description: updateResult.updatedDescription
+});
+
+// Step 8: (Optional) Add comment documenting changes
+if (params.add_comment) {
+  const verb = params.mark_complete ? "completed" : "unchecked";
+  const itemsList = updateResult.changedItems
+    .map(item => `- ${item.content}`)
+    .join('\n');
+
+  await mcp__linear__create_comment({
+    issueId: params.issue_id,
+    body: `## ✅ Checklist Updated\n\n**${verb.charAt(0).toUpperCase() + verb.slice(1)}** ${updateResult.changedCount} item(s):\n\n${itemsList}\n\n**Progress**: ${previousProgress.percentage}% → ${updateResult.newProgress.percentage}%\n\n_Updated via checklist operation_`
+  });
+}
+
+// Step 9: Return structured result
+return {
+  success: true,
+  data: {
+    id: updatedIssue.id,
+    identifier: updatedIssue.identifier,
+    updated_description: updateResult.updatedDescription,
+    checklist_summary: {
+      items_updated: updateResult.changedCount,
+      items_already_correct: params.indices.length - updateResult.changedCount,
+      previous_progress: previousProgress.percentage,
+      new_progress: updateResult.newProgress.percentage,
+      completed: updateResult.newProgress.completed,
+      total: updateResult.newProgress.total
+    },
+    changed_items: updateResult.changedItems.map((item, idx) => ({
+      index: params.indices[idx],
+      content: item.content,
+      previous_state: params.mark_complete ? 'unchecked' : 'checked',
+      new_state: params.mark_complete ? 'checked' : 'unchecked'
+    }))
+  },
+  metadata: {
+    cached: false,
+    duration_ms: executionTime,
+    mcp_calls: params.add_comment ? 3 : 2,  // get + update + optional comment
+    used_shared_helpers: true
+  }
+};
+```
+
+**Usage Examples**:
+```javascript
+// Mark items 0, 2, and 5 as complete
+Task(linear-operations): `
+operation: update_checklist_items
+params:
+  issue_id: PSN-123
+  indices: [0, 2, 5]
+  mark_complete: true
+  add_comment: true
+context:
+  command: "sync"
+`
+
+// Uncheck item 3 (rollback)
+Task(linear-operations): `
+operation: update_checklist_items
+params:
+  issue_id: PSN-123
+  indices: [3]
+  mark_complete: false
+context:
+  command: "utils:update-checklist"
+`
+
+// Batch completion without comment
+Task(linear-operations): `
+operation: update_checklist_items
+params:
+  issue_id: PSN-123
+  indices: [0, 1, 2, 3, 4]
+  mark_complete: true
+  add_comment: false
+context:
+  command: "verify"
+`
+```
+
+**Caching Strategy**:
+- Issue fetch: Cached if recently accessed (5min TTL)
+- Progress calculation: No caching (always computed)
+- Update: Never cached (writes invalidate cache)
+
+**Performance**:
+- Best case (cached issue): ~100ms
+- Typical case: ~300-400ms
+- With comment: ~500-600ms
 
 ---
 

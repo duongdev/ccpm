@@ -182,8 +182,34 @@ if (progress < 100) {
       }]
     });
 
-    // Update checklist in description
-    // ... (update logic)
+    // Update checklist in description using linear-operations subagent
+    if (updateResponse.answers && updateResponse.answers.length > 0) {
+      const selectedIndices = updateResponse.answers.map(answer => {
+        // Extract index from the label (assuming format "Item text")
+        const itemIndex = incompleteItems.findIndex(item =>
+          item.replace('- [ ] ', '') === answer
+        );
+        return itemIndex;
+      }).filter(idx => idx >= 0);
+
+      if (selectedIndices.length > 0) {
+        // Use Task tool to update checklist via subagent
+        await Task('linear-operations', `
+operation: update_checklist_items
+params:
+  issue_id: ${issueId}
+  indices: [${selectedIndices.join(', ')}]
+  mark_complete: true
+  add_comment: true
+  update_timestamp: true
+context:
+  command: "verify"
+  purpose: "Updating checklist items during verification"
+`);
+
+        console.log(`\n✅ Updated ${selectedIndices.length} checklist item(s)\n`);
+      }
+    }
   }
 
   if (response.answers[0] === "Continue anyway") {
