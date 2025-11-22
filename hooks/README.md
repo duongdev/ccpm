@@ -1,12 +1,17 @@
-# Agent Auto-Invocation System via Claude Code Hooks
+# Smart Agent Auto-Invocation System
 
 **Automatically invoke specialized agents based on task context using Claude Code hooks.**
 
-## 🎯 Overview
+## 🎯 Overview (v1.0)
 
-This system uses Claude Code hooks to analyze every user request and automatically invoke the most appropriate specialized agents, enforce TDD practices, and run quality gates after implementation.
+CCPM v1.0 uses a streamlined hook system focused on **smart agent selection**. The system analyzes every user request and automatically invokes the most appropriate specialized agents for optimal workflow efficiency.
 
-## 📊 Architecture
+**Key Changes in v1.0:**
+- ✅ **Kept**: Smart Agent Selector (optimized, 81.7% token reduction)
+- ❌ **Removed**: TDD Enforcer (developers manage their own testing)
+- ❌ **Removed**: Quality Gates (integrated into `/ccpm:verify` command)
+
+## 📊 Architecture (v1.0)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -15,305 +20,125 @@ This system uses Claude Code hooks to analyze every user request and automatical
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Hook 1: UserPromptSubmit (agent-selector.prompt)              │
-│  • Analyzes user intent                                         │
-│  • Selects appropriate agents (backend, frontend, TDD, etc.)    │
-│  • Injects agent invocation instructions into context           │
+│  Hook: UserPromptSubmit (smart-agent-selector.sh)              │
+│  • Discovers all available agents dynamically                   │
+│  • Scores agents based on context (0-100+ points)               │
+│  • Plans execution (parallel vs sequential)                     │
+│  • Injects agent invocation instructions                        │
+│  • Caches results for 85-95% faster runs                        │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Claude Starts Working                         │
-│  • Invokes selected agents (e.g., backend-architect)            │
-│  • Plans implementation                                          │
-│  • Prepares to write code                                        │
+│  • Invokes selected agents automatically                        │
+│  • Uses optimal agents for the task                             │
+│  • Coordinates parallel/sequential execution                    │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Hook 2: PreToolUse (tdd-enforcer.prompt)                      │
-│  • Triggers before Write/Edit tools                             │
-│  • Checks if tests exist for production code                    │
-│  • BLOCKS if tests missing → invokes tdd-orchestrator           │
-│  • Enforces Red-Green-Refactor                                  │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Tests Written First (TDD Enforced)                  │
-│  • tdd-orchestrator writes failing tests                        │
-│  • Implementation makes tests pass                              │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Implementation Complete                        │
-│  • Code written                                                  │
-│  • Tests passing                                                 │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Hook 3: Stop (quality-gate.prompt)                            │
-│  • Triggers after Claude finishes                               │
-│  • Analyzes what was done                                        │
-│  • Auto-invokes: code-reviewer, security-auditor                │
-│  • Validates quality, security, performance                      │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│             Quality Validated, Feature Complete                  │
-│  ✅ Tests written first                                         │
-│  ✅ Implementation done                                         │
-│  ✅ Code reviewed                                               │
-│  ✅ Security validated                                          │
+│              User Manages Quality Explicitly                     │
+│  • Run /ccpm:verify for quality checks                          │
+│  • Run /ccpm:commit when ready to commit                        │
+│  • Full control over testing and quality workflow               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ## 📁 Files Structure
 
 ```
-~/.claude/
-├── hooks/
-│   ├── agent-selector.prompt       # Analyzes user intent, selects agents
-│   ├── tdd-enforcer.prompt         # Enforces test-first development
-│   ├── quality-gate.prompt         # Post-implementation quality checks
-│   └── README.md                   # This file
-├── agent-invocation-hooks.json     # Complete hook configuration
-└── settings.json                   # Your main settings (merge hooks here)
+hooks/
+├── hooks.json                               # Hook configuration
+├── scripts/
+│   ├── smart-agent-selector.sh             # Agent discovery script
+│   └── discover-agents-cached.sh           # Cached discovery for performance
+├── smart-agent-selector.prompt             # Full prompt (fallback)
+├── smart-agent-selector-optimized.prompt   # Optimized prompt (81.7% reduction)
+├── agent-selector.prompt                   # Static selector (backup)
+├── SMART_AGENT_SELECTION.md                # Detailed documentation
+└── README.md                               # This file
 ```
 
-## 🚀 Installation
+## 🔧 Smart Agent Selector Hook
 
-### Option 1: Automatic Merge (Recommended)
+### Purpose
 
-1. Review the configuration:
-   ```bash
-   cat ~/.claude/agent-invocation-hooks.json
-   ```
+Analyzes every user request to determine which specialized agents should be invoked for optimal task execution.
 
-2. Merge into your settings:
-   ```bash
-   # Backup existing settings
-   cp ~/.claude/settings.json ~/.claude/settings.json.backup
+### How It Works
 
-   # Manual merge: Copy the "hooks" section from agent-invocation-hooks.json
-   # into your settings.json
-   ```
+1. **Discovery Phase** (cached)
+   - Scans `~/.claude/plugins/*/agents/` for plugin agents
+   - Scans `.claude/agents/` for project-specific agents
+   - Discovers global agents (general-purpose, Explore, Plan)
+   - Caches results for 85-95% faster subsequent runs
 
-### Option 2: Use Separate Config
+2. **Scoring Phase**
+   - Analyzes user request for keywords and intent
+   - Scores each agent (0-100+ points) based on:
+     - Keyword matches (+10 per match)
+     - Task type alignment (+20 for matching type)
+     - Tech stack relevance (+15 for stack match)
+     - Agent source (+5 for plugins, +25 for project-specific)
 
-1. Create project-specific hooks:
-   ```bash
-   cd ~/your-project
-   mkdir -p .claude
-   cp ~/.claude/agent-invocation-hooks.json .claude/settings.local.json
-   ```
+3. **Planning Phase**
+   - Determines execution order (sequential vs parallel)
+   - Example sequences:
+     - Design → TDD → Implementation → Review (sequential)
+     - Multiple independent agents (parallel)
 
-2. Edit to customize for your project.
+4. **Injection Phase**
+   - Injects agent invocation instructions into Claude's context
+   - Claude automatically invokes the selected agents
+   - Agents execute with full context awareness
 
-## 🎛️ Configuration
+### Performance
 
-### Enable/Disable Individual Hooks
+- **Token reduction**: 81.7% vs baseline
+- **Execution time**: <1s with caching (first run: ~2-3s)
+- **Cache hit rate**: 85-95%
+- **Agent discovery**: 30-50 agents in <100ms
 
-Edit `settings.json`:
+### Example
+
+**User Request**: "Add user authentication with JWT"
+
+**Agent Selector Output**:
+```yaml
+Agents to invoke:
+1. backend-architect (score: 85)
+   - Keyword matches: authentication, JWT
+   - Task type: backend API design
+   - Execution: Sequential (first)
+
+2. security-auditor (score: 75)
+   - Keyword matches: authentication
+   - Task type: security validation
+   - Execution: Sequential (after implementation)
+
+3. tdd-orchestrator (score: 60)
+   - Task type: testing strategy
+   - Execution: Parallel with implementation
+```
+
+## ⚙️ Configuration
+
+### Installation
+
+The hook is automatically installed with the CCPM plugin. Configuration is in `hooks/hooks.json`:
 
 ```json
 {
   "hooks": {
     "UserPromptSubmit": [
       {
-        "enabled": true,  // ← Add this to disable
-        "hooks": [...]
-      }
-    ]
-  }
-}
-```
-
-### Adjust Hook Behavior
-
-Edit the prompt files in `~/.claude/hooks/`:
-
-**Example: Disable TDD for documentation files**
-
-Edit `tdd-enforcer.prompt`, find the "Allow If" section and add:
-```
-- File path contains /docs/ or /documentation/
-```
-
-**Example: Add custom agent to selector**
-
-Edit `agent-selector.prompt`, find "Available Agents" and add:
-```
-- **your-custom-agent**: Description of what it does
-```
-
-## 🧪 Testing
-
-### Test Agent Selection
-
-```bash
-# User prompt: "Add user authentication"
-# Expected: Should select backend-architect, security-auditor, tdd-orchestrator
-```
-
-Output should show:
-```
-🤖 Agent Selection:
-- backend-architect: Design auth API
-- security-auditor: Validate security
-- tdd-orchestrator: Write tests first
-
-📋 Execution: Sequential
-```
-
-### Test TDD Enforcement
-
-```bash
-# Try to write production code without tests
-# Expected: Should be blocked and invoke tdd-orchestrator
-```
-
-Output should show:
-```
-⚠️  TDD Enforcement: Tests must be written first
-Invoking tdd-orchestrator...
-```
-
-### Test Quality Gate
-
-```bash
-# After implementing a feature
-# Expected: Should auto-invoke code-reviewer
-```
-
-Output should show:
-```
-🔍 Quality Gate Active
-Running: code-reviewer
-```
-
-## 📈 Benefits
-
-### For Individual Developers
-
-- ✅ **Never forget agents**: Automatically invoked based on task
-- ✅ **TDD enforced**: Can't skip tests anymore
-- ✅ **Quality guaranteed**: Automatic code review after every change
-- ✅ **Learn best practices**: Agents guide you to better patterns
-
-### For Teams
-
-- ✅ **Consistent quality**: All developers follow same workflow
-- ✅ **Security by default**: Security audits on sensitive changes
-- ✅ **Test coverage**: TDD enforcement ensures coverage
-- ✅ **Code review culture**: Every change gets reviewed
-
-## 🎯 Use Cases
-
-### Use Case 1: New Feature Development
-
-**Without Hooks:**
-```
-1. User: "Add user authentication"
-2. Claude implements code
-3. No tests? Oops, forgot to test
-4. No security review? Missed vulnerabilities
-5. Manual code review? Takes time
-```
-
-**With Hooks:**
-```
-1. User: "Add user authentication"
-2. agent-selector → Selects: backend-architect, security-auditor, tdd-orchestrator
-3. backend-architect → Designs auth system
-4. tdd-orchestrator → Writes tests first (TDD enforced)
-5. Claude → Implements auth to pass tests
-6. quality-gate → Auto-invokes code-reviewer + security-auditor
-7. Feature complete with tests + reviews + security validation
-```
-
-### Use Case 2: Bug Fix
-
-**Without Hooks:**
-```
-1. User: "Fix the spinner bug"
-2. Claude fixes bug
-3. Did we add tests? Maybe forgot
-4. Did we check for regressions? Not sure
-```
-
-**With Hooks:**
-```
-1. User: "Fix the spinner bug"
-2. agent-selector → Selects: debugger
-3. debugger → Analyzes and fixes bug
-4. quality-gate → Auto-invokes code-reviewer
-5. Validates no regressions introduced
-```
-
-### Use Case 3: Refactoring
-
-**Without Hooks:**
-```
-1. User: "Refactor payment module"
-2. Claude refactors
-3. Tests still passing? Hope so
-4. Code quality maintained? Unsure
-```
-
-**With Hooks:**
-```
-1. User: "Refactor payment module"
-2. agent-selector → Selects: legacy-modernizer
-3. legacy-modernizer → Plans refactoring strategy
-4. tdd-enforcer → Verifies tests exist
-5. Claude → Refactors
-6. quality-gate → Validates tests pass + code quality maintained
-```
-
-## ⚙️ Advanced Configuration
-
-### Project-Specific Rules
-
-Create `.claude/settings.local.json` in your project:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "Project-specific TDD rules:\n- Skip TDD for /scripts/\n- Require integration tests for /api/\n...",
-            "timeout": 5000
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### Conditional Hook Execution
-
-Use command hooks with conditions:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
-            "command": "if [[ \"$FILE_PATH\" == *.ts ]]; then ~/.claude/hooks/check-typescript.sh; fi",
-            "timeout": 3000
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/smart-agent-selector.sh",
+            "timeout": 5000,
+            "description": "Smart agent selector"
           }
         ]
       }
@@ -322,30 +147,30 @@ Use command hooks with conditions:
 }
 ```
 
-### Hook Chaining
+### Customization
 
-Chain multiple hooks for complex workflows:
+Users can disable the hook in their project's `.claude/settings.json`:
 
 ```json
 {
   "hooks": {
-    "Stop": [
+    "UserPromptSubmit": []
+  }
+}
+```
+
+Or adjust the timeout:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
-            "type": "prompt",
-            "promptFile": "~/.claude/hooks/quality-gate.prompt",
-            "description": "Stage 1: Quality check"
-          },
-          {
-            "type": "prompt",
-            "promptFile": "~/.claude/hooks/security-check.prompt",
-            "description": "Stage 2: Security validation"
-          },
-          {
-            "type": "prompt",
-            "promptFile": "~/.claude/hooks/performance-check.prompt",
-            "description": "Stage 3: Performance analysis"
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/smart-agent-selector.sh",
+            "timeout": 10000
           }
         ]
       }
@@ -354,88 +179,161 @@ Chain multiple hooks for complex workflows:
 }
 ```
 
+## 🚀 Optimization
+
+### Caching Strategy
+
+The smart agent selector uses aggressive caching:
+
+1. **Agent Discovery Cache** (~5 minutes TTL)
+   - Cached list of all available agents
+   - Invalidated when plugin structure changes
+   - Shared across all sessions
+
+2. **Scoring Cache** (session-level)
+   - Cached scoring results for similar requests
+   - Invalidated on context changes
+
+### Performance Tips
+
+1. **Keep plugins organized** - Faster discovery
+2. **Use project-specific agents** - Higher priority (+25 points)
+3. **Clear descriptions** - Better keyword matching
+4. **Avoid deep nesting** - Faster file system scans
+
+## 📖 Documentation
+
+For detailed information about the smart agent selection system:
+
+- **Algorithm Details**: See `SMART_AGENT_SELECTION.md`
+- **Agent Creation**: See `docs/guides/creating-agents.md`
+- **Hook Development**: See `docs/development/hooks.md`
+
+## 🔄 Migration from v2.x
+
+### What Changed
+
+**Removed Hooks:**
+
+1. **TDD Enforcer** (`PreToolUse` hook)
+   - **Reason**: Too opinionated, not all projects use TDD
+   - **Alternative**: Developers manage their own testing workflow
+   - **Benefit**: More flexibility, less overhead
+
+2. **Quality Gates** (`Stop` hook)
+   - **Reason**: Integrated into `/ccpm:verify` command
+   - **Alternative**: Run `/ccpm:verify` explicitly when needed
+   - **Benefit**: User controls when quality checks run
+
+**Kept Hook:**
+
+1. **Smart Agent Selector** (`UserPromptSubmit` hook)
+   - **Reason**: Core value proposition of CCPM
+   - **Improvement**: 81.7% token reduction in v1.0
+   - **Benefit**: Automatic optimal agent selection
+
+### Migration Steps
+
+If you were using the removed hooks:
+
+1. **For TDD Enforcement**:
+   - Remove reliance on automatic test enforcement
+   - Use `/ccpm:verify` to run tests before committing
+   - Consider adding `npm run test` to your git pre-commit hook
+
+2. **For Quality Gates**:
+   - Replace automatic quality checks with `/ccpm:verify`
+   - Run `/ccpm:verify` before `/ccpm:done` to ensure quality
+   - Quality checks now happen when YOU decide, not automatically
+
+### Benefits of v1.0 Hooks
+
+- ✅ **Simpler**: 1 hook instead of 3
+- ✅ **Faster**: 81.7% token reduction
+- ✅ **More control**: Quality checks on demand
+- ✅ **Still powerful**: Smart agent selection remains
+- ✅ **Less intrusive**: No blocking hooks
+- ✅ **Better UX**: Developers control their workflow
+
+## 🎯 Best Practices
+
+### When to Use Smart Agent Selection
+
+**Automatically invoked** - The hook runs on every user request. Best for:
+- Complex tasks requiring specialized knowledge
+- Multi-disciplinary work (backend + frontend + security)
+- Tasks where you're unsure which agent to use
+- New team members learning the system
+
+### When to Override
+
+**Manual agent invocation** - Use the Task tool directly when:
+- You know exactly which agent you need
+- Debugging agent behavior
+- Testing new agents
+- Performance-critical scenarios
+
+### Optimal Workflow
+
+1. **Let the hook work** - Trust the smart selection
+2. **Review suggestions** - Check which agents were selected
+3. **Override if needed** - Manual invocation for edge cases
+4. **Use `/ccpm:verify`** - Explicit quality checks before finalizing
+
 ## 🐛 Troubleshooting
 
-### Hooks Not Running
+### Hook Not Running
 
-1. **Check hook files exist:**
-   ```bash
-   ls -la ~/.claude/hooks/
-   ```
+```bash
+# Check hook is registered
+cat ~/.claude/settings.json | grep -A 10 "UserPromptSubmit"
 
-2. **Verify settings.json syntax:**
-   ```bash
-   cat ~/.claude/settings.json | jq .
-   ```
+# Verify script exists
+ls -la ~/.claude/plugins/ccpm/hooks/scripts/smart-agent-selector.sh
 
-3. **Enable verbose logging:**
-   ```bash
-   claude --verbose
-   ```
-
-4. **Check hook output:**
-   - Hook stdout/stderr appears in transcript mode
-
-### False Positives
-
-**TDD enforcer blocking docs:**
-```
-Edit tdd-enforcer.prompt:
-Add to "Allow If" section:
-- File path contains .md, .txt, or /docs/
+# Check permissions
+chmod +x ~/.claude/plugins/ccpm/hooks/scripts/smart-agent-selector.sh
 ```
 
-**Quality gate triggering on minor changes:**
+### Slow Performance
+
+```bash
+# Clear agent discovery cache
+rm -rf /tmp/claude-agent-cache*
+
+# Reduce plugin count
+# Move unused plugins out of ~/.claude/plugins/
+
+# Check script execution time
+time ~/.claude/plugins/ccpm/hooks/scripts/smart-agent-selector.sh "test request"
 ```
-Edit quality-gate.prompt:
-Update "Skip Quality Checks If":
-- Less than 3 lines changed
-- Only whitespace/formatting
+
+### Wrong Agents Selected
+
+```bash
+# Enable verbose logging (if available)
+export CLAUDE_HOOK_DEBUG=1
+
+# Check agent descriptions
+cat ~/.claude/plugins/*/agents/*.md | grep -A 5 "description:"
+
+# Review scoring algorithm
+cat ~/.claude/plugins/ccpm/hooks/SMART_AGENT_SELECTION.md
 ```
 
-### Performance Issues
+## 📚 Resources
 
-**Hooks adding latency:**
-- Each prompt hook: ~2-5 seconds
-- Command hooks: <1 second
+- [CCPM Documentation](../README.md)
+- [Smart Agent Selection Details](./SMART_AGENT_SELECTION.md)
+- [Creating Custom Agents](../docs/guides/creating-agents.md)
+- [Hook Development Guide](../docs/development/hooks.md)
+- [PM Tool Abstraction](../docs/architecture/pm-tool-abstraction.md)
 
-**Solutions:**
-1. Increase timeouts if needed
-2. Use command hooks for fast checks
-3. Disable hooks for simple tasks
-4. Cache agent decisions
+## 🙏 Credits
 
-## 📚 Additional Resources
+CCPM v1.0 hooks are optimized based on:
+- PSN-23: Hook performance optimization (81.7% token reduction)
+- PSN-31: Linear subagent pattern (session-level caching)
+- PSN-39: v1.0 simplification (remove unused hooks)
 
-- [Claude Code Hooks Documentation](https://code.claude.com/docs/en/hooks)
-- [Agent Workflows Plugin](https://github.com/anthropics/claude-code-workflows)
-- [TDD Best Practices](https://code.claude.com/docs/en/tdd)
-
-## 🤝 Contributing
-
-To add custom agents or improve hook logic:
-
-1. Edit prompt files in `~/.claude/hooks/`
-2. Test thoroughly in safe environment
-3. Document changes in this README
-4. Share improvements with team
-
-## ⚠️ Security Notes
-
-- Hooks execute with your system permissions
-- Review all prompt files before enabling
-- Never run hooks from untrusted sources
-- Test hooks in isolated environment first
-- Validate hook outputs before execution
-
-## 📝 License
-
-MIT License - Use freely, modify as needed
-
----
-
-**Questions or Issues?**
-- Check troubleshooting section above
-- Review hook logs in verbose mode
-- Inspect hook JSON responses
-- Test individual hooks in isolation
+Built with Claude Code hooks system and best practices from the community.
