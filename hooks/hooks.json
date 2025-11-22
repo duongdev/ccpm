@@ -1,6 +1,6 @@
 {
   "$schema": "https://code.claude.com/schemas/settings.json",
-  "description": "CCPM Plugin Hooks - Smart agent auto-invocation, TDD enforcement, and quality gates",
+  "description": "CCPM Plugin Hooks - Smart agent auto-invocation for optimal workflow",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -13,26 +13,12 @@
           }
         ]
       }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-enforcer-optimized.prompt",
-            "timeout": 3000,
-            "description": "TDD enforcer: Ensures tests exist before production code changes (Red-Green-Refactor)"
-          }
-        ]
-      }
-    ],
-    "Stop": []
+    ]
   },
   "usage": {
     "installation": "This file is automatically applied when the CCPM plugin is installed",
     "customization": "Users can disable specific hooks in their project's .claude/settings.json",
-    "optimization": "Using optimized hook prompts from PSN-23: 49% token reduction, 94% faster execution"
+    "optimization": "Using optimized hook prompts: 81.7% token reduction, <1s execution with caching"
   },
   "notes": {
     "smart_agent_selector": {
@@ -40,14 +26,23 @@
       "trigger": "UserPromptSubmit",
       "execution": "Before Claude starts responding",
       "output": "Injects agent invocation instructions into Claude's context",
-      "performance": "Optimized version: 81.7% token reduction, <1s execution with caching"
-    },
+      "performance": "Optimized version: 81.7% token reduction, <1s execution with caching",
+      "features": [
+        "Dynamic agent discovery from plugins and project",
+        "Context-aware scoring (0-100+ points)",
+        "Parallel vs sequential execution planning",
+        "Caching for 85-95% faster subsequent runs"
+      ]
+    }
+  },
+  "removed_hooks": {
     "tdd_enforcer": {
-      "purpose": "Blocks production code changes if tests don't exist (Red-Green-Refactor)",
-      "trigger": "PreToolUse for Write/Edit/NotebookEdit",
-      "execution": "Before file is written to disk",
-      "output": "Blocks and invokes tdd-orchestrator if tests missing",
-      "performance": "Optimized version: 49% token reduction, <1s execution"
+      "reason": "Removed in v1.0 for simplicity - developers manage their own testing workflow",
+      "alternative": "Use /ccpm:verify for quality checks before finalizing tasks"
+    },
+    "quality_gate": {
+      "reason": "Removed in v1.0 - integrated into /ccpm:verify command instead",
+      "alternative": "Run /ccpm:verify to perform quality checks and code review"
     }
   }
 }
