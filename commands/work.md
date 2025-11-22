@@ -206,6 +206,83 @@ context:
 
 Display: "✅ Updated status: ${issue.state.name} → In Progress"
 
+3.5. Load visual context for implementation (if available):
+
+**Detect and load visual references** (for pixel-perfect UI implementation):
+
+a) Check for images in issue (helpers/image-analysis.md):
+   - Scan issue.attachments for images
+   - Scan issue.description for markdown images
+   - Filter for UI mockups specifically
+
+b) Check for Figma links (helpers/figma-detection.md):
+   - Search issue.description and comments for Figma URLs
+   - Check Linear comments for cached design data
+
+**If UI-related visual context found:**
+
+Display: "🎨 Visual context available for implementation"
+
+**For UI tasks - Load mockups directly for pixel-perfect implementation:**
+
+```javascript
+const isUITask = issue.description.match(/\b(ui|design|mockup|interface|component|screen|page)\b/i)
+  || issue.title.match(/\b(ui|design|mockup|interface|component|screen|page)\b/i);
+
+if (isUITask && (detectedImages.length > 0 || detectedFigmaLinks.length > 0)) {
+  // This is THE KEY FEATURE from PSN-24 Subtask 9
+  // Pass visual mockups DIRECTLY to agents for pixel-perfect implementation
+
+  console.log('\n🎨 UI Task Detected - Loading visual references:');
+
+  // Prepare visual context for agents
+  const visualReferences = [];
+
+  // Load images (mockups, designs)
+  for (const image of detectedImages.filter(img => img.type === 'ui_mockup')) {
+    console.log(`  📸 Loading mockup: ${image.url}`);
+
+    // Fetch image via WebFetch for agent to see
+    const imageContent = await WebFetch(image.url, 'Fetch UI mockup for implementation');
+
+    visualReferences.push({
+      type: 'image',
+      url: image.url,
+      content: imageContent,
+      purpose: 'pixel_perfect_implementation'
+    });
+  }
+
+  // Load Figma design data
+  for (const figmaUrl of detectedFigmaLinks) {
+    console.log(`  🎨 Loading Figma design: ${figmaUrl}`);
+
+    // Check cache first
+    const cached = await Bash(`./scripts/figma-cache-manager.sh get "${issueId}" "${figmaUrl}"`);
+
+    if (cached) {
+      visualReferences.push({
+        type: 'figma',
+        url: figmaUrl,
+        designSystem: JSON.parse(cached),
+        purpose: 'design_system_reference'
+      });
+    }
+  }
+
+  console.log(`✅ Loaded ${visualReferences.length} visual reference(s)`);
+
+  // Store for use in agent invocation
+  const visualContext = {
+    available: true,
+    references: visualReferences,
+    mode: 'pixel_perfect' // Enable pixel-perfect mode
+  };
+}
+```
+
+Display: "✅ Visual context prepared for pixel-perfect implementation"
+
 4. Analyze codebase with smart agent:
 
 Task: `
@@ -215,6 +292,17 @@ Context:
 - Issue: ${issueId}
 - Description: ${issue.description}
 ${selectedPhases ? `- Focus on: ${selectedPhases.join(', ')}` : ''}
+${visualContext?.available ? `
+- **Visual Context Available**: ${visualContext.references.length} reference(s)
+  ${visualContext.references.map(ref => `
+  - ${ref.type}: ${ref.url}
+    Purpose: ${ref.purpose}
+  `).join('\n')}
+
+  **IMPORTANT**: You have direct access to UI mockups. For UI implementation tasks,
+  reference the visual mockups directly for pixel-perfect implementation.
+  Aim for 95-100% design fidelity (not 70-80% text-based interpretation).
+` : ''}
 
 Your task:
 1. Identify files that need modification

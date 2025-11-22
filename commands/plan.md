@@ -324,6 +324,95 @@ if (hasChecklist && isPlanned) {
   return;
 }
 
+2.5. Detect and analyze visual context (images + Figma):
+
+**Extract visual context from issue** (parallel detection):
+
+a) Detect images using helpers/image-analysis.md logic:
+   - Scan issue.attachments for image files (jpg, png, gif, webp, svg)
+   - Scan issue.description for markdown images: ![alt](url)
+   - Deduplicate by URL
+   - Limit to 5 images max (performance)
+
+b) Detect Figma links using helpers/figma-detection.md logic:
+   - Search issue.description and comments for Figma URLs
+   - Parse URLs to extract file_id, node_id
+   - Select appropriate MCP server for project
+
+**If images or Figma links found:**
+
+Display: "🎨 Visual context detected: {count} image(s), {count} Figma link(s)"
+
+**Process visual context (parallel analysis):**
+
+For images (if detected):
+```bash
+# Analyze each image with context-aware prompts
+for each image in detectedImages:
+  - Determine image type (UI mockup, diagram, screenshot, generic)
+  - Fetch image via WebFetch or Read tool
+  - Analyze with appropriate prompt template from helpers/image-analysis.md:
+    * UI mockup → Extract layout, components, colors, typography
+    * Architecture diagram → Extract components, relationships, data flow
+    * Screenshot → Extract current state, issues, context
+    * Generic → General visual analysis
+  - Store analysis results
+```
+
+For Figma links (if detected):
+```bash
+# Extract design system via scripts
+for each figmaUrl in detectedFigmaLinks:
+  # Parse Figma URL
+  parsed=$(./scripts/figma-utils.sh parse "$figmaUrl")
+
+  # Select MCP server for project
+  server=$(./scripts/figma-server-manager.sh select "$projectId")
+
+  # Check cache first (Linear comments)
+  cached=$(./scripts/figma-cache-manager.sh get "$issueId" "$figmaUrl")
+
+  if [ -n "$cached" ]; then
+    # Use cached design data (fast path)
+    designData=$cached
+  else
+    # Extract design data via MCP (scripts/figma-data-extractor.sh)
+    designData=$(./scripts/figma-data-extractor.sh extract "$server" "$figmaUrl")
+
+    # Analyze design system (scripts/figma-design-analyzer.sh)
+    designSystem=$(./scripts/figma-design-analyzer.sh analyze "$designData")
+
+    # Cache in Linear comment for 1 hour
+    ./scripts/figma-cache-manager.sh set "$issueId" "$figmaUrl" "$designSystem"
+  fi
+
+  # Store: colors → Tailwind, fonts → Tailwind, spacing → Tailwind
+```
+
+**Store visual context for planning:**
+```javascript
+const visualContext = {
+  images: [
+    { url, type: 'ui_mockup', analysis: {...} },
+    { url, type: 'diagram', analysis: {...} }
+  ],
+  figma: [
+    {
+      url,
+      file_name,
+      design_system: {
+        colors: [{ hex: '#3b82f6', tailwind: 'blue-500' }],
+        typography: [{ family: 'Inter', tailwind: 'font-sans' }],
+        spacing: [{ value: '16px', tailwind: 'space-4' }]
+      }
+    }
+  ],
+  summary: "2 UI mockups, 1 Figma design system extracted"
+}
+```
+
+Display: "✅ Visual context analyzed and ready for planning"
+
 3. Deep research (v1.0 workflow):
 
 **Search for context (parallel):**
@@ -345,6 +434,26 @@ Context gathered:
 - Jira context: [if found]
 - Codebase patterns: [implementations]
 - Recent commits: [related work]
+${visualContext ? `- Visual context: ${visualContext.summary}` : ''}
+
+${visualContext?.images?.length > 0 ? `
+Visual Context - Images:
+${visualContext.images.map(img => `
+  - ${img.type}: ${img.url}
+    Analysis: ${JSON.stringify(img.analysis, null, 2)}
+`).join('\n')}
+` : ''}
+
+${visualContext?.figma?.length > 0 ? `
+Visual Context - Figma Design System:
+${visualContext.figma.map(fig => `
+  - File: ${fig.file_name}
+    URL: ${fig.url}
+    Colors: ${fig.design_system.colors.map(c => `${c.hex} → ${c.tailwind}`).join(', ')}
+    Fonts: ${fig.design_system.typography.map(t => `${t.family} → ${t.tailwind}`).join(', ')}
+    Spacing: ${fig.design_system.spacing.map(s => `${s.value} → ${s.tailwind}`).join(', ')}
+`).join('\n')}
+` : ''}
 
 Your task:
 1. Consider multiple implementation approaches
@@ -353,6 +462,7 @@ Your task:
 4. Create detailed checklist (5-10 items)
 5. Estimate complexity with reasoning
 6. Identify risks, dependencies, unknowns
+${visualContext ? '7. **Use visual context** - Reference mockups/designs for pixel-perfect implementation' : ''}
 
 Provide structured plan with:
 - **Recommended approach** + alternatives
@@ -361,6 +471,7 @@ Provide structured plan with:
 - **Uncertainties** to clarify
 - **Testing strategy**
 - **Complexity** with reasoning
+${visualContext?.figma?.length > 0 ? '- **Design System** - Tailwind classes from Figma (include in checklist)' : ''}
 `
 
 4. Present plan for confirmation (v1.0 workflow):
