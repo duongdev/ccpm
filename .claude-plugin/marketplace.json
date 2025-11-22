@@ -6,15 +6,15 @@
     "url": "https://github.com/duongdev"
   },
   "metadata": {
-    "description": "Official marketplace for CCPM (Claude Code Project Management) - Enterprise-grade project management with 2025 best practices",
-    "version": "2.0.0"
+    "description": "Official marketplace for CCPM (Claude Code Project Management) - Lean project management for solo developers",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "ccpm",
       "source": "./",
-      "description": "Enterprise-grade Project Management plugin for Claude Code. Features: 45 PM commands covering complete project lifecycle, 10 auto-activating Agent Skills with context-aware selection, hook-based automation (TDD enforcement, quality gates, smart agent selection), Linear integration with spec management, multi-system workflows (Jira, Confluence, BitBucket, Slack), monorepo support with auto-detection, safety-first design with confirmation for external writes. Built with 2025 best practices for optimal agent auto-activation and workflow automation.",
-      "version": "2.0.0",
+      "description": "Lean Project Management for solo developers managing multiple projects. v1.0: 12 optimized commands (82% simpler than v2.x), 50-60% token reduction via smart caching, natural workflow (plan → work → sync → commit → verify → done), tool-agnostic architecture supporting any PM system via MCP (Jira, Confluence, etc.), intelligent agent auto-invocation, interactive planning with deep research, monorepo support, safety-first design. Built for power users who value simplicity and extensibility.",
+      "version": "1.0.0",
       "author": {
         "name": "Dustin Do",
         "email": "dustin.do95@gmail.com",
@@ -27,30 +27,32 @@
       "keywords": [
         "project-management",
         "linear",
-        "jira",
-        "confluence",
-        "workflow",
-        "automation",
-        "tdd",
-        "quality-gates",
-        "agent-skills",
-        "hooks",
-        "spec-management",
-        "monorepo",
+        "workflow-automation",
+        "natural-commands",
         "multi-project",
-        "2025-best-practices"
+        "monorepo",
+        "smart-agents",
+        "lean-workflow",
+        "jira-integration",
+        "confluence-integration",
+        "tool-agnostic",
+        "interactive-planning",
+        "token-optimization",
+        "solo-developer"
       ],
       "tags": [
         "productivity",
         "workflow-automation",
         "linear-integration",
         "jira-integration",
-        "enterprise",
-        "tdd-enforcement",
-        "code-quality",
-        "multi-system",
-        "spec-driven-development",
-        "monorepo-support"
+        "lean-tools",
+        "natural-workflow",
+        "smart-agents",
+        "multi-project",
+        "tool-agnostic",
+        "monorepo-support",
+        "solo-developer",
+        "token-optimized"
       ]
     }
   ]
