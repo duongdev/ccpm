@@ -1,7 +1,7 @@
 {
   "name": "ccpm",
   "version": "1.0.0",
-  "description": "Enterprise-grade Project Management plugin for Claude Code. v1.0: Lean, optimized natural workflow commands (/ccpm:plan, /ccpm:work, /ccpm:sync, /ccpm:commit, /ccpm:verify, /ccpm:done) + Linear subagent for 50-60% token reduction. Features: 11 core PM commands, smart agent auto-invocation, TDD enforcement, quality gates, Linear-first tracking with extensible PM tool integration (Jira, Confluence via MCP), monorepo support, safety-first design with tool-agnostic architecture.",
+  "description": "Lean Project Management plugin for Claude Code. v1.0: 12 optimized commands (6 natural workflow + 6 project config), 50-60% token reduction via Linear subagent caching, smart agent auto-invocation, tool-agnostic PM architecture (Jira, Confluence, etc. via MCP), monorepo support, user-controlled quality workflow. 82% simpler than v2.x while maintaining power through intelligent automation.",
   "author": {
     "name": "Dustin Do",
     "email": "dustin.do95@gmail.com",
