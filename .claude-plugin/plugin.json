@@ -1,7 +1,7 @@
 {
   "name": "ccpm",
   "version": "1.0.0",
-  "description": "Lean Project Management plugin for Claude Code. v1.0: 12 optimized commands (6 natural workflow + 6 project config), 50-60% token reduction via Linear subagent caching, smart agent auto-invocation, tool-agnostic PM architecture (Jira, Confluence, etc. via MCP), monorepo support, user-controlled quality workflow. 82% simpler than v2.x while maintaining power through intelligent automation.",
+  "description": "Lean Project Management plugin for Claude Code. v1.0: 12 optimized commands (6 natural workflow + 6 project config), 8 specialized agents (Linear, PM orchestrator, Jira, Confluence, project detection), 50-60% token reduction via Linear subagent caching, smart agent auto-invocation, tool-agnostic PM architecture, monorepo support, user-controlled quality workflow. 82% simpler than v2.x while maintaining power through intelligent automation.",
   "author": {
     "name": "Dustin Do",
     "email": "dustin.do95@gmail.com",
@@ -28,6 +28,10 @@
   "license": "MIT",
   "commands": "./commands",
   "agents": [
+    "./agents/linear-operations.md",
+    "./agents/pm-operations-orchestrator.md",
+    "./agents/jira-operations.md",
+    "./agents/confluence-operations.md",
     "./agents/pm:ui-designer.md",
     "./agents/project-config-loader.md",
     "./agents/project-context-manager.md",

@@ -4,6 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ⚠️ CRITICAL RULES - READ FIRST
 
+### Linear Operations Policy
+
+**✅ ALWAYS execute Linear operations automatically WITHOUT asking for confirmation**
+
+- ✅ **Linear is internal tracking** - Not an external system requiring approval
+- ✅ **All Linear writes are automatic** - Creating issues, updating status, adding comments
+- ✅ **NEVER ask** "Do you want me to update Linear?" or "Should I post this to Linear?"
+- ✅ **Just do it** - Execute Linear operations immediately when needed
+
+**Why**: Linear is CCPM's internal project tracking, not external team communication. Users expect these operations to happen automatically. See `commands/SAFETY_RULES.md` lines 36-47 for the complete policy.
+
+**Examples of automatic Linear operations:**
+- Creating new issues
+- Updating issue descriptions
+- Adding comments with progress updates
+- Changing status, labels, or assignments
+- Closing or reopening issues
+
 ### Git Commit & Push Policy
 
 **🚫 NEVER auto-commit or auto-push without explicit user approval**
@@ -180,6 +198,8 @@ CCPM uses a dedicated Linear subagent for all Linear API operations:
 - **Single source of truth** for Linear logic
 - **Structured error handling** with actionable suggestions
 
+**CRITICAL:** Linear operations **NEVER require user confirmation**. Linear is CCPM's internal tracking system. All create/update/comment operations execute automatically without asking. See `commands/SAFETY_RULES.md` lines 36-47.
+
 **Usage in Commands:**
 
 Commands delegate to the subagent via the Task tool. Commands must use **explicit execution instructions**, not YAML template syntax.
@@ -209,7 +229,7 @@ Invoke the `ccpm:linear-operations` subagent:
 **PLAN Mode:**
 - Deep research (codebase, Linear, external PM, git history)
 - Interactive clarification questions (AskUserQuestion)
-- Explicit confirmation before updating Linear
+- Automatic Linear updates (no confirmation required - internal tracking)
 - Updates issue description (single source of truth)
 
 **WORK Mode:**
