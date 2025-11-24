@@ -132,39 +132,150 @@ Store: issue.id, issue.identifier
 
 Display: "✅ Created issue: ${issue.identifier}"
 
-3. Deep research (v1.0 workflow):
+3. Stage 1: Research & Clarify Requirements
 
-**Search for context (parallel):**
+**Deep research (parallel):**
 a) Search Linear for similar issues
 b) If Jira provided, research ticket + Confluence docs
 c) Search codebase for similar implementations
 d) Analyze recent git commits for related work
 
-**Smart agent planning:**
+**Identify ambiguities using helpers/decision-helpers.md:**
+
+Use `calculateConfidence()` to assess understanding:
+- Requirements clarity (0-100)
+- Technical approach certainty (0-100)
+- Scope boundaries definition (0-100)
+
+**Gather clarification questions (DO NOT ASSUME):**
+
+Generate questions for any area with confidence < 80%:
+- Technical approach preferences
+- Scope boundaries (what's included/excluded)
+- Constraints (time, compatibility, existing patterns to follow)
+- Risk tolerance
+- Integration requirements
+- Testing expectations
+
+**Use AskUserQuestion to ask ALL clarifying questions:**
+
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      question: "Which approach do you prefer for [technical decision]?",
+      header: "Approach",
+      multiSelect: false,
+      options: [
+        { label: "Option A", description: "Pros/cons..." },
+        { label: "Option B", description: "Pros/cons..." }
+      ]
+    },
+    // ... more questions as needed
+  ]
+});
+```
+
+**Based on answers, propose 2-3 implementation approaches:**
+
+Output:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Implementation Approaches for ${title}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Approach 1: [Name]
+   Complexity: [Low/Medium/High]
+   Effort: [estimate]
+   Pros: [benefits]
+   Cons: [drawbacks]
+
+📋 Approach 2: [Name]
+   Complexity: [Low/Medium/High]
+   Effort: [estimate]
+   Pros: [benefits]
+   Cons: [drawbacks]
+
+📋 Approach 3: [Name] (if applicable)
+   Complexity: [Low/Medium/High]
+   Effort: [estimate]
+   Pros: [benefits]
+   Cons: [drawbacks]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**User selects preferred approach:**
+
+```javascript
+const selectedApproach = await AskUserQuestion({
+  questions: [{
+    question: "Which approach would you like to use?",
+    header: "Approach",
+    multiSelect: false,
+    options: [
+      { label: "Approach 1", description: "Brief summary" },
+      { label: "Approach 2", description: "Brief summary" },
+      { label: "Approach 3", description: "Brief summary" }
+    ]
+  }]
+});
+```
+
+**Document scope boundaries:**
+
+Output:
+```
+✅ Selected Approach: ${selectedApproach}
+
+📍 Scope Boundaries:
+   IN SCOPE:
+   • [specific items included]
+
+   OUT OF SCOPE:
+   • [specific items excluded]
+   • [features deferred]
+```
+
+4. Stage 2: Detailed Planning with Smart Agent Selection
+
+**Let smart-agent-selector determine best agent(s):**
+
+Based on task context (tech stack, requirements, approach), the smart-agent-selector will automatically choose optimal agent(s):
+- Backend/API → backend-development:backend-architect
+- Frontend/UI → frontend-mobile-development:frontend-developer
+- Mobile → frontend-mobile-development:mobile-developer
+- Full-stack → Both backend + frontend (parallel)
+- And others based on scoring...
+
+**Invoke selected agent(s) with strict scope constraints:**
 
 Task: `
-**CRITICAL: THIS IS PLANNING ONLY - DO NOT IMPLEMENT CODE**
+**APPROVED APPROACH**: ${selectedApproach}
 
-You are in PLAN mode. Your job is to research and create a plan ONLY.
+**SCOPE BOUNDARIES**:
+IN SCOPE: ${scopeIn}
+OUT OF SCOPE: ${scopeOut}
 
-**FORBIDDEN ACTIONS**:
-- ❌ DO NOT write any code files (no Write, Edit tools)
-- ❌ DO NOT implement any features
-- ❌ DO NOT commit to git
-- ❌ DO NOT make code changes
-- ❌ DO NOT start implementation
+**CRITICAL CONSTRAINTS - DO NOT VIOLATE**:
+- ❌ NO features outside approved scope
+- ❌ NO refactoring unrelated code
+- ❌ NO alternative approaches
+- ❌ NO nice-to-have improvements
+- ❌ NO implementation (planning only!)
 
-**ALLOWED ACTIONS**:
-- ✅ Read existing code to understand patterns
-- ✅ Search codebase for similar implementations
-- ✅ Research best practices
-- ✅ Create detailed checklists
-- ✅ Identify files that WILL need modification (don't modify them!)
-- ✅ Estimate complexity and risks
+**YOUR JOB - PROVIDE ONLY**:
+- ✅ Step-by-step implementation for approved approach
+- ✅ Specific file changes within scope
+- ✅ Technical gotchas for this approach
+- ✅ Testing strategy for approved scope
 
 ---
 
-Plan implementation for: ${title}
+Create detailed implementation plan for: ${title}
+
+Approved Approach: ${selectedApproach}
+User Clarifications: ${clarificationAnswers}
 
 Context gathered:
 - Linear similar issues: [if found]
@@ -172,30 +283,26 @@ Context gathered:
 - Codebase patterns: [found implementations]
 - Recent commits: [related work]
 
-Your task:
-1. Consider multiple implementation approaches
-2. Analyze trade-offs for each approach
-3. Research best practices using Context7 MCP
-4. Create detailed implementation checklist (5-10 items)
-5. Estimate complexity (low/medium/high) with reasoning
-6. Identify risks, dependencies, unknowns
-7. Suggest testing strategy
+Provide:
+1. **Implementation Checklist** (5-15 actionable items with marker comments)
+2. **Files to Modify** (specific paths with rationale)
+3. **Technical Considerations** (gotchas, edge cases)
+4. **Testing Strategy** (unit, integration, manual tests)
+5. **Complexity Assessment** (low/medium/high with reasoning)
+6. **Dependencies** (prerequisites, external factors)
 
-Provide structured plan with:
-- **Recommended approach** and alternatives considered
-- **Implementation checklist** (specific, actionable items)
-- **Files to modify** (with rationale - but DON'T modify them!)
-- **Dependencies** and prerequisites
-- **Uncertainties** that need clarification
-- **Testing strategy**
-- **Complexity** with reasoning
+**FORMAT CHECKLIST WITH MARKER COMMENTS**:
+<!-- ccpm-checklist-start -->
+- [ ] **Task 1**: Specific, actionable description
+- [ ] **Task 2**: Specific, actionable description
+<!-- ccpm-checklist-end -->
 
-**REMEMBER**: This is PLANNING ONLY. Implementation happens later in /ccpm:work.
+**REMEMBER**: Stay within approved scope. No code implementation, planning only.
 `
 
-Note: Smart-agent-selector automatically chooses optimal agent
+Note: Smart-agent-selector chooses agent automatically. Agent provides scoped, detailed plan.
 
-4. Present plan for confirmation (v1.0 workflow):
+5. Present plan for confirmation (v1.0 workflow):
 
 Display the complete plan with:
 - Recommended approach + alternatives
@@ -236,7 +343,7 @@ Output:
 
 Then ask: "Does this plan look good? Any adjustments needed?"
 
-5. Update Linear issue with confirmed plan:
+6. Update Linear issue with confirmed plan:
 
 **Use the Task tool to update the issue description:**
 
@@ -251,9 +358,14 @@ Invoke the `ccpm:linear-operations` subagent:
     description: |
       ## Implementation Checklist
 
-      {checklist from planning result}
+      <!-- ccpm-checklist-start -->
+      {checklist from planning result - with marker comments}
+      <!-- ccpm-checklist-end -->
 
-      > **Complexity**: {complexity} | **Approach**: {approach summary}
+      Progress: 0% (0/{N} completed)
+      Last updated: {timestamp}
+
+      > **Complexity**: {complexity} | **Approach**: {selected approach name}
 
       ---
 
@@ -263,21 +375,69 @@ Invoke the `ccpm:linear-operations` subagent:
 
       {if Jira: **Jira**: [{jiraTicket}](url)}
 
-      ## Recommended Approach
+      ---
 
-      {approach details and alternatives}
+      ## ❓ Clarifications
 
-      ## Files to Modify
+      {Questions asked and user answers from Stage 1}
+
+      **Q: {question 1}**
+      A: {user answer}
+
+      **Q: {question 2}**
+      A: {user answer}
+
+      ---
+
+      ## 🔍 Approach Analysis
+
+      ### Approaches Considered:
+
+      **1. {Approach 1 Name}** (Selected ✓)
+      - Complexity: {complexity}
+      - Pros: {benefits}
+      - Cons: {drawbacks}
+
+      **2. {Approach 2 Name}**
+      - Complexity: {complexity}
+      - Pros: {benefits}
+      - Cons: {drawbacks}
+
+      **Why selected**: {rationale for selection}
+
+      **Scope Boundaries**:
+      - IN SCOPE: {specific items included}
+      - OUT OF SCOPE: {specific items excluded/deferred}
+
+      ---
+
+      ## 🤖 Engineer Analysis
+
+      **Agent**: {agent name from smart-agent-selector}
+
+      {Detailed implementation analysis from specialized agent}
+
+      ### Implementation Steps
+
+      {Step-by-step implementation details}
+
+      ### Files to Modify
 
       {files list with rationale}
 
-      ## Uncertainties / Open Questions
+      ### Technical Considerations
 
-      {uncertainties identified}
+      {gotchas, edge cases, best practices}
+
+      ### Dependencies
+
+      {prerequisites, external factors}
+
+      ---
 
       ## Testing Strategy
 
-      {testing approach}
+      {testing approach from agent}
 
       ---
 
@@ -286,7 +446,7 @@ Invoke the `ccpm:linear-operations` subagent:
     command: "plan"
   ```
 
-6. Update status and labels:
+7. Update status and labels:
 
 **Use the Task tool:**
 
@@ -301,7 +461,7 @@ context:
   command: "plan"
 ```
 
-7. Display completion:
+8. Display completion:
 
 console.log('\n═══════════════════════════════════════');
 console.log('✅ Task Created & Planned!');
@@ -439,42 +599,154 @@ const visualContext = {
 
 Display: "✅ Visual context analyzed and ready for planning"
 
-3. Deep research (v1.0 workflow):
+3. Stage 1: Research & Clarify Requirements
 
-**Search for context (parallel):**
+**Deep research (parallel):**
 a) Search Linear for similar issues
 b) Extract Jira reference from description, research if found
 c) Search codebase for similar implementations
 d) Analyze git history for related work
 
-**Smart agent planning:**
+**Identify ambiguities using helpers/decision-helpers.md:**
+
+Use `calculateConfidence()` to assess understanding:
+- Requirements clarity (0-100)
+- Technical approach certainty (0-100)
+- Scope boundaries definition (0-100)
+
+**Gather clarification questions (DO NOT ASSUME):**
+
+Generate questions for any area with confidence < 80%:
+- Technical approach preferences
+- Scope boundaries (what's included/excluded)
+- Constraints (time, compatibility, existing patterns to follow)
+- Risk tolerance
+- Integration requirements
+- Testing expectations
+${visualContext ? '- Visual context interpretation (mockup details, design intent)' : ''}
+
+**Use AskUserQuestion to ask ALL clarifying questions:**
+
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      question: "Which approach do you prefer for [technical decision]?",
+      header: "Approach",
+      multiSelect: false,
+      options: [
+        { label: "Option A", description: "Pros/cons..." },
+        { label: "Option B", description: "Pros/cons..." }
+      ]
+    },
+    // ... more questions as needed
+  ]
+});
+```
+
+**Based on answers, propose 2-3 implementation approaches:**
+
+Output:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Implementation Approaches for ${issue.title}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Approach 1: [Name]
+   Complexity: [Low/Medium/High]
+   Effort: [estimate]
+   Pros: [benefits]
+   Cons: [drawbacks]
+
+📋 Approach 2: [Name]
+   Complexity: [Low/Medium/High]
+   Effort: [estimate]
+   Pros: [benefits]
+   Cons: [drawbacks]
+
+📋 Approach 3: [Name] (if applicable)
+   Complexity: [Low/Medium/High]
+   Effort: [estimate]
+   Pros: [benefits]
+   Cons: [drawbacks]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**User selects preferred approach:**
+
+```javascript
+const selectedApproach = await AskUserQuestion({
+  questions: [{
+    question: "Which approach would you like to use?",
+    header: "Approach",
+    multiSelect: false,
+    options: [
+      { label: "Approach 1", description: "Brief summary" },
+      { label: "Approach 2", description: "Brief summary" },
+      { label: "Approach 3", description: "Brief summary" }
+    ]
+  }]
+});
+```
+
+**Document scope boundaries:**
+
+Output:
+```
+✅ Selected Approach: ${selectedApproach}
+
+📍 Scope Boundaries:
+   IN SCOPE:
+   • [specific items included]
+
+   OUT OF SCOPE:
+   • [specific items excluded]
+   • [features deferred]
+```
+
+4. Stage 2: Detailed Planning with Smart Agent Selection
+
+**Let smart-agent-selector determine best agent(s):**
+
+Based on task context (tech stack, requirements, approach), the smart-agent-selector will automatically choose optimal agent(s):
+- Backend/API → backend-development:backend-architect
+- Frontend/UI → frontend-mobile-development:frontend-developer
+- Mobile → frontend-mobile-development:mobile-developer
+- Full-stack → Both backend + frontend (parallel)
+- And others based on scoring...
+
+**Invoke selected agent(s) with strict scope constraints:**
 
 Task: `
-**CRITICAL: THIS IS PLANNING ONLY - DO NOT IMPLEMENT CODE**
+**APPROVED APPROACH**: ${selectedApproach}
 
-You are in PLAN mode. Your job is to research and create a plan ONLY.
+**SCOPE BOUNDARIES**:
+IN SCOPE: ${scopeIn}
+OUT OF SCOPE: ${scopeOut}
 
-**FORBIDDEN ACTIONS**:
-- ❌ DO NOT write any code files (no Write, Edit tools)
-- ❌ DO NOT implement any features
-- ❌ DO NOT commit to git
-- ❌ DO NOT make code changes
-- ❌ DO NOT start implementation
+**CRITICAL CONSTRAINTS - DO NOT VIOLATE**:
+- ❌ NO features outside approved scope
+- ❌ NO refactoring unrelated code
+- ❌ NO alternative approaches
+- ❌ NO nice-to-have improvements
+- ❌ NO implementation (planning only!)
 
-**ALLOWED ACTIONS**:
-- ✅ Read existing code to understand patterns
-- ✅ Search codebase for similar implementations
-- ✅ Research best practices
-- ✅ Create detailed checklists
-- ✅ Identify files that WILL need modification (don't modify them!)
-- ✅ Estimate complexity and risks
+**YOUR JOB - PROVIDE ONLY**:
+- ✅ Step-by-step implementation for approved approach
+- ✅ Specific file changes within scope
+- ✅ Technical gotchas for this approach
+- ✅ Testing strategy for approved scope
 
 ---
 
-Create implementation plan for: ${issue.title}
+Create detailed implementation plan for: ${issue.title}
 
 Current description:
 ${issue.description}
+
+Approved Approach: ${selectedApproach}
+User Clarifications: ${clarificationAnswers}
 
 Context gathered:
 - Linear similar issues: [if found]
@@ -502,32 +774,31 @@ ${visualContext.figma.map(fig => `
 `).join('\n')}
 ` : ''}
 
-Your task:
-1. Consider multiple implementation approaches
-2. Analyze trade-offs for each
-3. Research best practices using Context7 MCP
-4. Create detailed checklist (5-10 items)
-5. Estimate complexity with reasoning
-6. Identify risks, dependencies, unknowns
-${visualContext ? '7. **Use visual context** - Reference mockups/designs for pixel-perfect implementation' : ''}
+Provide:
+1. **Implementation Checklist** (5-15 actionable items with marker comments)
+2. **Files to Modify** (specific paths with rationale)
+3. **Technical Considerations** (gotchas, edge cases)
+4. **Testing Strategy** (unit, integration, manual tests)
+5. **Complexity Assessment** (low/medium/high with reasoning)
+6. **Dependencies** (prerequisites, external factors)
+${visualContext ? '7. **Visual Context Usage** - How to use mockups/designs for pixel-perfect implementation' : ''}
 
-Provide structured plan with:
-- **Recommended approach** + alternatives
-- **Implementation checklist** (actionable)
-- **Files to modify** with rationale (but DON'T modify them!)
-- **Uncertainties** to clarify
-- **Testing strategy**
-- **Complexity** with reasoning
-${visualContext?.figma?.length > 0 ? '- **Design System** - Tailwind classes from Figma (include in checklist)' : ''}
+**FORMAT CHECKLIST WITH MARKER COMMENTS**:
+<!-- ccpm-checklist-start -->
+- [ ] **Task 1**: Specific, actionable description
+- [ ] **Task 2**: Specific, actionable description
+<!-- ccpm-checklist-end -->
 
-**REMEMBER**: This is PLANNING ONLY. Implementation happens later in /ccpm:work.
+**REMEMBER**: Stay within approved scope. No code implementation, planning only.
 `
 
-4. Present plan for confirmation (v1.0 workflow):
+Note: Smart-agent-selector chooses agent automatically. Agent provides scoped, detailed plan.
+
+5. Present plan for confirmation (v1.0 workflow):
 
 Display complete plan and ask: "Does this plan look good? Any adjustments needed?"
 
-5. Update issue description with confirmed plan:
+6. Update issue description with confirmed plan:
 
 **Use the Task tool:**
 
@@ -539,29 +810,82 @@ params:
   description: |
     ## Implementation Checklist
 
-    {checklist}
+    <!-- ccpm-checklist-start -->
+    {checklist from planning result - with marker comments}
+    <!-- ccpm-checklist-end -->
 
-    > **Complexity**: {complexity} | **Approach**: {approach}
+    Progress: 0% (0/{N} completed)
+    Last updated: {timestamp}
+
+    > **Complexity**: {complexity} | **Approach**: {selected approach name}
 
     ---
 
     {original description}
 
-    ## Recommended Approach
+    ---
 
-    {approach + alternatives}
+    ## ❓ Clarifications
 
-    ## Files to Modify
+    {Questions asked and user answers from Stage 1}
 
-    {files with rationale}
+    **Q: {question 1}**
+    A: {user answer}
 
-    ## Uncertainties / Open Questions
+    **Q: {question 2}**
+    A: {user answer}
 
-    {uncertainties}
+    ---
+
+    ## 🔍 Approach Analysis
+
+    ### Approaches Considered:
+
+    **1. {Approach 1 Name}** (Selected ✓)
+    - Complexity: {complexity}
+    - Pros: {benefits}
+    - Cons: {drawbacks}
+
+    **2. {Approach 2 Name}**
+    - Complexity: {complexity}
+    - Pros: {benefits}
+    - Cons: {drawbacks}
+
+    **Why selected**: {rationale for selection}
+
+    **Scope Boundaries**:
+    - IN SCOPE: {specific items included}
+    - OUT OF SCOPE: {specific items excluded/deferred}
+
+    ---
+
+    ## 🤖 Engineer Analysis
+
+    **Agent**: {agent name from smart-agent-selector}
+
+    {Detailed implementation analysis from specialized agent}
+
+    ### Implementation Steps
+
+    {Step-by-step implementation details}
+
+    ### Files to Modify
+
+    {files list with rationale}
+
+    ### Technical Considerations
+
+    {gotchas, edge cases, best practices}
+
+    ### Dependencies
+
+    {prerequisites, external factors}
+
+    ---
 
     ## Testing Strategy
 
-    {testing approach}
+    {testing approach from agent}
 
     ---
 
@@ -570,7 +894,7 @@ context:
   command: "plan"
 ```
 
-6. Update status and labels:
+7. Update status and labels:
 
 **Use the Task tool:**
 
@@ -585,7 +909,7 @@ context:
   command: "plan"
 ```
 
-7. Display completion:
+8. Display completion:
 
 console.log('\n═══════════════════════════════════════');
 console.log('✅ Planning Complete!');
