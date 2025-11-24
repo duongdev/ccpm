@@ -8,21 +8,23 @@ argument-hint: "[issue-id] [summary]"
 
 Auto-detects issue from git branch and syncs progress to Linear with smart checklist updates and **concise comments**.
 
-## 🎯 v1.0 Linear Comment Strategy (Hybrid Format)
+## 🎯 v1.0 Linear Comment Strategy (Native Collapsible)
 
-**Focus**: Scannable summary + detailed context for next sessions
-- **Top**: 3-5 line summary (visible in collapsed feed)
-- **Below separator**: Detailed context for resume (expanded view)
+**Focus**: Scannable summary + detailed context using Linear's native collapsible syntax
+- **Top**: 3-5 line summary (always visible)
+- **Collapsible section**: Detailed context (click to expand)
 - **Benefits**: Quick scan in feed, full context when needed
 
 **Structure**:
 ```
 🔄 Summary (always visible)
----
-📋 Context for Next Session (click to expand)
+
++++ 📋 Context for Next Session
+[Detailed context here]
++++
 ```
 
-Linear auto-collapses comments in the feed, so users see the summary by default and can click to expand for full context.
+**Linear's Native Syntax**: The `+++ Title` syntax creates a true collapsible section that starts collapsed and expands on click.
 
 ## Usage
 
@@ -271,9 +273,7 @@ params:
     **Checklist**: {checklistUpdateResult.itemsUpdated} completed
     **Progress**: {checklistUpdateResult.previousProgress}% → {checklistUpdateResult.newProgress}%
 
-    ---
-
-    ### 📋 Context for Next Session
+    +++ 📋 Context for Next Session
 
     **Changed Files**:
     {changes.modified.map(f => `- ${f}`).join('\n')}
@@ -296,7 +296,7 @@ params:
     - {technical decisions made}
     - {next logical steps}
 
-    _Linear auto-collapses in feed - click to expand for full context_
+    +++
 context:
   command: "sync"
   purpose: "Hybrid: scannable summary + detailed session context"
@@ -309,7 +309,7 @@ context:
 
 This ensures the comment reflects the ACTUAL checklist state, not estimated values!
 
-**Example hybrid comment:**
+**Example with Linear's native collapsible:**
 
 ```markdown
 🔄 **Synced** | feature/psn-29-auth
@@ -320,9 +320,7 @@ Completed auth implementation, all tests passing
 **Checklist**: 2 completed
 **Progress**: 40% → 60%
 
----
-
-### 📋 Context for Next Session
++++ 📋 Context for Next Session
 
 **Changed Files**:
 - src/auth/jwt.ts
@@ -354,8 +352,14 @@ Completed auth implementation, all tests passing
 - Chose bcrypt for password hashing (industry standard)
 - Next: Password reset requires email service setup
 
-_Linear auto-collapses in feed - click to expand for full context_
++++
 ```
+
+**How it appears in Linear**:
+- Summary visible immediately
+- "📋 Context for Next Session" shows as collapsed section
+- Click to expand for full details
+- Native Linear UX - no workarounds needed!
 
 **Comparison:**
 
@@ -548,7 +552,7 @@ Example: /ccpm:sync PSN-29
 6. ✅ **Concise comments** - 90% shorter (50 words vs 500+)
 7. ✅ **Batch updates** - Single subagent call for description + comment
 
-## v1.0 Linear Comment Strategy Benefits (Hybrid Format)
+## v1.0 Linear Comment Strategy Benefits (Native Collapsible)
 
 **Before (verbose):**
 - 500-1000 words per sync comment
@@ -556,23 +560,31 @@ Example: /ccpm:sync PSN-29
 - Context mixed with summary
 - Lost details between sessions
 
-**After (hybrid):**
-- 3-5 line summary (collapsed in feed)
-- Full context below separator (expanded view)
-- Easy to scan, detailed when needed
+**After (native collapsible):**
+- 3-5 line summary (always visible)
+- Full context in collapsible section (click to expand)
+- Uses Linear's native `+++` syntax
 - Perfect for session resume
 
 **Benefits:**
-- ✅ **Scannable**: Summary visible in collapsed feed
-- ✅ **Complete**: Full context when expanded
+- ✅ **Scannable**: Summary always visible
+- ✅ **Complete**: Full context in collapsible section
 - ✅ **Session-friendly**: Everything needed to resume work
-- ✅ **Linear-native**: Uses Linear's natural collapse behavior
+- ✅ **Linear-native**: Uses `+++` syntax (true collapsible, not auto-collapse)
+- ✅ **Clean UX**: Native Linear behavior, no HTML hacks
 
 **Use Cases:**
 - **Quick scan**: See progress across multiple issues in feed
-- **Deep dive**: Click to expand for full context
+- **Deep dive**: Click "📋 Context for Next Session" to expand
 - **Resume work**: All details available for next session
 - **Team sync**: Summary for stakeholders, details for developers
+
+**Technical Detail:**
+Linear's `+++ Title` syntax creates a true collapsible section that:
+- Starts collapsed by default
+- Shows title with expand/collapse indicator
+- Preserves full markdown formatting inside
+- Works in comments, issue descriptions, and documents
 
 ## Integration
 
