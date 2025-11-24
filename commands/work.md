@@ -30,8 +30,8 @@ This command uses:
 
 ## Mode Detection
 
-- **START**: Status is Planning/Backlog/Todo/Planned → Initialize implementation
-- **RESUME**: Status is In Progress/In Development/Doing → Show progress and next action
+- **START**: Status is Planning/Backlog/Todo/Planned → Initialize implementation (AI or manual, auto-sync if AI)
+- **RESUME**: Status is In Progress/In Development/Doing → Show progress + continue implementation (AI or manual, auto-sync if AI)
 - **ERROR**: Status is Done/Completed/Cancelled → Cannot work on completed tasks
 
 ## Usage
@@ -867,7 +867,169 @@ if (nextAction) {
   console.log(`🎯 Next Action: ${nextAction}\n`);
 }
 
-5. Interactive menu:
+5. Ask user: Continue with AI or manual? (Same as START mode):
+
+// Only offer AI continuation if there's remaining work
+if (progress < 100) {
+  console.log('\n💡 Continue Implementation:');
+  console.log('  Option 1: AI continues now (auto-sync progress to Linear)');
+  console.log('  Option 2: I'll continue manually (you code, sync later)');
+  console.log('  Option 3: Just show menu (no implementation now)');
+
+  AskUserQuestion({
+    questions: [{
+      question: "How would you like to continue?",
+      header: "Continue Work",
+      multiSelect: false,
+      options: [
+        {
+          label: "AI continues now",
+          description: "AI implements remaining items, auto-syncs progress (never lose context)"
+        },
+        {
+          label: "I'll continue manually",
+          description: "You write code, use /ccpm:sync when ready"
+        },
+        {
+          label: "Just show menu",
+          description: "Review options without implementing now"
+        }
+      ]
+    }]
+  });
+
+  const continueMode = answer;
+
+  if (continueMode === "AI continues now") {
+    console.log('\n🤖 AI continuing implementation...');
+
+    // Get remaining work context
+    const remainingItems = checklistData?.items.filter(item => !item.checked) || [];
+
+    // Invoke specialized agent to continue implementation
+    Task: `
+    Continue implementation for: ${issue.title}
+
+    **Context:**
+    - Issue: ${issueId}
+    - Current Progress: ${progress}% (${completedItems}/${totalItems} items)
+    - Recent Activity: ${recentComments?.[0]?.body?.split('\n')[0] || 'None'}
+
+    **Remaining Work:**
+    ${remainingItems.map((item, i) => `${i+1}. ${item.content}`).join('\n')}
+
+    ${uncertaintiesList.length > 0 ? `
+    **Uncertainties to Address:**
+    ${uncertaintiesList.map((u, i) => `${i+1}. ${u}`).join('\n')}
+    ` : ''}
+
+    **Your Task:**
+    Continue implementing the remaining checklist items. Make actual code changes to complete the work.
+
+    **Constraints:**
+    - Focus on remaining uncompleted items only
+    - Follow existing code patterns and standards
+    - Write production-quality code
+    - Add necessary imports and dependencies
+
+    **Important:** Make actual file changes. This is continuation of implementation.
+    `
+
+    console.log('✅ Implementation continued');
+
+    // Auto-sync progress (same logic as START mode)
+    console.log('\n🔄 Auto-syncing progress to Linear...');
+
+    const gitChanges = await Bash('git status --porcelain && echo "---" && git diff --stat HEAD');
+
+    // Parse changes (same logic as START mode Step 4C)
+    const changes = { modified: [], added: [], deleted: [], insertions: 0, deletions: 0 };
+    // ... parsing logic ...
+
+    if (changes.modified.length > 0 || changes.added.length > 0) {
+      console.log(`📊 Detected: ${changes.modified.length} modified, ${changes.added.length} added`);
+
+      // AI-powered checklist matching (same as START mode Step 4D)
+      const uncheckedItems = remainingItems;
+      uncheckedItems.forEach(item => {
+        // Score items based on git changes
+        // ... scoring logic (same as START mode) ...
+      });
+
+      const completedItems = uncheckedItems.filter(i => i.score >= 50);
+
+      if (completedItems.length > 0) {
+        console.log(`\n✅ Auto-completing ${completedItems.length} checklist item(s)`);
+
+        // Update checklist
+        Invoke `ccpm:linear-operations`:
+        ```
+        operation: update_checklist_items
+        params:
+          issueId: "{issue ID}"
+          indices: [${completedItems.map(i => i.index).join(', ')}]
+          mark_complete: true
+          add_comment: false
+          update_timestamp: true
+        context:
+          command: "work"
+          purpose: "Auto-sync after continued implementation"
+        ```
+      }
+
+      // Post progress comment (same format as START mode Step 4F)
+      Invoke `ccpm:linear-operations`:
+      ```
+      operation: create_comment
+      params:
+        issueId: "{issue ID}"
+        body: |
+          🔄 **Continued** | ${currentBranch}
+
+          **Remaining work**: ${remainingItems.length - completedItems.length} items
+          **Files**: ${changes.modified.length} modified, ${changes.added.length} added (+${changes.insertions}, -${changes.deletions})
+          **Checklist**: ${completedItems.length} completed
+          **Progress**: ${progress}% → ${newProgress}%
+
+          +++ 📋 Implementation Details
+
+          **Changed Files**:
+          ${changes.modified.map(f => `- ${f}`).join('\n')}
+
+          **Completed Items** (auto-detected):
+          ${completedItems.map(item => `- ✅ ${item.content}`).join('\n')}
+
+          **Remaining Work**:
+          ${(remainingItems.length - completedItems.length > 0) ? remainingItems.filter(i => !completedItems.includes(i)).map(item => `- ⏳ ${item.content}`).join('\n') : '✅ All items complete!'}
+
+          **Next Steps**:
+          1. Review the changes
+          2. Use /ccpm:commit to commit
+          3. Use /ccpm:verify for quality checks
+
+          +++
+      context:
+        command: "work"
+        purpose: "Auto-sync continued implementation"
+      ```
+
+      Display: "✅ Progress auto-synced to Linear!"
+    }
+
+    // Skip interactive menu since AI already implemented
+    const skipMenu = true;
+  } else if (continueMode === "I'll continue manually") {
+    console.log('\n📝 Manual implementation mode - use /ccpm:sync when ready');
+    const skipMenu = false;  // Show menu
+  } else {
+    // Just show menu
+    const skipMenu = false;
+  }
+}
+
+6. Interactive menu (if not skipped):
+
+**Only show if skipMenu !== true (i.e., manual mode or just show menu)**
 
 console.log('Available Actions:');
 console.log('  1. ⭐ Sync progress      - /ccpm:sync');
@@ -884,6 +1046,9 @@ console.log(`  /ccpm:commit`);
 
 if (progress === 100 && uncertaintiesList.length === 0) {
   console.log('\n⭐ Recommended: /ccpm:verify (checklist complete, no uncertainties)');
+} else if (continueMode === "AI continues now") {
+  console.log('\n✅ AI implementation complete + auto-synced!');
+  console.log('⏭️  Next: Review changes, then /ccpm:commit');
 }
 ```
 
