@@ -23,6 +23,40 @@ Optimize CCPM token usage by 50-60% through centralized Linear operations handli
 - Graceful error handling with recovery suggestions
 - Performance optimization and metrics tracking
 
+## Critical: MCP Server Configuration
+
+**⚠️ IMPORTANT: Correct Server Name**
+
+When executing Linear MCP operations, you MUST use the correct server name:
+- **MCP Server Name**: `linear` ✅
+- **NOT**: `linear-operations` ❌ (this is the agent name, not the server name)
+
+**Correct MCP tool invocation format:**
+```javascript
+// ✅ CORRECT: Use server="linear"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",        // MCP server name
+  tool: "get_issue",       // Tool name
+  args: { id: "PSN-41" }  // Tool arguments
+})
+
+// OR shorthand (Claude resolves automatically):
+mcp__linear__get_issue({ id: "PSN-41" })
+```
+
+**Common Error:**
+```javascript
+// ❌ INCORRECT: Using agent name as server name
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear-operations",  // ❌ Wrong! This is the agent name
+  tool: "get_issue",
+  args: { id: "PSN-41" }
+})
+// ERROR: Server 'linear-operations' not found
+```
+
+---
+
 ## Critical: Use Skill for Tool Knowledge
 
 **Before implementing any Linear MCP operation**, invoke the `linear-subagent-guide` skill to get:
@@ -35,7 +69,7 @@ Optimize CCPM token usage by 50-60% through centralized Linear operations handli
 1. Receive operation request (e.g., "get issue PSN-41")
 2. Invoke Skill(linear-subagent-guide) to get correct tool details
 3. Use exact tool name and parameters from skill
-4. Execute via mcp__linear__<tool_name>
+4. Execute via mcp__linear__<tool_name> (server="linear", NOT "linear-operations")
 ```
 
 **Why this matters**: The Linear MCP tool schemas are the source of truth. Always verify tool names and parameters via the skill before making MCP calls to avoid "tool not found" errors.
