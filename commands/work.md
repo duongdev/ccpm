@@ -19,13 +19,14 @@ This command uses:
 **WORK Mode Philosophy:**
 - **Git branch safety** - Check protected branches before creating new branches
 - **Phase planning** - Ask which phases to do now vs later (multi-select support)
+- **Implementation choice** - AI implements now (auto-sync) OR manual (you code)
+- **Auto-sync after AI implementation** - Never lose context! Git changes → checklist update → progress comment
 - **Confidence-based decisions** - Use decision-helpers.md to ask when confidence < 80%
 - **Parallel implementation** - Detect and prioritize tasks that can run simultaneously
 - **Document uncertainties** - Immediately note questions/unknowns in Linear
-- **Regular progress updates** - Sync to Linear frequently
-- **Robust checklist management** - Use checklist.md for consistent parsing and updates
+- **Robust checklist management** - Use checklist.md for automatic updates after changes
 - **Proactive subagents** - Invoke specialized agents as needed
-- **No auto-commit** - Only commit on explicit user request
+- **No auto-commit** - Only commit on explicit user request (use /ccpm:commit)
 
 ## Mode Detection
 
@@ -383,6 +384,211 @@ if (implementationConfidence.score < 80 || analysisResult.uncertainties.length >
   console.log('\n✅ Clarifications received. Proceeding with implementation.');
 }
 
+4A. Ask user: AI implementation or manual? (Context preservation):
+
+console.log('\n💡 Implementation Mode:');
+console.log('  Option 1: AI implements now (auto-sync progress to Linear)');
+console.log('  Option 2: Manual implementation (you code, sync later with /ccpm:sync)');
+
+AskUserQuestion({
+  questions: [{
+    question: "How would you like to implement this?",
+    header: "Implementation",
+    multiSelect: false,
+    options: [
+      {
+        label: "AI implements now",
+        description: "AI makes changes, automatically syncs progress to Linear (never lose context)"
+      },
+      {
+        label: "I'll implement manually",
+        description: "You write code, use /ccpm:sync when ready"
+      }
+    ]
+  }]
+});
+
+const aiImplement = (answer === "AI implements now");
+
+**If AI implements (aiImplement === true):**
+
+4B. Invoke specialized agent to implement changes:
+
+console.log('\n🤖 Invoking specialized agent for implementation...');
+
+// Smart-agent-selector automatically chooses optimal agent
+Task: `
+Implement the following based on the approved approach:
+
+**Context:**
+- Issue: ${issueId} - ${issue.title}
+- Selected Phases: ${selectedPhases ? selectedPhases.join(', ') : 'All phases'}
+- Implementation Plan: ${analysisResult}
+
+**Your Task:**
+Implement the selected phases. Make actual code changes to the files identified in the analysis.
+
+${visualContext?.available ? `
+**Visual Context Available**:
+You have direct access to UI mockups. For UI tasks, reference the visual mockups directly for pixel-perfect implementation (95-100% fidelity).
+` : ''}
+
+**Constraints:**
+- Focus ONLY on selected phases: ${selectedPhases ? selectedPhases.join(', ') : 'All phases'}
+- Follow the implementation plan from analysis
+- Write production-quality code
+- Add necessary imports and dependencies
+- Follow project coding standards
+
+**Important:** Make actual file changes. This is implementation, not planning.
+`
+
+console.log('✅ Implementation complete');
+
+4C. Auto-sync progress (detect git changes):
+
+console.log('\n🔄 Auto-syncing progress to Linear...');
+
+// Detect git changes (same logic as sync command)
+const gitChanges = await Bash('git status --porcelain && echo "---" && git diff --stat HEAD');
+
+Parse changes:
+const changes = {
+  modified: [],
+  added: [],
+  deleted: [],
+  insertions: 0,
+  deletions: 0
+};
+
+// Parse git status and diff stats
+// (same parsing logic as sync command)
+
+if (changes.modified.length === 0 && changes.added.length === 0) {
+  console.log('⚠️  No git changes detected. Skipping auto-sync.');
+  // Continue to manual flow (Step 5)
+} else {
+  console.log(`📊 Detected: ${changes.modified.length} modified, ${changes.added.length} added`);
+
+  4D. AI-powered checklist matching (from sync command):
+
+  // Extract unchecked items from current checklist
+  const checklistData = parseChecklist(issue.description);
+  const uncheckedItems = checklistData?.items.filter(item => !item.checked) || [];
+
+  if (uncheckedItems.length > 0) {
+    // Score each item based on git changes (same logic as sync command)
+    uncheckedItems.forEach(item => {
+      const keywords = extractKeywords(item.content);
+      item.score = 0;
+
+      // File path matching (30 points)
+      changes.modified.concat(changes.added).forEach(file => {
+        if (keywords.some(kw => file.toLowerCase().includes(kw))) {
+          item.score += 30;
+        }
+      });
+
+      // File name exact match (40 points)
+      if (changes.modified.some(f => matchesPattern(f, item.content))) {
+        item.score += 40;
+      }
+
+      // Large changes (10-20 points)
+      const totalLines = changes.insertions + changes.deletions;
+      if (totalLines > 50) item.score += 10;
+      if (totalLines > 100) item.score += 20;
+    });
+
+    // Auto-complete high-confidence items (score >= 50)
+    const completedItems = uncheckedItems.filter(i => i.score >= 50);
+
+    if (completedItems.length > 0) {
+      console.log(`\n✅ Auto-completing ${completedItems.length} high-confidence checklist item(s):`);
+      completedItems.forEach(item => console.log(`  - ${item.content}`));
+
+      4E. Update checklist automatically:
+
+      **Use the Task tool:**
+
+      Invoke `ccpm:linear-operations`:
+      ```
+      operation: update_checklist_items
+      params:
+        issueId: "{issue ID}"
+        indices: [${completedItems.map(i => i.index).join(', ')}]
+        mark_complete: true
+        add_comment: false  # We'll add comprehensive comment below
+        update_timestamp: true
+      context:
+        command: "work"
+        purpose: "Auto-sync progress after AI implementation"
+      ```
+
+      const checklistUpdateResult = {
+        itemsUpdated: completedItems.length,
+        previousProgress: checklistData.progress || 0,
+        newProgress: /* result from update */
+      };
+    }
+  }
+
+  4F. Post comprehensive progress comment (with actual changes):
+
+  **Use the Task tool:**
+
+  Invoke `ccpm:linear-operations`:
+  ```
+  operation: create_comment
+  params:
+    issueId: "{issue ID}"
+    body: |
+      🚀 **Implemented** | ${currentBranch}
+
+      ${selectedPhases ? `**Focus**: ${selectedPhases.join(', ')}` : 'Implemented all phases'}
+      **Files**: ${changes.modified.length} modified, ${changes.added.length} added (+${changes.insertions}, -${changes.deletions})
+      ${checklistUpdateResult ? `**Checklist**: ${checklistUpdateResult.itemsUpdated} completed` : ''}
+      ${checklistUpdateResult ? `**Progress**: ${checklistUpdateResult.previousProgress}% → ${checklistUpdateResult.newProgress}%` : ''}
+
+      +++ 📋 Implementation Details
+
+      **Changed Files**:
+      ${changes.modified.map(f => `- ${f}`).join('\n')}
+      ${changes.added.length > 0 ? `\n**New Files**:\n${changes.added.map(f => `- ${f}`).join('\n')}` : ''}
+
+      ${completedItems?.length > 0 ? `
+      **Completed Items** (auto-detected):
+      ${completedItems.map(item => `- ✅ ${item.content}`).join('\n')}
+      ` : ''}
+
+      ${uncertainties.length > 0 ? `
+      **Uncertainties** (documented in description):
+      ${uncertainties.map((u, i) => `${i+1}. ${u}`).join('\n')}
+      ` : ''}
+
+      **Git Summary**:
+      \`\`\`
+      ${changes.modified.length + changes.added.length} files changed, ${changes.insertions} insertions(+), ${changes.deletions} deletions(-)
+      \`\`\`
+
+      **Next Steps**:
+      1. Review the changes
+      2. Use /ccpm:commit to commit changes
+      3. Use /ccpm:verify for quality checks
+      4. Use /ccpm:sync for additional progress updates
+
+      +++
+  context:
+    command: "work"
+    purpose: "Auto-sync progress with implementation details"
+  ```
+
+  Display: "✅ Progress auto-synced to Linear (never lose context!)"
+
+  // Skip manual comment (Step 6) since we already posted progress
+  const skipManualComment = true;
+}
+
 5. Document uncertainties immediately (v1.0 workflow):
 
 Extract uncertainties from analysis result:
@@ -416,7 +622,11 @@ if (uncertainties.length > 0) {
   Display: "✅ Documented ${uncertainties.length} uncertainties in Linear"
 }
 
-6. Add structured comment to Linear (with collapsible context):
+6. Add structured comment to Linear (ONLY if manual implementation):
+
+**Skip this step if AI already implemented and auto-synced (skipManualComment === true)**
+
+**If manual implementation (skipManualComment !== true):**
 
 **Use the Task tool:**
 
@@ -504,19 +714,30 @@ if (analysisResult.taskDependencies) {
 }
 
 console.log('\n💡 Next Steps:');
-console.log('  1. Review the implementation plan above');
-console.log('  2. Start coding (no auto-commit - you decide when)');
-console.log('  3. ⭐ Use /ccpm:sync frequently to:');
-console.log('     - Save progress updates');
-console.log('     - Update checklist items');
-console.log('     - Track file changes');
-console.log('  4. Use /ccpm:commit when ready to commit');
+
+if (aiImplement) {
+  console.log('  ✅ AI implementation complete!');
+  console.log('  ✅ Progress auto-synced to Linear (never lose context!)');
+  console.log('');
+  console.log('  1. Review the changes made by AI');
+  console.log('  2. Use /ccpm:commit to commit changes');
+  console.log('  3. Use /ccpm:verify for quality checks');
+  console.log('  4. Use /ccpm:sync for additional progress updates (optional)');
+} else {
+  console.log('  1. Review the implementation plan above');
+  console.log('  2. Start coding (no auto-commit - you decide when)');
+  console.log('  3. ⭐ Use /ccpm:sync frequently to:');
+  console.log('     - Save progress updates');
+  console.log('     - Update checklist items automatically (AI-powered matching)');
+  console.log('     - Track file changes');
+  console.log('  4. Use /ccpm:commit when ready to commit');
+}
+
 console.log('\n📌 Quick Commands:');
 console.log(`  /ccpm:sync                     # Interactive checklist update`);
 console.log(`  /ccpm:sync "progress note"     # Quick sync without checklist`);
 console.log(`  /ccpm:commit                   # Git commit`);
 console.log(`  /ccpm:verify                   # Quality checks`);
-console.log('\n⚠️  Important: Checklists are updated via /ccpm:sync, not automatically');
 ```
 
 ### Step 4B: RESUME Mode - Show Progress
@@ -842,17 +1063,20 @@ Proceed anyway? This will create commits on main.
 
 ## Key Optimizations
 
-1. ✅ **Direct implementation** - No routing overhead
-2. ✅ **Linear subagent** - All ops cached (85-95% hit rate)
-3. ✅ **Smart agent selection** - Automatic optimal agent choice
-4. ✅ **Decision helpers** - Confidence-based decisions (Always-Ask Policy when < 80%)
-5. ✅ **Parallel implementation** - Detects and prioritizes independent tasks
-6. ✅ **Checklist helpers** - Robust parsing with marker comment support
-7. ✅ **v1.0 workflow** - Git safety, phase planning, uncertainty tracking
-8. ✅ **Shorter Linear comments** - Concise status updates (not long reports)
-9. ✅ **Uncertainty tracking** - Documented in description, not comments
-10. ✅ **No auto-commit** - Explicit user control over git commits
-11. ✅ **Visual context integration** - Pixel-perfect UI implementation (95-100% fidelity)
+1. ✅ **Auto-sync after AI implementation** - Never lose context! Git changes → checklist → progress comment
+2. ✅ **Direct implementation** - No routing overhead
+3. ✅ **Linear subagent** - All ops cached (85-95% hit rate)
+4. ✅ **Smart agent selection** - Automatic optimal agent choice
+5. ✅ **Decision helpers** - Confidence-based decisions (Always-Ask Policy when < 80%)
+6. ✅ **Parallel implementation** - Detects and prioritizes independent tasks
+7. ✅ **AI-powered checklist matching** - Automatic item completion based on git changes (score >= 50)
+8. ✅ **Checklist helpers** - Robust parsing with marker comment support
+9. ✅ **v1.0 workflow** - Git safety, phase planning, uncertainty tracking
+10. ✅ **Collapsible Linear comments** - Scannable summary + detailed context (`+++` syntax)
+11. ✅ **Uncertainty tracking** - Documented in description, not comments
+12. ✅ **No auto-commit** - Explicit user control over git commits
+13. ✅ **Visual context integration** - Pixel-perfect UI implementation (95-100% fidelity)
+14. ✅ **Flexible workflow** - Choose AI or manual implementation each time
 
 ## v1.0 Linear Comment Strategy (Native Collapsible)
 
@@ -933,28 +1157,35 @@ Unit tests for all auth functions
 
 ## Notes
 
-### Workflow
+### Workflow Options
 
-- **v1.0 workflow**: Git safety, phase planning, uncertainty tracking, no auto-commit
-- **Checklist updates**: ⚠️ **NOT automatic** - Use `/ccpm:sync` to update checklist items based on git changes
-- **Progress tracking**: `/ccpm:work` displays current progress, `/ccpm:sync` updates it
-- **Comment format**: Uses Linear's native `+++` collapsible syntax (matches `/ccpm:sync`)
+**Option 1: AI Implementation (Auto-sync - Never Lose Context!)**
+- `/ccpm:work` → analyze → AI implements → **auto-sync** (git changes → update checklist → post progress) → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
+- ✅ **Best for**: Context preservation, complex tasks, learning from AI
+- ✅ **Benefit**: Progress automatically saved to Linear, never lose work if session ends
+
+**Option 2: Manual Implementation**
+- `/ccpm:work` → analyze → you code → `/ccpm:sync` → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
+- ✅ **Best for**: Learning by doing, custom implementation, pair programming with AI
 
 ### Features
 
+- **Implementation choice**: Ask user whether AI implements or manual
+- **Auto-sync after AI implementation**: Detects git changes → updates checklist → posts progress comment
 - **Git branch safety**: Checks protected branches, requires confirmation
 - **Phase planning**: Interactive multi-select for large tasks (>5 items), skips completed items
 - **Decision helpers**: Confidence-based decisions with Always-Ask Policy (< 80% threshold)
 - **Parallel implementation**: Detects independent tasks, groups for simultaneous execution
-- **Checklist helpers**: Robust parsing with marker comments (`<!-- ccpm-checklist-start -->`), display only
+- **Checklist automation**: AI-powered matching of git changes to checklist items (score >= 50 = auto-complete)
 - **Uncertainty tracking**: Documented in issue description for visibility
 - **Collapsible comments**: Scannable summary + detailed context using `+++` syntax
-- **Smart agents**: Automatic selection based on task type
+- **Smart agents**: Automatic selection based on task type (backend, frontend, mobile, etc.)
 - **Caching**: Linear subagent caches for 85-95% faster operations
 - **Visual context**: Loads UI mockups and Figma designs for pixel-perfect implementation
 
 ### Important
 
-- ⚠️ **Checklists are DISPLAY-ONLY in this command** - Use `/ccpm:sync` to update them
-- 💡 **Workflow**: `/ccpm:work` → code → `/ccpm:sync` → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
-- 🔄 **Sync frequently**: Use `/ccpm:sync` after completing each phase or significant change
+- 🚀 **Auto-sync**: If AI implements, progress is automatically saved to Linear (never lose context!)
+- 🎯 **AI Checklist Matching**: High-confidence items (score >= 50) are auto-completed based on git changes
+- 💡 **Manual workflow**: If you implement manually, use `/ccpm:sync` to update progress
+- 🔄 **Flexibility**: Choose AI or manual implementation each time based on your needs
