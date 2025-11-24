@@ -8,12 +8,21 @@ argument-hint: "[issue-id] [summary]"
 
 Auto-detects issue from git branch and syncs progress to Linear with smart checklist updates and **concise comments**.
 
-## 🎯 v1.0 Linear Comment Strategy
+## 🎯 v1.0 Linear Comment Strategy (Hybrid Format)
 
-**Focus**: Short, scannable updates (not verbose reports)
-- **OLD**: 500-1000 word progress reports
-- **NEW**: 50-100 word status snapshots
-- **Details**: In issue description (single source of truth)
+**Focus**: Scannable summary + detailed context for next sessions
+- **Top**: 3-5 line summary (visible in collapsed feed)
+- **Below separator**: Detailed context for resume (expanded view)
+- **Benefits**: Quick scan in feed, full context when needed
+
+**Structure**:
+```
+🔄 Summary (always visible)
+---
+📋 Context for Next Session (click to expand)
+```
+
+Linear auto-collapses comments in the feed, so users see the summary by default and can click to expand for full context.
 
 ## Usage
 
@@ -243,7 +252,7 @@ const checklistUpdateResult = {
 };
 ```
 
-**B) Add CONCISE progress comment (using actual checklist data from Step 7A):**
+**B) Add HYBRID progress comment (concise summary + detailed context):**
 
 **Use the Task tool:**
 
@@ -261,9 +270,36 @@ params:
     **Files**: {modified} modified, {added} added (+{insertions}, -{deletions})
     **Checklist**: {checklistUpdateResult.itemsUpdated} completed
     **Progress**: {checklistUpdateResult.previousProgress}% → {checklistUpdateResult.newProgress}%
+
+    ---
+
+    ### 📋 Context for Next Session
+
+    **Changed Files**:
+    {changes.modified.map(f => `- ${f}`).join('\n')}
+    {changes.added.length > 0 ? '\n**New Files**:\n' + changes.added.map(f => `- ${f}`).join('\n') : ''}
+
+    **Completed Items** (this session):
+    {completedItems.map(item => `- ✅ ${item.text}`).join('\n')}
+
+    **Remaining Work**:
+    {remainingItems.slice(0, 5).map(item => `- ⏳ ${item.text}`).join('\n')}
+    {remainingItems.length > 5 ? `\n_...and ${remainingItems.length - 5} more items_` : ''}
+
+    **Git Summary**:
+    ```
+    {git diff --stat output or summary}
+    ```
+
+    **Key Insights**:
+    - {any important notes or blockers discovered}
+    - {technical decisions made}
+    - {next logical steps}
+
+    _Linear auto-collapses in feed - click to expand for full context_
 context:
   command: "sync"
-  purpose: "Concise progress update with actual checklist changes"
+  purpose: "Hybrid: scannable summary + detailed session context"
 ```
 
 **Use actual data from checklist update (Step 7A):**
@@ -273,7 +309,7 @@ context:
 
 This ensures the comment reflects the ACTUAL checklist state, not estimated values!
 
-**Example concise comment:**
+**Example hybrid comment:**
 
 ```markdown
 🔄 **Synced** | feature/psn-29-auth
@@ -283,6 +319,42 @@ Completed auth implementation, all tests passing
 **Files**: 8 modified, 2 added (+234, -67)
 **Checklist**: 2 completed
 **Progress**: 40% → 60%
+
+---
+
+### 📋 Context for Next Session
+
+**Changed Files**:
+- src/auth/jwt.ts
+- src/auth/middleware.ts
+- src/auth/routes.ts
+- src/tests/auth.test.ts
+
+**New Files**:
+- src/utils/validators.ts
+- src/types/auth.d.ts
+
+**Completed Items** (this session):
+- ✅ Implement JWT authentication
+- ✅ Add login form validation
+
+**Remaining Work**:
+- ⏳ Add password reset flow
+- ⏳ Implement OAuth providers
+- ⏳ Write integration tests
+- ⏳ Update documentation
+
+**Git Summary**:
+```
+8 files changed, 234 insertions(+), 67 deletions(-)
+```
+
+**Key Insights**:
+- Used jsonwebtoken library for JWT implementation
+- Chose bcrypt for password hashing (industry standard)
+- Next: Password reset requires email service setup
+
+_Linear auto-collapses in feed - click to expand for full context_
 ```
 
 **Comparison:**
@@ -476,25 +548,31 @@ Example: /ccpm:sync PSN-29
 6. ✅ **Concise comments** - 90% shorter (50 words vs 500+)
 7. ✅ **Batch updates** - Single subagent call for description + comment
 
-## v1.0 Linear Comment Strategy Benefits
+## v1.0 Linear Comment Strategy Benefits (Hybrid Format)
 
 **Before (verbose):**
 - 500-1000 words per sync comment
 - Hard to scan Linear timeline
-- Redundant information
-- Details buried in comments
+- Context mixed with summary
+- Lost details between sessions
 
-**After (concise):**
-- 50-100 words per sync comment
-- Easy to scan at a glance
-- Key info highlighted
-- Details in description (single source)
+**After (hybrid):**
+- 3-5 line summary (collapsed in feed)
+- Full context below separator (expanded view)
+- Easy to scan, detailed when needed
+- Perfect for session resume
 
-**Impact:**
-- ✅ 90% shorter comments
-- ✅ Cleaner Linear feed
-- ✅ Faster to review progress
-- ✅ Better signal-to-noise ratio
+**Benefits:**
+- ✅ **Scannable**: Summary visible in collapsed feed
+- ✅ **Complete**: Full context when expanded
+- ✅ **Session-friendly**: Everything needed to resume work
+- ✅ **Linear-native**: Uses Linear's natural collapse behavior
+
+**Use Cases:**
+- **Quick scan**: See progress across multiple issues in feed
+- **Deep dive**: Click to expand for full context
+- **Resume work**: All details available for next session
+- **Team sync**: Summary for stakeholders, details for developers
 
 ## Integration
 
