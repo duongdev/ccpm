@@ -11,12 +11,15 @@ Intelligent command that creates new tasks, plans existing tasks, or updates pla
 ## 🎯 v1.0 Interactive Workflow Rules
 
 **PLAN Mode Philosophy:**
+- **🚫 NO IMPLEMENTATION** - This command ONLY plans, NEVER implements code or commits
 - **Seek details** - Consider multiple approaches, don't assume
 - **Deep research** - Codebase, Linear, external PM, git history
 - **Update description** - Keep plan consolidated (not scattered in comments)
 - **Stay in plan mode** - Don't rush to implementation
 - **Get confirmation** - Explicit approval before proceeding
 - **Hybrid Q&A** - Critical questions via AskUserQuestion, clarifications via output
+
+**🔴 CRITICAL**: `/ccpm:plan` creates checklists and updates Linear descriptions ONLY. Implementation happens in `/ccpm:work`.
 
 ## Mode Detection
 
@@ -140,6 +143,27 @@ d) Analyze recent git commits for related work
 **Smart agent planning:**
 
 Task: `
+**CRITICAL: THIS IS PLANNING ONLY - DO NOT IMPLEMENT CODE**
+
+You are in PLAN mode. Your job is to research and create a plan ONLY.
+
+**FORBIDDEN ACTIONS**:
+- ❌ DO NOT write any code files (no Write, Edit tools)
+- ❌ DO NOT implement any features
+- ❌ DO NOT commit to git
+- ❌ DO NOT make code changes
+- ❌ DO NOT start implementation
+
+**ALLOWED ACTIONS**:
+- ✅ Read existing code to understand patterns
+- ✅ Search codebase for similar implementations
+- ✅ Research best practices
+- ✅ Create detailed checklists
+- ✅ Identify files that WILL need modification (don't modify them!)
+- ✅ Estimate complexity and risks
+
+---
+
 Plan implementation for: ${title}
 
 Context gathered:
@@ -160,11 +184,13 @@ Your task:
 Provide structured plan with:
 - **Recommended approach** and alternatives considered
 - **Implementation checklist** (specific, actionable items)
-- **Files to modify** (with rationale)
+- **Files to modify** (with rationale - but DON'T modify them!)
 - **Dependencies** and prerequisites
 - **Uncertainties** that need clarification
 - **Testing strategy**
 - **Complexity** with reasoning
+
+**REMEMBER**: This is PLANNING ONLY. Implementation happens later in /ccpm:work.
 `
 
 Note: Smart-agent-selector automatically chooses optimal agent
@@ -424,6 +450,27 @@ d) Analyze git history for related work
 **Smart agent planning:**
 
 Task: `
+**CRITICAL: THIS IS PLANNING ONLY - DO NOT IMPLEMENT CODE**
+
+You are in PLAN mode. Your job is to research and create a plan ONLY.
+
+**FORBIDDEN ACTIONS**:
+- ❌ DO NOT write any code files (no Write, Edit tools)
+- ❌ DO NOT implement any features
+- ❌ DO NOT commit to git
+- ❌ DO NOT make code changes
+- ❌ DO NOT start implementation
+
+**ALLOWED ACTIONS**:
+- ✅ Read existing code to understand patterns
+- ✅ Search codebase for similar implementations
+- ✅ Research best practices
+- ✅ Create detailed checklists
+- ✅ Identify files that WILL need modification (don't modify them!)
+- ✅ Estimate complexity and risks
+
+---
+
 Create implementation plan for: ${issue.title}
 
 Current description:
@@ -467,11 +514,13 @@ ${visualContext ? '7. **Use visual context** - Reference mockups/designs for pix
 Provide structured plan with:
 - **Recommended approach** + alternatives
 - **Implementation checklist** (actionable)
-- **Files to modify** with rationale
+- **Files to modify** with rationale (but DON'T modify them!)
 - **Uncertainties** to clarify
 - **Testing strategy**
 - **Complexity** with reasoning
 ${visualContext?.figma?.length > 0 ? '- **Design System** - Tailwind classes from Figma (include in checklist)' : ''}
+
+**REMEMBER**: This is PLANNING ONLY. Implementation happens later in /ccpm:work.
 `
 
 4. Present plan for confirmation (v1.0 workflow):
