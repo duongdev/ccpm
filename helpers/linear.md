@@ -19,7 +19,7 @@ These helper functions are a **delegation layer** that maintains backward compat
 
 **Usage in commands:** Reference this file at the start of command execution:
 ```markdown
-READ: commands/_shared-linear-helpers.md
+READ: helpers/linear.md
 ```
 
 Then use the functions as described below. The delegation to the subagent happens automatically.

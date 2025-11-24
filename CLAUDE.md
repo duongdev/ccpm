@@ -276,7 +276,46 @@ CCPM provides 17 installable skills that extend Claude Code's functionality:
 **Installing Skills:**
 Skills can be installed globally or per-project using the Claude Code skills system.
 
-### 7. Visual Context Integration (PSN-24 + PSN-25)
+### 7. Helper System
+
+CCPM v1.0 includes 10 reusable helper modules in `helpers/` that provide common functionality across commands:
+
+**Active Helpers** (currently used):
+- `image-analysis.md` (1,836 lines) - Image detection and analysis for visual context
+- `figma-detection.md` (272 lines) - Figma link detection and MCP integration
+
+**Available Helpers** (ready for integration):
+- `checklist.md` (802 lines) - Checklist parsing, updating, and progress calculation
+- `decision-helpers.md` (919 lines) - Confidence-based decision making with Always-Ask Policy
+- `linear.md` - Linear subagent delegation layer for optimized token usage
+- `workflow.md` - Workflow state detection (uncommitted changes, stale sync, etc.)
+- `planning-workflow.md` - Planning workflow logic for `/ccpm:plan`
+- `next-actions.md` - Smart next-action suggestions based on workflow state
+- `state-machine.md` - Workflow state machine (IDEA → PLANNED → IMPLEMENTING → etc.)
+- `project-config.md` - Project configuration loader for multi-project support
+
+**Helper Integration Strategy** (Staged Approach):
+- ✅ **Phase 10.5 (Complete)**: Fixed all v2.x command references in helpers
+- ⏳ **Phase 11**: Integrate critical helpers (`checklist`, `decision-helpers`) into commands
+- ⏳ **Phase 12**: Full integration with examples and documentation
+
+**Usage Pattern**:
+Commands reference helpers at the top:
+```markdown
+## Helper Functions
+
+This command uses:
+- `helpers/checklist.md` - For checklist parsing and updates
+- `helpers/decision-helpers.md` - For confidence-based decisions
+```
+
+**Key Benefits**:
+- **Consistent behavior** across commands
+- **Reusable patterns** reduce duplication
+- **Single source of truth** for common logic
+- **Token efficiency** through shared utilities
+
+### 8. Visual Context Integration (PSN-24 + PSN-25)
 
 CCPM v1.0 includes automatic visual context detection and analysis for pixel-perfect UI implementation:
 

@@ -15,7 +15,7 @@ These helper functions provide:
 
 **Usage in commands:** Reference this file at the start of command execution:
 ```markdown
-READ: commands/_shared-decision-helpers.md
+READ: helpers/decision-helpers.md
 ```
 
 Then use the functions as described below.
@@ -912,7 +912,7 @@ if (decision.shouldAsk) {
 
 ## Related Documents
 
-- [Decision Framework](../docs/architecture/decision-framework.md)
-- [Decision Trees](../docs/architecture/decision-trees-visual.md)
-- [Implementation Guide](../docs/guides/implementing-always-ask-policy.md)
-- [Workflow State Tracking](./_shared-workflow-state.md)
+- `helpers/workflow.md` - Workflow state detection
+- `helpers/checklist.md` - Checklist management
+- `commands/plan.md` - Planning command with mode detection
+- `commands/work.md` - Work command with phase selection
