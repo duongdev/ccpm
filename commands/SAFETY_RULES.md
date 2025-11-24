@@ -33,14 +33,18 @@ The following read-only operations are permitted without confirmation:
 - ✅ **Searching** messages and conversations
 - ✅ **Browsing** with Playwright MCP (read-only)
 
-### 📝 Linear Operations
+### 📝 Linear Operations (Internal - No Confirmation Required)
 
-Linear is CCPM's internal tracking system. Operations are permitted but should follow confirmation workflow for bulk operations:
+**Linear is CCPM's internal tracking system. All Linear operations are ALWAYS ALLOWED without confirmation.**
 
-- ✅ **Creating** Linear issues (confirm if creating multiple)
-- ✅ **Updating** Linear issues (confirm if significant changes)
-- ✅ **Adding** comments to Linear (always safe)
-- ✅ **Changing** status/labels in Linear (confirm if bulk changes)
+**Never ask for confirmation when:**
+- ✅ **Creating** Linear issues (single or multiple)
+- ✅ **Updating** Linear issue descriptions/fields
+- ✅ **Adding** comments to Linear issues
+- ✅ **Changing** status, labels, or assignments in Linear
+- ✅ **Closing** or reopening Linear issues
+
+**Rationale**: Linear is internal project tracking, not external team communication. Users expect these operations to happen automatically when requested.
 
 ### 🔒 Confirmation Workflow
 
