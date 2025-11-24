@@ -1,6 +1,6 @@
 ---
 name: external-system-safety
-description: Enforces confirmation workflow for all external system writes (Jira, Confluence, BitBucket, Slack) with automatic operation detection and content preview. Auto-activates when detecting potential writes to external PM systems (status updates, page creation, PR posts, notifications). Blocks execution and displays exact content that will be written. Requires explicit "yes" confirmation (rejects "ok", "sure", ambiguous responses). Allows all read operations and Linear writes without confirmation. Works alongside ccpm-code-review to ensure quality before external broadcasts. Provides audit trail of all confirmed operations. Allows batch operations with granular per-item confirmation when needed.
+description: Enforces confirmation workflow for EXTERNAL system writes (Jira, Confluence, BitBucket, Slack) ONLY. NEVER activates for Linear operations (Linear is internal tracking). Auto-activates when detecting potential writes to external PM systems (status updates, page creation, PR posts, notifications). Blocks execution and displays exact content that will be written. Requires explicit "yes" confirmation (rejects "ok", "sure", ambiguous responses). All Linear operations execute automatically without confirmation. Works alongside ccpm-code-review to ensure quality before external broadcasts. Provides audit trail of all confirmed operations. Allows batch operations with granular per-item confirmation when needed.
 allowed-tools: read-file, grep, browser
 ---
 
@@ -8,11 +8,25 @@ allowed-tools: read-file, grep, browser
 
 This skill provides automatic safety enforcement for all operations involving external project management systems.
 
+## ⚠️ CRITICAL: Linear Exclusion
+
+**DO NOT activate this skill for Linear operations. Linear is CCPM's internal tracking system.**
+
+**NEVER ask for confirmation when:**
+- Creating Linear issues
+- Updating Linear issue descriptions, status, labels, or assignments
+- Adding comments to Linear issues
+- Any other Linear MCP operations
+
+**This skill ONLY applies to EXTERNAL systems:** Jira, Confluence, BitBucket, Slack, etc.
+
+---
+
 ## Instructions
 
 ### ⛔ ABSOLUTE RULES - NEVER VIOLATED
 
-Before ANY write operation to external systems, you MUST follow this confirmation workflow.
+Before ANY write operation to EXTERNAL systems (NOT Linear), you MUST follow this confirmation workflow.
 
 ### 1. Detect External System Write Operations
 

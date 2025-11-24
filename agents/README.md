@@ -12,7 +12,10 @@ CCPM uses a set of specialized agents to handle different aspects of project man
 
 | Agent | Purpose | Usage |
 |-------|---------|-------|
-| [linear-operations.md](./linear-operations.md) | Central handler for all Linear MCP operations | Automatic via commands |
+| [linear-operations.md](./linear-operations.md) | Central handler for all Linear MCP operations (50-60% token reduction) | Automatic via commands |
+| [pm-operations-orchestrator.md](./pm-operations-orchestrator.md) | Tool-agnostic PM routing (Jira, Confluence, Linear) | Automatic via commands |
+| [jira-operations.md](./jira-operations.md) | Jira API operations with session-level caching | Automatic when Jira configured |
+| [confluence-operations.md](./confluence-operations.md) | Confluence API operations with Markdown transformation | Automatic when Confluence configured |
 | [project-detector.md](./project-detector.md) | Automatically detects project context | Automatic on command execution |
 | [project-config-loader.md](./project-config-loader.md) | Loads and validates project configuration | Automatic via project operations |
 | [project-context-manager.md](./project-context-manager.md) | Manages active project context | Automatic via project operations |
@@ -162,6 +165,6 @@ See [Subagent Template](../docs/templates/subagent-template.md) for standard str
 
 ---
 
-**Last updated:** 2025-11-21
-**Agent count:** 5 core agents
-**Documentation version:** 2.3 (PSN-31)
+**Last updated:** 2025-11-24
+**Agent count:** 8 agents (7 core + 1 specialized)
+**Documentation version:** 2.4 (v1.0)
