@@ -31,16 +31,16 @@ async function suggestAfterPlan(issueId) {
     },
     alternatives: [
       {
-        action: 'insights',
-        command: `/ccpm:utils:insights ${issueId}`,
-        label: 'Get AI Insights',
-        description: 'Analyze complexity and risks'
+        action: 'sync',
+        command: `/ccpm:sync`,
+        label: 'Save Progress',
+        description: 'Sync progress to Linear'
       },
       {
-        action: 'status',
-        command: `/ccpm:utils:status ${issueId}`,
-        label: 'Review Status',
-        description: 'Check planning details'
+        action: 'commit',
+        command: `/ccpm:commit`,
+        label: 'Commit Changes',
+        description: 'Create git commit'
       }
     ]
   }

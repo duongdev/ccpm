@@ -24,7 +24,7 @@ All CCPM commands that interact with checklists should use these utilities to en
 **Usage in commands:** Reference this file at the start of command execution:
 
 ```markdown
-READ: commands/_shared-checklist-helpers.md
+READ: helpers/checklist.md
 ```
 
 Then use the functions as described below.
@@ -638,7 +638,7 @@ console.log(`Progress: ${result.progress.percentage}%`);
 
 ### Pattern 2: Validation Before Update
 
-Used by: `/ccpm:utils:update-checklist`, `/ccpm:planning:update`
+Used by: `/ccpm:sync`, `/ccpm:verify`, `/ccpm:done`
 
 ```javascript
 // 1. Validate checklist structure
@@ -791,9 +791,10 @@ grep -r "parseChecklist\|updateChecklistItems\|calculateProgress" commands/ | gr
 
 ## Related Files
 
-- `commands/_shared-linear-helpers.md` - Linear API delegation utilities
-- `commands/utils:update-checklist.md` - Interactive checklist update command
+- `helpers/linear.md` - Linear API delegation utilities
 - `commands/sync.md` - Natural sync command with AI checklist analysis
+- `commands/verify.md` - Verification command with checklist validation
+- `commands/done.md` - Finalization command with completion checks
 - `agents/linear-operations.md` - Linear operations subagent
 
 ---

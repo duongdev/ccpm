@@ -59,11 +59,39 @@ Create a comment on a specific Linear issue.
 - `body` (string, required) - The content of the comment as Markdown
 - `parentId` (string, optional) - A parent comment ID to reply to
 
-**Example:**
+**Linear's Native Collapsible Syntax:**
+Use `+++` to create collapsible sections (starts collapsed, native Linear feature):
+```
++++ Section Title
+Content here (multi-line markdown supported)
++++
+```
+
+**Example (simple):**
 ```javascript
 mcp__linear__create_comment({
   issueId: "PSN-41",
   body: "## Progress Update\n\nCompleted first phase."
+})
+```
+
+**Example (with collapsible section):**
+```javascript
+mcp__linear__create_comment({
+  issueId: "PSN-41",
+  body: `🔄 **Progress Update**
+
+Completed first phase, all tests passing
+
++++ 📋 Detailed Context
+**Changed Files:**
+- src/auth.ts
+- src/tests/auth.test.ts
+
+**Next Steps:**
+- Implement phase 2
+- Update documentation
++++`
 })
 ```
 
