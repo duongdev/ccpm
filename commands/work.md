@@ -416,7 +416,7 @@ if (uncertainties.length > 0) {
   Display: "✅ Documented ${uncertainties.length} uncertainties in Linear"
 }
 
-6. Add concise comment to Linear (v1.0 strategy - shorter):
+6. Add structured comment to Linear (with collapsible context):
 
 **Use the Task tool:**
 
@@ -428,16 +428,52 @@ params:
   body: |
     🚀 **Started** | ${currentBranch}
 
-    **Focus**: ${selectedPhases ? selectedPhases.join(', ') : 'All phases'}
-    **Files**: {count} files to modify
-    ${uncertainties.length > 0 ? `**Uncertainties**: ${uncertainties.length} (see description)` : ''}
+    ${selectedPhases ? `**Focus**: ${selectedPhases.join(', ')}` : 'Starting all phases'}
+    **Files**: ${analysisResult.filesToModify.length} files to modify
+    ${uncertainties.length > 0 ? `**Uncertainties**: ${uncertainties.length} (see description)` : '✅ No uncertainties'}
 
-    _Use /ccpm:sync to update progress_
+    +++ 📋 Implementation Context
+
+    **Selected Phases**:
+    ${selectedPhases?.map(p => `- ${p}`).join('\n') || '- All phases'}
+
+    **Files to Modify**:
+    ${analysisResult.filesToModify.slice(0, 10).map(f => `- ${f.path || f}`).join('\n')}
+    ${analysisResult.filesToModify.length > 10 ? `\n_...and ${analysisResult.filesToModify.length - 10} more files_` : ''}
+
+    **Dependencies**:
+    ${analysisResult.dependencies?.join(', ') || 'None specified'}
+
+    ${analysisResult.taskDependencies?.parallelGroup1?.length > 0 ? `
+    **Parallel Implementation Opportunities**:
+    - Group 1 (start now): ${analysisResult.taskDependencies.parallelGroup1.join(', ')}
+    ${analysisResult.taskDependencies.sequentialTasks?.length > 0 ? `- Sequential: ${analysisResult.taskDependencies.sequentialTasks.join(', ')}` : ''}
+    ${analysisResult.taskDependencies.parallelGroup2?.length > 0 ? `- Group 2 (after sequential): ${analysisResult.taskDependencies.parallelGroup2.join(', ')}` : ''}
+    ` : ''}
+
+    **Testing Strategy**:
+    ${analysisResult.testingApproach || analysisResult.testing || 'TBD'}
+
+    ${uncertainties.length > 0 ? `
+    **Uncertainties** (documented in description):
+    ${uncertainties.map((u, i) => `${i+1}. ${u}`).join('\n')}
+    ` : ''}
+
+    **Complexity**: ${analysisResult.complexity || 'TBD'}
+
+    **Next Steps**:
+    1. Implement selected phases
+    2. **Use /ccpm:sync frequently** to save progress and update checklist
+    3. Use /ccpm:commit when ready to commit
+    4. Use /ccpm:verify before completion
+
+    +++
 context:
   command: "work"
+  purpose: "Start work with full implementation context"
 ```
 
-Display: "✅ Logged start in Linear"
+Display: "✅ Logged start in Linear with implementation context"
 
 7. Display next actions with parallel implementation guidance:
 
@@ -470,12 +506,17 @@ if (analysisResult.taskDependencies) {
 console.log('\n💡 Next Steps:');
 console.log('  1. Review the implementation plan above');
 console.log('  2. Start coding (no auto-commit - you decide when)');
-console.log('  3. Use /ccpm:sync frequently to save progress');
+console.log('  3. ⭐ Use /ccpm:sync frequently to:');
+console.log('     - Save progress updates');
+console.log('     - Update checklist items');
+console.log('     - Track file changes');
 console.log('  4. Use /ccpm:commit when ready to commit');
 console.log('\n📌 Quick Commands:');
-console.log(`  /ccpm:sync "progress update"`);
-console.log(`  /ccpm:commit`);
-console.log(`  /ccpm:verify`);
+console.log(`  /ccpm:sync                     # Interactive checklist update`);
+console.log(`  /ccpm:sync "progress note"     # Quick sync without checklist`);
+console.log(`  /ccpm:commit                   # Git commit`);
+console.log(`  /ccpm:verify                   # Quality checks`);
+console.log('\n⚠️  Important: Checklists are updated via /ccpm:sync, not automatically');
 ```
 
 ### Step 4B: RESUME Mode - Show Progress
@@ -813,9 +854,9 @@ Proceed anyway? This will create commits on main.
 10. ✅ **No auto-commit** - Explicit user control over git commits
 11. ✅ **Visual context integration** - Pixel-perfect UI implementation (95-100% fidelity)
 
-## v1.0 Linear Comment Strategy
+## v1.0 Linear Comment Strategy (Native Collapsible)
 
-**OLD (verbose):**
+**OLD (verbose - 500-1000 words):**
 ```markdown
 ## 🚀 Implementation Started
 
@@ -835,7 +876,7 @@ Proceed anyway? This will create commits on main.
 *Started via /ccpm:work*
 ```
 
-**NEW (concise):**
+**NEW (scannable summary + collapsible details):**
 ```markdown
 🚀 **Started** | feature/psn-29-auth
 
@@ -843,15 +884,44 @@ Proceed anyway? This will create commits on main.
 **Files**: 8 files to modify
 **Uncertainties**: 2 (see description)
 
-_Use /ccpm:sync to update progress_
++++ 📋 Implementation Context
+
+**Selected Phases**:
+- Phase 1: Create auth endpoints
+- Phase 2: Add JWT validation
+
+**Files to Modify**:
+- src/auth/jwt.ts
+- src/auth/middleware.ts
+... and 6 more files
+
+**Dependencies**:
+jsonwebtoken, bcrypt
+
+**Parallel Implementation Opportunities**:
+- Group 1 (start now): Create API endpoint, Design UI component
+
+**Testing Strategy**:
+Unit tests for all auth functions
+
+**Complexity**: Medium
+
+**Next Steps**:
+1. Implement selected phases
+2. **Use /ccpm:sync frequently** to save progress and update checklist
+3. Use /ccpm:commit when ready to commit
+4. Use /ccpm:verify before completion
+
++++
 ```
 
 **Benefits:**
-- ✅ 80% shorter comments
-- ✅ Easier to scan Linear timeline
-- ✅ Key info at a glance
-- ✅ Details in description (single source of truth)
-- ✅ Less noise in Linear feed
+- ✅ **Scannable**: 3-5 line summary always visible
+- ✅ **Complete**: Full context in collapsible section
+- ✅ **Linear-native**: Uses `+++` syntax (true collapsible)
+- ✅ **Session-friendly**: All context for resuming work
+- ✅ **Consistent**: Matches `/ccpm:sync` format
+- ✅ **Workflow guidance**: Clear next steps with checklist update reminders
 
 ## Integration
 
@@ -863,14 +933,28 @@ _Use /ccpm:sync to update progress_
 
 ## Notes
 
+### Workflow
+
 - **v1.0 workflow**: Git safety, phase planning, uncertainty tracking, no auto-commit
+- **Checklist updates**: ⚠️ **NOT automatic** - Use `/ccpm:sync` to update checklist items based on git changes
+- **Progress tracking**: `/ccpm:work` displays current progress, `/ccpm:sync` updates it
+- **Comment format**: Uses Linear's native `+++` collapsible syntax (matches `/ccpm:sync`)
+
+### Features
+
 - **Git branch safety**: Checks protected branches, requires confirmation
 - **Phase planning**: Interactive multi-select for large tasks (>5 items), skips completed items
 - **Decision helpers**: Confidence-based decisions with Always-Ask Policy (< 80% threshold)
 - **Parallel implementation**: Detects independent tasks, groups for simultaneous execution
-- **Checklist helpers**: Robust parsing with marker comments (`<!-- ccpm-checklist-start -->`), progress tracking
+- **Checklist helpers**: Robust parsing with marker comments (`<!-- ccpm-checklist-start -->`), display only
 - **Uncertainty tracking**: Documented in issue description for visibility
-- **Shorter comments**: 80% reduction, easier to scan timeline
+- **Collapsible comments**: Scannable summary + detailed context using `+++` syntax
 - **Smart agents**: Automatic selection based on task type
 - **Caching**: Linear subagent caches for 85-95% faster operations
 - **Visual context**: Loads UI mockups and Figma designs for pixel-perfect implementation
+
+### Important
+
+- ⚠️ **Checklists are DISPLAY-ONLY in this command** - Use `/ccpm:sync` to update them
+- 💡 **Workflow**: `/ccpm:work` → code → `/ccpm:sync` → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
+- 🔄 **Sync frequently**: Use `/ccpm:sync` after completing each phase or significant change
