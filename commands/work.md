@@ -8,15 +8,23 @@ argument-hint: "[issue-id]"
 
 Intelligent command that detects whether to start new work or resume in-progress tasks.
 
+## Helper Functions
+
+This command uses:
+- `helpers/decision-helpers.md` - For confidence-based decision making (Always-Ask Policy)
+- `helpers/checklist.md` - For robust checklist parsing and progress tracking
+
 ## 🎯 v1.0 Interactive Workflow Rules
 
 **WORK Mode Philosophy:**
 - **Git branch safety** - Check protected branches before creating new branches
-- **Phase planning** - Ask which phases to do now vs later
+- **Phase planning** - Ask which phases to do now vs later (multi-select support)
+- **Confidence-based decisions** - Use decision-helpers.md to ask when confidence < 80%
+- **Parallel implementation** - Detect and prioritize tasks that can run simultaneously
 - **Document uncertainties** - Immediately note questions/unknowns in Linear
 - **Regular progress updates** - Sync to Linear frequently
+- **Robust checklist management** - Use checklist.md for consistent parsing and updates
 - **Proactive subagents** - Invoke specialized agents as needed
-- **Parallel execution** - Organize independent tasks to run together
 - **No auto-commit** - Only commit on explicit user request
 
 ## Mode Detection
@@ -158,34 +166,43 @@ Display: "✅ Git branch safe: ${currentBranch}"
 
 2. Phase planning (v1.0 workflow):
 
-Extract checklist from description:
-const checklist = issue.description.match(/- \[ \] .+/g) || [];
+**Use helpers/checklist.md to parse checklist:**
 
-if (checklist.length > 5) {
+const checklistData = parseChecklist(issue.description);
+
+if (!checklistData) {
+  console.log('\n⚠️  No implementation checklist found. Consider running /ccpm:plan first.');
+  // Continue anyway, but no phase planning
+} else if (checklistData.items.length > 5) {
   console.log('\n📋 Implementation Checklist:');
-  checklist.forEach((item, idx) => {
-    const text = item.replace(/- \[ \] /, '');
-    console.log(`  ${idx + 1}. ${text}`);
+  checklistData.items.forEach((item, idx) => {
+    const icon = item.checked ? '✅' : '⏳';
+    console.log(`  ${icon} ${idx + 1}. ${item.content}`);
   });
 
-  console.log('\n💡 This task has multiple phases. Which would you like to tackle first?');
+  // Only show phase planning for uncompleted items
+  const incompleteItems = checklistData.items.filter(item => !item.checked);
 
-  // Use AskUserQuestion for phase selection
-  AskUserQuestion({
-    questions: [{
-      question: "Which phases to work on now?",
-      header: "Phase Planning",
-      multiSelect: true,
-      options: checklist.slice(0, 4).map((item, idx) => ({
-        label: `Phase ${idx + 1}`,
-        description: item.replace(/- \[ \] /, '')
-      }))
-    }]
-  });
+  if (incompleteItems.length > 0) {
+    console.log('\n💡 This task has multiple phases. Which would you like to tackle first?');
 
-  // Store selected phases for focused work
-  const selectedPhases = answers;
-  console.log(`\n✅ Focusing on: ${selectedPhases.join(', ')}`);
+    // Use AskUserQuestion for phase selection
+    AskUserQuestion({
+      questions: [{
+        question: "Which phases to work on now?",
+        header: "Phase Planning",
+        multiSelect: true,
+        options: incompleteItems.slice(0, 4).map((item, idx) => ({
+          label: `Phase ${idx + 1}`,
+          description: item.content
+        }))
+      }]
+    });
+
+    // Store selected phases for focused work
+    const selectedPhases = answers;
+    console.log(`\n✅ Focusing on: ${selectedPhases.join(', ')}`);
+  }
 }
 
 3. Update issue status:
@@ -283,7 +300,7 @@ if (isUITask && (detectedImages.length > 0 || detectedFigmaLinks.length > 0)) {
 
 Display: "✅ Visual context prepared for pixel-perfect implementation"
 
-4. Analyze codebase with smart agent:
+4. Analyze codebase with smart agent and detect parallel opportunities:
 
 Task: `
 Analyze the codebase for: ${issue.title}
@@ -307,19 +324,64 @@ ${visualContext?.available ? `
 Your task:
 1. Identify files that need modification
 2. List dependencies and imports needed
-3. Note potential challenges or UNKNOWNS
-4. Outline testing strategy
-5. Estimate complexity (low/medium/high)
+3. **Analyze task dependencies** - identify which tasks can run in parallel vs sequential
+4. Note potential challenges or UNKNOWNS
+5. Outline testing strategy
+6. Estimate complexity (low/medium/high)
 
 Provide structured plan with:
 - **Files to modify** (with specific locations)
 - **Dependencies** needed
+- **Task Dependencies** - Group tasks as:
+  - **Parallel Group 1**: [independent tasks that can be done simultaneously]
+  - **Parallel Group 2**: [depends on Group 1 completion]
+  - **Sequential Tasks**: [tasks requiring specific order]
 - **Uncertainties** - flag anything unclear or needing decisions
 - **Testing approach**
 - **Complexity** with reasoning
+
+**Example task grouping:**
+Parallel Group 1: [Create API endpoint, Design UI component] (independent)
+Sequential: [After Group 1] Integrate UI with API endpoint
+Parallel Group 2: [Write unit tests for API, Write UI tests] (independent)
 `
 
 Note: Smart-agent-selector automatically chooses optimal agent
+
+**After agent analysis, evaluate implementation approach confidence (helpers/decision-helpers.md):**
+
+const implementationConfidence = calculateConfidence({
+  input: analysisResult.approach,
+  signals: {
+    patternMatch: analysisResult.similarPatternsFound ? 80 : 40,
+    contextMatch: analysisResult.filesIdentified.length > 0 ? 70 : 30,
+    uncertaintyCount: analysisResult.uncertainties?.length || 0
+  }
+});
+
+// If confidence < 80%, ask user for clarification
+if (implementationConfidence.score < 80 || analysisResult.uncertainties.length > 0) {
+  console.log('\n⚠️  Implementation approach needs clarification');
+  console.log(`Confidence: ${implementationConfidence.score}%`);
+
+  // Generate clarifying questions based on uncertainties
+  const questions = analysisResult.uncertainties.map(uncertainty => {
+    return {
+      question: uncertainty.question,
+      header: uncertainty.category || "Approach",
+      multiSelect: false,
+      options: uncertainty.options || [
+        { label: "Option A", description: "..." },
+        { label: "Option B", description: "..." }
+      ]
+    };
+  });
+
+  // Ask user for decisions
+  AskUserQuestion({ questions: questions.slice(0, 4) }); // Max 4 questions
+
+  console.log('\n✅ Clarifications received. Proceeding with implementation.');
+}
 
 5. Document uncertainties immediately (v1.0 workflow):
 
@@ -377,7 +439,7 @@ context:
 
 Display: "✅ Logged start in Linear"
 
-7. Display next actions:
+7. Display next actions with parallel implementation guidance:
 
 console.log('\n═══════════════════════════════════════');
 console.log('🎯 Implementation Started');
@@ -385,6 +447,26 @@ console.log('══════════════════════�
 console.log(`📝 Working on: ${selectedPhases ? selectedPhases.join(', ') : 'All phases'}`);
 console.log(`🌿 Branch: ${currentBranch}`);
 console.log(`${uncertainties.length > 0 ? `⚠️  ${uncertainties.length} uncertainties documented` : '✅ No uncertainties'}`);
+
+// Display parallel implementation opportunities if detected
+if (analysisResult.taskDependencies) {
+  console.log('\n⚡ Parallel Implementation Opportunities:');
+
+  if (analysisResult.taskDependencies.parallelGroup1?.length > 0) {
+    console.log(`  🔵 Group 1 (start now): ${analysisResult.taskDependencies.parallelGroup1.join(', ')}`);
+  }
+
+  if (analysisResult.taskDependencies.sequentialTasks?.length > 0) {
+    console.log(`  🔴 Sequential (after Group 1): ${analysisResult.taskDependencies.sequentialTasks.join(', ')}`);
+  }
+
+  if (analysisResult.taskDependencies.parallelGroup2?.length > 0) {
+    console.log(`  🔵 Group 2 (after sequential): ${analysisResult.taskDependencies.parallelGroup2.join(', ')}`);
+  }
+
+  console.log('\n  💡 Tip: Focus on parallel tasks together for faster progress');
+}
+
 console.log('\n💡 Next Steps:');
 console.log('  1. Review the implementation plan above');
 console.log('  2. Start coding (no auto-commit - you decide when)');
@@ -422,23 +504,34 @@ Extract latest progress updates:
 - Current focus areas
 - Any blockers mentioned
 
-2. Calculate progress from checklist:
+2. Calculate progress from checklist (using helpers/checklist.md):
 
-const description = issue.description || '';
-const checklistItems = description.match(/- \[([ x])\] .+/g) || [];
-const totalItems = checklistItems.length;
-const completedItems = checklistItems.filter(item => item.includes('[x]')).length;
-const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+**Use parseChecklist and calculateProgress:**
+
+const checklistData = parseChecklist(issue.description);
+
+let progress = 0;
+let completedItems = 0;
+let totalItems = 0;
+
+if (checklistData) {
+  progress = calculateProgress(checklistData);
+  completedItems = checklistData.items.filter(item => item.checked).length;
+  totalItems = checklistData.items.length;
+} else {
+  console.log('\n⚠️  No implementation checklist found.');
+}
 
 3. Check for uncertainties in description:
 
+const description = issue.description || '';
 const hasUncertainties = description.includes('## ⚠️ Uncertainties');
 const uncertaintiesMatch = description.match(/## ⚠️ Uncertainties[^]*?(?=\n##|\n\*|$)/);
 const uncertaintiesList = uncertaintiesMatch
   ? uncertaintiesMatch[0].match(/\d+\. .+/g) || []
   : [];
 
-3. Determine next action:
+4. Determine next action:
 
 let nextAction = null;
 let suggestion = null;
@@ -449,17 +542,19 @@ if (uncertaintiesList.length > 0) {
 } else if (progress === 100) {
   suggestion = 'All checklist items complete! Ready for verification.';
   nextAction = '/ccpm:verify';
-} else {
-  const incompleteItem = checklistItems.find(item => item.includes('[ ]'));
+} else if (checklistData) {
+  const incompleteItem = checklistData.items.find(item => !item.checked);
   if (incompleteItem) {
-    const itemText = incompleteItem.replace(/- \[ \] /, '');
-    nextAction = `Continue work on: ${itemText}`;
+    nextAction = `Continue work on: ${incompleteItem.content}`;
   } else {
-    suggestion = 'No checklist found. Continue implementation.';
+    suggestion = 'All items checked. Ready for verification.';
+    nextAction = '/ccpm:verify';
   }
+} else {
+  suggestion = 'No checklist found. Continue implementation.';
 }
 
-4. Display progress and next action with recent activity (v1.0 enhancement):
+5. Display progress and next action with recent activity (v1.0 enhancement):
 
 console.log('\n═══════════════════════════════════════');
 console.log('📊 Work in Progress');
@@ -493,13 +588,11 @@ if (uncertaintiesList.length > 0) {
   console.log('');
 }
 
-if (checklistItems.length > 0) {
+if (checklistData && checklistData.items.length > 0) {
   console.log('📝 Checklist:\n');
-  checklistItems.forEach(item => {
-    const isComplete = item.includes('[x]');
-    const icon = isComplete ? '✅' : '⏳';
-    const text = item.replace(/- \[([ x])\] /, '');
-    console.log(`  ${icon} ${text}`);
+  checklistData.items.forEach(item => {
+    const icon = item.checked ? '✅' : '⏳';
+    console.log(`  ${icon} ${item.content}`);
   });
   console.log('');
 }
@@ -518,10 +611,11 @@ console.log('Available Actions:');
 console.log('  1. ⭐ Sync progress      - /ccpm:sync');
 console.log('  2. 📝 Git commit         - /ccpm:commit');
 console.log('  3. ✅ Run verification   - /ccpm:verify');
-console.log('  4. 🔍 View issue details - /ccpm:utils:status ' + issueId);
+
 if (uncertaintiesList.length > 0) {
-  console.log('  5. ❓ Update uncertainties - Edit issue description');
+  console.log('  4. ❓ Update uncertainties - Edit issue description');
 }
+
 console.log('\n📌 Quick Commands:');
 console.log(`  /ccpm:sync "progress update"`);
 console.log(`  /ccpm:commit`);
@@ -710,10 +804,14 @@ Proceed anyway? This will create commits on main.
 1. ✅ **Direct implementation** - No routing overhead
 2. ✅ **Linear subagent** - All ops cached (85-95% hit rate)
 3. ✅ **Smart agent selection** - Automatic optimal agent choice
-4. ✅ **v1.0 workflow** - Git safety, phase planning, uncertainty tracking
-5. ✅ **Shorter Linear comments** - Concise status updates (not long reports)
-6. ✅ **Uncertainty tracking** - Documented in description, not comments
-7. ✅ **No auto-commit** - Explicit user control over git commits
+4. ✅ **Decision helpers** - Confidence-based decisions (Always-Ask Policy when < 80%)
+5. ✅ **Parallel implementation** - Detects and prioritizes independent tasks
+6. ✅ **Checklist helpers** - Robust parsing with marker comment support
+7. ✅ **v1.0 workflow** - Git safety, phase planning, uncertainty tracking
+8. ✅ **Shorter Linear comments** - Concise status updates (not long reports)
+9. ✅ **Uncertainty tracking** - Documented in description, not comments
+10. ✅ **No auto-commit** - Explicit user control over git commits
+11. ✅ **Visual context integration** - Pixel-perfect UI implementation (95-100% fidelity)
 
 ## v1.0 Linear Comment Strategy
 
@@ -767,8 +865,12 @@ _Use /ccpm:sync to update progress_
 
 - **v1.0 workflow**: Git safety, phase planning, uncertainty tracking, no auto-commit
 - **Git branch safety**: Checks protected branches, requires confirmation
-- **Phase planning**: Interactive selection for large tasks (>5 items)
+- **Phase planning**: Interactive multi-select for large tasks (>5 items), skips completed items
+- **Decision helpers**: Confidence-based decisions with Always-Ask Policy (< 80% threshold)
+- **Parallel implementation**: Detects independent tasks, groups for simultaneous execution
+- **Checklist helpers**: Robust parsing with marker comments (`<!-- ccpm-checklist-start -->`), progress tracking
 - **Uncertainty tracking**: Documented in issue description for visibility
 - **Shorter comments**: 80% reduction, easier to scan timeline
 - **Smart agents**: Automatic selection based on task type
 - **Caching**: Linear subagent caches for 85-95% faster operations
+- **Visual context**: Loads UI mockups and Figma designs for pixel-perfect implementation
