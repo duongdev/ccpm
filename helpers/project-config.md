@@ -7,7 +7,7 @@
 Add this to your command file where you need to load project config:
 
 ```markdown
-**LOAD PROJECT CONFIG** (see `_shared-project-config-loader.md`)
+**LOAD PROJECT CONFIG** (see `helpers/project-config.md`)
 ```
 
 ## Configuration Loader Code

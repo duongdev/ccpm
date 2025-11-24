@@ -1,6 +1,6 @@
 # Shared Planning Workflow
 
-This module provides the common planning workflow logic used by both `/ccpm:planning:plan` and `/ccpm:planning:create` commands.
+This module provides the common planning workflow logic used by the `/ccpm:plan` command.
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ Calling commands MUST provide these context variables before executing this work
 
 ### Step 0.5: Detect and Analyze Images
 
-**READ**: `commands/_shared-image-analysis.md`
+**READ**: `helpers/image-analysis.md`
 
 Apply the image analysis workflow to detect and analyze any images attached to or referenced in the Linear issue:
 

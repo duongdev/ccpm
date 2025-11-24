@@ -1118,6 +1118,48 @@ context:
 
 ## 5. Comment Operations
 
+### Linear Comment Formatting Best Practices
+
+**Collapsible Sections (Native Linear Syntax):**
+
+Linear supports native collapsible sections using `+++` syntax. This is the CORRECT and RECOMMENDED way to create collapsible content:
+
+```
++++ Section Title
+Multi-line content here
+Supports full markdown
++++
+```
+
+**Key Points:**
+- ✅ **Use `+++` syntax** - Native Linear feature, starts collapsed
+- ❌ **Do NOT use `<details>` tags** - HTML tags are not supported in Linear
+- ✅ **Starts collapsed** - Keeps comments scannable
+- ✅ **Native behavior** - Clean Linear UX, no workarounds needed
+
+**Example Structure for Progress Updates:**
+```markdown
+🔄 **Summary Line** (always visible)
+
+Brief context (2-3 lines)
+
++++ 📋 Detailed Context for Next Session
+**Changed Files:**
+- file1.ts
+- file2.ts
+
+**Completed Items:**
+- ✅ Task 1
+- ✅ Task 2
+
+**Remaining Work:**
+- ⏳ Task 3
+- ⏳ Task 4
++++
+```
+
+---
+
 ### 5.1 create_comment
 
 Add a comment to an issue.
@@ -1127,10 +1169,17 @@ Add a comment to an issue.
 operation: create_comment
 params:
   issue_id: "PSN-123"               # Required
-  body: "## Update\n..."            # Required (Markdown)
+  body: |                           # Required (Markdown with +++ for collapsible)
+    🔄 **Progress Update**
+
+    Completed phase 1, tests passing
+
+    +++ 📋 Detailed Context
+    Full details here...
+    +++
   parent_id: "comment-456"          # Optional (for replies)
 context:
-  command: "implementation:sync"
+  command: "sync"
 ```
 
 **Output YAML**:

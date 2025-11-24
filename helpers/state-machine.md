@@ -32,8 +32,7 @@ const STATE_MACHINE = {
       CANCELLED: 50  // Requires confirmation
     },
     allowed_commands: [
-      "/ccpm:plan",
-      "/ccpm:utils:*"
+      "/ccpm:plan"
     ]
   },
 
