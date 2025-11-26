@@ -8,6 +8,35 @@ argument-hint: "[issue-id] [message]"
 
 Auto-detects issue from git branch and creates conventional commits linked to Linear issues.
 
+## ⚠️ IMPORTANT: Respect CLAUDE.md Rules (All Scopes)
+
+**Before executing any git commit operations, this command MUST check ALL CLAUDE.md files in the hierarchy:**
+
+1. `~/.claude/CLAUDE.md` - User global rules
+2. Parent directories (walking up from git root)
+3. Git repository root `CLAUDE.md`
+4. Current working directory `CLAUDE.md`
+5. `.claude/CLAUDE.md` in any of the above
+
+**Rules from more specific (closer) files take precedence over global ones.**
+
+**Example rules to respect:**
+- Custom commit message formats (e.g., `[PROJ-123] message`)
+- Required commit prefixes or scopes
+- Commit signing requirements (`--gpg-sign`, `--signoff`)
+- Branch-specific commit rules
+- Pre-commit checks or validations
+
+**Example hierarchy:**
+```
+~/.claude/CLAUDE.md                    # Global: --signoff required
+~/work/CLAUDE.md                       # Org: conventional commits
+~/work/my-project/CLAUDE.md            # Project: GPG signing
+~/work/my-project/apps/web/CLAUDE.md   # Subproject: custom prefix
+```
+
+**Result:** Command merges all rules, with subproject rules winning on conflicts.
+
 ## 🎯 v1.0 Workflow Rules
 
 **COMMIT Mode Philosophy:**
@@ -16,6 +45,7 @@ Auto-detects issue from git branch and creates conventional commits linked to Li
 - **Smart auto-generation** - Creates meaningful messages from context
 - **No auto-push** - Only commits locally, user decides when to push
 - **Safe confirmation** - Always shows what will be committed
+- **Respect local rules** - Local CLAUDE.md commit rules take precedence
 
 ## Usage
 
@@ -37,6 +67,118 @@ Auto-detects issue from git branch and creates conventional commits linked to Li
 ```
 
 ## Implementation
+
+### Step 0: Check for CLAUDE.md Commit Rules (All Scopes)
+
+**CRITICAL: Check ALL CLAUDE.md files in the hierarchy!**
+
+Claude Code loads CLAUDE.md files from multiple locations (in order of precedence):
+1. `~/.claude/CLAUDE.md` (user global)
+2. Parent directories up to filesystem root
+3. Git repository root `/CLAUDE.md`
+4. Current working directory `./CLAUDE.md`
+5. `.claude/CLAUDE.md` in any of above
+
+**The command must respect rules from ALL these files, with more specific (closer) files taking precedence.**
+
+```javascript
+// Find all CLAUDE.md files in hierarchy
+const cwd = process.cwd();
+const gitRoot = await Bash('git rev-parse --show-toplevel 2>/dev/null || echo ""');
+const homeDir = process.env.HOME;
+
+// Collect all potential CLAUDE.md locations (order: global → local)
+const claudeMdPaths = [];
+
+// 1. User global
+claudeMdPaths.push(`${homeDir}/.claude/CLAUDE.md`);
+
+// 2. Walk up from git root (or cwd if no git) to find parent CLAUDE.md files
+let searchDir = gitRoot.trim() || cwd;
+let prevDir = '';
+while (searchDir !== prevDir && searchDir !== '/') {
+  claudeMdPaths.push(`${searchDir}/CLAUDE.md`);
+  claudeMdPaths.push(`${searchDir}/.claude/CLAUDE.md`);
+  prevDir = searchDir;
+  searchDir = path.dirname(searchDir);
+}
+
+// 3. Current working directory (if different from git root)
+if (cwd !== gitRoot.trim()) {
+  claudeMdPaths.push(`${cwd}/CLAUDE.md`);
+  claudeMdPaths.push(`${cwd}/.claude/CLAUDE.md`);
+}
+
+// Read all existing CLAUDE.md files and merge rules
+let commitRules = {
+  format: 'conventional',
+  requireScope: false,
+  requireSignoff: false,
+  customPrefix: null,
+  prependIssueId: true,
+  additionalFlags: [],
+  sources: []  // Track which files contributed rules
+};
+
+for (const claudePath of claudeMdPaths) {
+  const content = await Read(claudePath).catch(() => null);
+  if (!content) continue;
+
+  // Check for commit-related rules
+  const hasCommitRules = content.match(/commit|git/i);
+  if (!hasCommitRules) continue;
+
+  commitRules.sources.push(claudePath);
+
+  // Parse rules (later files override earlier ones)
+  if (content.includes('--signoff') || content.match(/\b-s\b.*commit/i)) {
+    commitRules.requireSignoff = true;
+    if (!commitRules.additionalFlags.includes('--signoff')) {
+      commitRules.additionalFlags.push('--signoff');
+    }
+  }
+
+  if (content.includes('--gpg-sign') || content.match(/\b-S\b.*commit/i)) {
+    if (!commitRules.additionalFlags.includes('--gpg-sign')) {
+      commitRules.additionalFlags.push('--gpg-sign');
+    }
+  }
+
+  // Custom format (last one wins)
+  const formatMatch = content.match(/commit.*format[:\s]+([^\n]+)/i);
+  if (formatMatch) {
+    commitRules.customFormat = formatMatch[1].trim();
+  }
+
+  // Scope requirements
+  if (content.match(/must include.*scope|scope.*required/i)) {
+    commitRules.requireScope = true;
+  }
+
+  // Issue ID requirements
+  if (content.match(/must include.*issue|issue.*required/i)) {
+    commitRules.prependIssueId = true;
+  }
+
+  // Custom commit message patterns (e.g., "[PROJ-123] message" format)
+  const prefixMatch = content.match(/commit.*prefix[:\s]+([^\n]+)/i);
+  if (prefixMatch) {
+    commitRules.customPrefix = prefixMatch[1].trim();
+  }
+}
+
+// Display what was found
+if (commitRules.sources.length > 0) {
+  console.log('📋 Found CLAUDE.md commit rules from:');
+  commitRules.sources.forEach(src => console.log(`   • ${src}`));
+  if (commitRules.additionalFlags.length > 0) {
+    console.log(`   Flags: ${commitRules.additionalFlags.join(' ')}`);
+  }
+  if (commitRules.customFormat) {
+    console.log(`   Format: ${commitRules.customFormat}`);
+  }
+}
+```
 
 ### Step 1: Parse Arguments & Detect Issue
 
@@ -262,11 +404,21 @@ Use **AskUserQuestion**:
 # Stage all changes
 git add .
 
+# Build commit command with flags from local CLAUDE.md rules
+const commitFlags = commitRules.additionalFlags.join(' ');
+
 # Create commit (use heredoc for proper formatting)
-git commit -m "$(cat <<'EOF'
+# Include any additional flags from local CLAUDE.md (e.g., --signoff, --gpg-sign)
+git commit ${commitFlags} -m "$(cat <<'EOF'
 ${commitMessage}
 EOF
 )"
+
+# Examples:
+# No extra flags:     git commit -m "feat(PSN-29): add auth"
+# With signoff:       git commit --signoff -m "feat(PSN-29): add auth"
+# With GPG:           git commit --gpg-sign -m "feat(PSN-29): add auth"
+# Both:               git commit --signoff --gpg-sign -m "feat(PSN-29): add auth"
 ```
 
 Display success:

@@ -13,10 +13,14 @@ Intelligent command that detects whether to start new work or resume in-progress
 This command uses:
 - `helpers/decision-helpers.md` - For confidence-based decision making (Always-Ask Policy)
 - `helpers/checklist.md` - For robust checklist parsing and progress tracking
+- Git context detection - For repo labels from `git remote` or folder name
+- CLAUDE.md rules (all scopes) - For protected branches and workflow rules
 
 ## 🎯 v1.0 Interactive Workflow Rules
 
 **WORK Mode Philosophy:**
+- **⛔ NEVER implement inline** - ALWAYS delegate to specialized agents via Task tool
+- **Respect CLAUDE.md rules** - Check all scopes for protected branches, prefixes, workflow rules
 - **Git branch safety** - Check protected branches before creating new branches
 - **Phase planning** - Ask which phases to do now vs later (multi-select support)
 - **Implementation choice** - AI implements now (auto-sync) OR manual (you code)
@@ -50,6 +54,94 @@ This command uses:
 
 ## Implementation
 
+### Step 0: Check CLAUDE.md Workflow Rules (All Scopes)
+
+**CRITICAL: Check ALL CLAUDE.md files for workflow rules!**
+
+Claude Code loads CLAUDE.md files from multiple locations. This command must respect:
+- Protected branch rules
+- Branch naming conventions
+- Workflow restrictions
+
+```javascript
+// Find all CLAUDE.md files in hierarchy
+const cwd = process.cwd();
+const gitRoot = await Bash('git rev-parse --show-toplevel 2>/dev/null || echo ""');
+const homeDir = process.env.HOME;
+
+// Collect all potential CLAUDE.md locations (order: global → local)
+const claudeMdPaths = [];
+
+// 1. User global
+claudeMdPaths.push(`${homeDir}/.claude/CLAUDE.md`);
+
+// 2. Walk up from git root to find parent CLAUDE.md files
+let searchDir = gitRoot.trim() || cwd;
+let prevDir = '';
+while (searchDir !== prevDir && searchDir !== '/') {
+  claudeMdPaths.push(`${searchDir}/CLAUDE.md`);
+  claudeMdPaths.push(`${searchDir}/.claude/CLAUDE.md`);
+  prevDir = searchDir;
+  searchDir = path.dirname(searchDir);
+}
+
+// 3. Current working directory (if different from git root)
+if (cwd !== gitRoot.trim()) {
+  claudeMdPaths.push(`${cwd}/CLAUDE.md`);
+  claudeMdPaths.push(`${cwd}/.claude/CLAUDE.md`);
+}
+
+// Default workflow rules
+let workflowRules = {
+  protectedBranches: ['main', 'master', 'develop', 'staging', 'production'],
+  branchPrefix: 'feature/',
+  requireBranchForWork: true,
+  sources: []
+};
+
+// Read all existing CLAUDE.md files and extract workflow rules
+for (const claudePath of claudeMdPaths) {
+  const content = await Read(claudePath).catch(() => null);
+  if (!content) continue;
+
+  // Check for workflow/branch-related rules
+  const hasWorkflowRules = content.match(/branch|protect|workflow/i);
+  if (!hasWorkflowRules) continue;
+
+  workflowRules.sources.push(claudePath);
+
+  // Extract protected branches (patterns like "protected branches: main, develop")
+  const protectedMatch = content.match(/protected.*branch(?:es)?[:\s]+([^\n]+)/i);
+  if (protectedMatch) {
+    const branches = protectedMatch[1].split(/[,\s]+/).filter(b => b.length > 0);
+    workflowRules.protectedBranches = [...new Set([...workflowRules.protectedBranches, ...branches])];
+  }
+
+  // Extract branch prefix requirement
+  const prefixMatch = content.match(/branch.*prefix[:\s]+([^\n\s]+)/i);
+  if (prefixMatch) {
+    workflowRules.branchPrefix = prefixMatch[1].trim();
+  }
+
+  // Check if direct commits to main are allowed
+  if (content.match(/allow.*commit.*main|direct.*commit.*allowed/i)) {
+    workflowRules.requireBranchForWork = false;
+  }
+
+  // Check for stricter rules
+  if (content.match(/never.*commit.*main|always.*feature.*branch/i)) {
+    workflowRules.requireBranchForWork = true;
+  }
+}
+
+// Display what was found
+if (workflowRules.sources.length > 0) {
+  console.log('📋 Found CLAUDE.md workflow rules from:');
+  workflowRules.sources.forEach(src => console.log(`   • ${src}`));
+  console.log(`   Protected: ${workflowRules.protectedBranches.join(', ')}`);
+}
+```
+
 ### Step 1: Parse Arguments & Detect Context
 
 ```javascript
@@ -72,7 +164,71 @@ if (!/^[A-Z]+-\d+$/.test(issueId)) {
 }
 ```
 
-### Step 2: Fetch Issue via Linear Subagent
+### Step 2: Detect Repository Context for Labels
+
+**Get repo name from git remote or folder name:**
+
+```bash
+# Try git remote first (preferred - gets actual repo name)
+REPO_NAME=$(git remote get-url origin 2>/dev/null | sed -E 's/.*[\/:]([^\/]+)\.git$/\1/' | sed 's/\.git$//')
+
+# Fallback to current folder name if no remote
+if [ -z "$REPO_NAME" ]; then
+  REPO_NAME=$(basename "$(pwd)")
+fi
+
+echo "Repo: $REPO_NAME"
+```
+
+**Store for label application:**
+
+```javascript
+// Get repo name from git
+const gitRemote = await Bash('git remote get-url origin 2>/dev/null || echo ""');
+let repoName = '';
+
+if (gitRemote.trim()) {
+  // Extract repo name from remote URL
+  // Handles: git@github.com:user/repo.git, https://github.com/user/repo.git
+  const match = gitRemote.match(/[\/:]([^\/]+?)(\.git)?$/);
+  repoName = match ? match[1].replace('.git', '') : '';
+}
+
+// Fallback to folder name
+if (!repoName) {
+  const cwd = await Bash('basename "$(pwd)"');
+  repoName = cwd.trim();
+}
+
+// Optional: detect monorepo subproject from cwd
+const cwdParts = process.cwd().split('/');
+const appsIndex = cwdParts.findIndex(p => ['apps', 'packages', 'services'].includes(p));
+const subproject = appsIndex !== -1 && cwdParts[appsIndex + 1]
+  ? cwdParts[appsIndex + 1]
+  : null;
+
+// Build labels array
+const repoLabels = [repoName];
+if (subproject) {
+  repoLabels.push(subproject);
+}
+
+console.log(`📁 Repository: ${repoName}`);
+if (subproject) {
+  console.log(`📦 Subproject: ${subproject}`);
+}
+console.log(`🏷️  Labels: ${repoLabels.join(', ')}`);
+```
+
+**Example outputs:**
+
+| Context | repoLabels |
+|---------|------------|
+| `~/projects/my-app` (simple repo) | `["my-app"]` |
+| `~/projects/monorepo/apps/web` | `["monorepo", "web"]` |
+| `~/projects/monorepo/packages/ui` | `["monorepo", "ui"]` |
+
+### Step 3: Fetch Issue via Linear Subagent
 
 **Use the Task tool:**
 
@@ -100,7 +256,7 @@ if (subagentResponse.error) {
 const issue = subagentResponse.issue;
 ```
 
-### Step 3: Detect Mode
+### Step 4: Detect Mode
 
 ```javascript
 const status = issue.state.name;
@@ -133,32 +289,57 @@ console.log(`📊 Status: ${status}\n`);
 ```yaml
 ## START Mode with v1.0 workflow
 
-1. Git branch safety check (v1.0 workflow):
+1. Git branch safety check (uses CLAUDE.md rules from Step 0):
 
+```javascript
 const currentBranch = await Bash('git rev-parse --abbrev-ref HEAD');
-const protectedBranches = ['main', 'master', 'develop', 'staging', 'production'];
+
+// Use protected branches from CLAUDE.md rules (Step 0)
+// Default: ['main', 'master', 'develop', 'staging', 'production']
+const protectedBranches = workflowRules.protectedBranches;
+const branchPrefix = workflowRules.branchPrefix || 'feature/';
 
 if (protectedBranches.includes(currentBranch)) {
   console.log(`⚠️  You are on protected branch: ${currentBranch}`);
+
+  if (workflowRules.sources.length > 0) {
+    console.log(`   (Protected by CLAUDE.md rules)`);
+  }
+
   console.log(`\nRecommended: Create a feature branch`);
-  console.log(`  git checkout -b feature/${issueId.toLowerCase()}-${issue.title.toLowerCase().replace(/\s+/g, '-').substring(0, 30)}`);
+  console.log(`  git checkout -b ${branchPrefix}${issueId.toLowerCase()}-${issue.title.toLowerCase().replace(/\s+/g, '-').substring(0, 30)}`);
   console.log(`\nProceed anyway? This will create commits on ${currentBranch}.`);
+```
+
+  // Generate suggested branch name
+  const suggestedBranch = `${branchPrefix}${issueId.toLowerCase()}-${issue.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 30).replace(/-$/, '')}`;
 
   // Use AskUserQuestion for confirmation
   AskUserQuestion({
     questions: [{
-      question: `Create commits on protected branch ${currentBranch}?`,
+      question: `You're on protected branch '${currentBranch}'. What would you like to do?`,
       header: "Safety Check",
       multiSelect: false,
       options: [
-        { label: "No, I'll create a branch", description: "Stop and let me create a feature branch first" },
-        { label: "Yes, proceed", description: "I know what I'm doing, proceed on this branch" }
+        { label: "Create branch for me", description: `Auto-create: ${suggestedBranch}` },
+        { label: "I'll create branch myself", description: "Stop here and let me handle it" },
+        { label: "Continue on main", description: "I know what I'm doing, proceed on this branch" }
       ]
     }]
   });
 
-  if (answer !== "Yes, proceed") {
+  if (answer === "Create branch for me") {
+    // Auto-create the feature branch
+    console.log(`\n🌿 Creating branch: ${suggestedBranch}`);
+    await Bash(`git checkout -b ${suggestedBranch}`);
+    console.log(`✅ Switched to new branch: ${suggestedBranch}`);
+  } else if (answer === "Continue on main") {
+    console.log(`\n⚠️  Proceeding on protected branch: ${currentBranch}`);
+  } else {
+    // "I'll create branch myself" or cancelled
     console.log('\n⏸️  Stopped. Create a feature branch and run /ccpm:work again.');
+    console.log(`\nSuggested command:`);
+    console.log(`  git checkout -b ${suggestedBranch}`);
     return;
   }
 }
@@ -206,23 +387,31 @@ if (!checklistData) {
   }
 }
 
-3. Update issue status:
+3. Update issue status with repo labels:
 
 **Use the Task tool:**
 
 Invoke `ccpm:linear-operations`:
-```
+
+```yaml
 operation: update_issue
 params:
   issueId: "{issue ID}"
   state: "In Progress"
-  labels: ["implementation"]
+  labels: [...repoLabels, "implementation"]  # Merge repo + workflow labels
+  # e.g., ["my-app", "implementation"] or ["monorepo", "web", "implementation"]
 context:
   cache: true
   command: "work"
 ```
 
+**Label strategy:**
+- `repoLabels` from Step 2 (git remote or folder name + optional subproject)
+- `"implementation"` added as workflow stage label
+- Result: Linear issue shows which repo/subproject is affected
+
 Display: "✅ Updated status: ${issue.state.name} → In Progress"
+Display: "🏷️  Labels: ${[...repoLabels, 'implementation'].join(', ')}"
 
 3.5. Load visual context for implementation (if available):
 
@@ -408,7 +597,34 @@ const aiImplement = (answer === "AI implements now");
 
 4B. Chunked implementation via specialized agents (CONTEXT PROTECTION):
 
-**🎯 IMPORTANT: Delegate to specialized agents to protect main context**
+## ⛔ CRITICAL: NEVER Implement Code Inline - ALWAYS Delegate to Agents
+
+**These rules are ABSOLUTE and MUST be followed:**
+
+1. **NEVER** write implementation code directly in the main context
+2. **NEVER** use Read/Edit/Write tools to implement features yourself
+3. **NEVER** do codebase analysis inline - use Explore agent
+4. **ALWAYS** use `Task(subagent_type=...)` for ALL implementation work
+5. **ALWAYS** select the appropriate specialized agent for each task
+6. **ALWAYS** invoke agents via the Task tool, not inline code
+
+**Why?** Main context fills up rapidly (~200k limit). Each agent call uses only ~50 tokens in main context, while inline implementation uses ~2000-5000 tokens per file.
+
+**Violation example (WRONG):**
+```
+// DON'T DO THIS - implementing inline fills main context
+const code = `function login() { ... }`;
+Edit("src/auth.ts", code);  // ❌ WRONG - direct implementation
+```
+
+**Correct approach (RIGHT):**
+```
+Task(subagent_type="frontend-mobile-development:frontend-developer"): `
+Implement login component using existing patterns.
+Files: src/components/Login.tsx
+Make actual file changes.
+`  // ✅ RIGHT - delegated to agent
+```
 
 See `helpers/agent-delegation.md` for full patterns.
 
