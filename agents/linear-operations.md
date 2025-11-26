@@ -1822,8 +1822,142 @@ At end of session or on-demand via `/ccpm:utils:telemetry`:
 
 ---
 
+## Background Execution & Retry Mechanism
+
+### Overview
+
+For operations that experience high latency (e.g., cold start of MCP server), CCPM provides background execution with automatic retry:
+
+1. **Retry Wrapper** (`scripts/linear-retry-wrapper.sh`) - Handles transient failures with exponential backoff
+2. **Background Queue** (`scripts/linear-background-ops.sh`) - Fire-and-forget for non-critical operations
+
+### When to Use Background Execution
+
+**Use background for non-blocking operations:**
+- ✅ Creating comments (progress updates)
+- ✅ Updating status (non-critical)
+- ✅ Adding labels
+- ✅ Non-critical description updates
+
+**Use synchronous (blocking) for:**
+- ❌ Creating issues (need the issue ID)
+- ❌ Getting issue details (need the data)
+- ❌ Critical updates that block workflow
+
+### Background Execution Pattern
+
+**In commands, use this pattern for non-critical operations:**
+
+```markdown
+## Post progress comment (non-blocking)
+
+Execute in background for faster workflow:
+
+Bash(background=true): `
+./scripts/linear-background-ops.sh queue create_comment '{
+  "issueId": "${issueId}",
+  "body": "🔄 **Progress Update**\n\nCompleted initial implementation."
+}'
+`
+
+Display: "📝 Progress comment queued (runs in background)"
+
+# Continue with next steps immediately - don't wait for comment to post
+```
+
+**Or use the quick commands:**
+
+```bash
+# Quick comment
+./scripts/linear-background-ops.sh comment PSN-123 "Making progress on auth module"
+
+# Quick status update
+./scripts/linear-background-ops.sh update-status PSN-123 "In Progress"
+```
+
+### Retry Pattern for Critical Operations
+
+**For operations that must succeed, use retry wrapper:**
+
+```markdown
+## Update issue status (critical, must succeed)
+
+Bash: `
+./scripts/linear-retry-wrapper.sh update_issue '{
+  "id": "${issueId}",
+  "state": "In Progress"
+}' --timeout 60
+`
+
+Parse result and handle success/failure.
+```
+
+### Configuration
+
+Environment variables for tuning:
+
+```bash
+# Retry settings
+LINEAR_MAX_RETRIES=3        # Number of retry attempts
+LINEAR_INITIAL_BACKOFF=2    # Initial backoff in seconds
+LINEAR_MAX_BACKOFF=30       # Maximum backoff in seconds
+LINEAR_DEFAULT_TIMEOUT=120  # Default timeout in seconds
+
+# Queue settings
+LINEAR_MAX_CONCURRENT=3     # Max concurrent background operations
+CCPM_QUEUE_DIR=/tmp/ccpm-linear-queue
+CCPM_LOG_DIR=/tmp/ccpm-linear-logs
+```
+
+### Monitoring Background Operations
+
+```bash
+# List queued operations
+./scripts/linear-background-ops.sh list
+
+# Check specific operation status
+./scripts/linear-background-ops.sh status op-abc12345
+
+# View logs
+tail -f /tmp/ccpm-linear-logs/processor.log
+
+# Cleanup old records
+./scripts/linear-background-ops.sh cleanup 24  # Remove records older than 24 hours
+```
+
+### Performance Comparison
+
+| Approach | First Call | Subsequent Calls | Best For |
+|----------|-----------|------------------|----------|
+| Synchronous (blocking) | 2+ minutes (cold) | <1s (warm) | Critical operations |
+| Background (fire-and-forget) | ~0ms (returns immediately) | ~0ms | Comments, status |
+| With retry | 2+ minutes + retries | <1s + retries | Unreliable networks |
+
+### Integration Example
+
+**Optimized command flow with background operations:**
+
+```markdown
+## Update Issue and Post Comment
+
+### Step 1: Update status (background - non-blocking)
+Bash(background=true): `./scripts/linear-background-ops.sh update-status ${issueId} "In Progress"`
+
+### Step 2: Continue with implementation
+[... implementation code ...]
+
+### Step 3: Post progress comment (background - non-blocking)
+Bash(background=true): `./scripts/linear-background-ops.sh comment ${issueId} "Completed initial setup"`
+
+# Total blocking time: ~0ms (vs 4+ minutes with synchronous calls)
+```
+
+---
+
 ## Related Documentation
 
 - [Architecture Document](../docs/architecture/linear-subagent-architecture.md)
 - [Shared Linear Helpers](../commands/_shared-linear-helpers.md) (being deprecated)
 - [CCPM Commands Reference](../commands/README.md)
+- [Retry Wrapper Script](../scripts/linear-retry-wrapper.sh)
+- [Background Operations Script](../scripts/linear-background-ops.sh)

@@ -22,6 +22,93 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Changing status, labels, or assignments
 - Closing or reopening issues
 
+### Linear Background Operations (Performance Optimization)
+
+**🚀 Use background execution for non-critical Linear operations**
+
+Linear MCP operations can take 1-2+ minutes due to cold-start latency. To avoid blocking the workflow, use background execution for non-critical operations:
+
+**Background (fire-and-forget) - ~0ms:**
+```bash
+# Post comment in background
+./scripts/linear-background-ops.sh comment ${issueId} "Progress update"
+
+# Update status in background
+./scripts/linear-background-ops.sh update-status ${issueId} "In Progress"
+```
+
+**Blocking (must wait) - use for:**
+- `get_issue` - Need the data to continue
+- `create_issue` - Need the issue ID
+- `update_checklist_items` - Need progress % for display
+
+**Decision Matrix:**
+
+| Operation | Mode | Reason |
+|-----------|------|--------|
+| `create_comment` | Background | User doesn't wait for comments |
+| `update_issue` (status) | Background | Non-blocking status change |
+| `get_issue` | Blocking | Need data to continue |
+| `create_issue` | Blocking | Need issue ID |
+| `update_checklist_items` | Blocking | Need progress for display |
+
+**Helper files:**
+- `helpers/linear-background.md` - Patterns for background operations
+- `helpers/linear-direct.md` - Direct MCP call patterns
+- `scripts/linear-background-ops.sh` - Background queue script
+- `scripts/linear-retry-wrapper.sh` - Retry with exponential backoff
+
+See `agents/linear-operations.md` section "Background Execution & Retry Mechanism" for full documentation.
+
+### Agent Delegation for Implementation (Context Protection)
+
+**🎯 ALWAYS delegate implementation to specialized agents to protect main context**
+
+The main context fills rapidly when doing codebase analysis and implementation inline. Use specialized agents:
+
+**Agent Selection by Task Type:**
+
+| Task Type | Agent | Example Tasks |
+|-----------|-------|---------------|
+| Codebase analysis | `Explore` | Finding files, patterns |
+| Frontend/UI | `frontend-mobile-development:frontend-developer` | React components, CSS |
+| Backend/API | `backend-development:backend-architect` | APIs, databases, auth |
+| Mobile | `frontend-mobile-development:mobile-developer` | React Native, Flutter |
+| Testing | `full-stack-orchestration:test-automator` | Unit tests, E2E |
+
+**Context Impact:**
+
+| Approach | Main Context Usage |
+|----------|-------------------|
+| Analysis + implementation inline | ~15,000 tokens (context full!) |
+| Via specialized agents | ~500 tokens (sustainable) |
+
+**Implementation Pattern:**
+
+```javascript
+// 1. Use Explore agent for codebase analysis
+Task(subagent_type="Explore"): "Find files for ${task}"
+// Returns: ~100 tokens (summary)
+
+// 2. Use specialized agent for each checklist item
+Task(subagent_type="frontend-developer"): "Implement ${item}"
+// Returns: ~50 tokens (summary)
+
+// 3. Use background for Linear updates
+./scripts/linear-background-ops.sh comment ${issueId} "Done"
+// Uses: ~20 tokens
+```
+
+**Key Rules:**
+- ❌ **NEVER** analyze codebase in main context - use Explore agent
+- ❌ **NEVER** implement code in main context - use specialized agents
+- ✅ **ALWAYS** break implementation into chunks (one agent per checklist item)
+- ✅ **ALWAYS** use parallel Task calls when tasks are independent
+
+**Helper files:**
+- `helpers/agent-delegation.md` - Full delegation patterns
+- Smart-agent-selector hook suggests optimal agents automatically
+
 ### Git Commit & Push Policy
 
 **🚫 NEVER auto-commit or auto-push without explicit user approval**
