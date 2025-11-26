@@ -301,53 +301,47 @@ if (isUITask && (detectedImages.length > 0 || detectedFigmaLinks.length > 0)) {
 
 Display: "✅ Visual context prepared for pixel-perfect implementation"
 
-4. Analyze codebase with smart agent and detect parallel opportunities:
+4. Analyze codebase with Explore agent (CONTEXT PROTECTION):
 
-Task: `
-Analyze the codebase for: ${issue.title}
+**🎯 IMPORTANT: Use Explore agent to protect main context**
 
-Context:
-- Issue: ${issueId}
-- Description: ${issue.description}
-${selectedPhases ? `- Focus on: ${selectedPhases.join(', ')}` : ''}
-${visualContext?.available ? `
-- **Visual Context Available**: ${visualContext.references.length} reference(s)
-  ${visualContext.references.map(ref => `
-  - ${ref.type}: ${ref.url}
-    Purpose: ${ref.purpose}
-  `).join('\n')}
+See `helpers/agent-delegation.md` for full patterns.
 
-  **IMPORTANT**: You have direct access to UI mockups. For UI implementation tasks,
-  reference the visual mockups directly for pixel-perfect implementation.
-  Aim for 95-100% design fidelity (not 70-80% text-based interpretation).
-` : ''}
+**Use Task tool with Explore agent (isolates exploration from main context):**
 
-Your task:
-1. Identify files that need modification
-2. List dependencies and imports needed
-3. **Analyze task dependencies** - identify which tasks can run in parallel vs sequential
-4. Note potential challenges or UNKNOWNS
-5. Outline testing strategy
-6. Estimate complexity (low/medium/high)
+Task(subagent_type="Explore", model="haiku"): `
+Find files and patterns for implementing: ${issue.title}
 
-Provide structured plan with:
-- **Files to modify** (with specific locations)
-- **Dependencies** needed
-- **Task Dependencies** - Group tasks as:
-  - **Parallel Group 1**: [independent tasks that can be done simultaneously]
-  - **Parallel Group 2**: [depends on Group 1 completion]
-  - **Sequential Tasks**: [tasks requiring specific order]
-- **Uncertainties** - flag anything unclear or needing decisions
-- **Testing approach**
-- **Complexity** with reasoning
+${selectedPhases ? `Focus on phases: ${selectedPhases.join(', ')}` : ''}
 
-**Example task grouping:**
-Parallel Group 1: [Create API endpoint, Design UI component] (independent)
-Sequential: [After Group 1] Integrate UI with API endpoint
-Parallel Group 2: [Write unit tests for API, Write UI tests] (independent)
+Return ONLY:
+1. **file_paths**: List of files to modify
+2. **patterns**: Existing patterns to follow
+3. **dependencies**: Imports/packages needed
+4. **task_groups**: Group tasks as parallel vs sequential
+5. **uncertainties**: Questions needing decisions
+6. **complexity**: low/medium/high with reasoning
 `
 
-Note: Smart-agent-selector automatically chooses optimal agent
+**Main context receives:** ~100 tokens (just the structured result)
+**Explore context:** ~2000 tokens (discarded after)
+
+Store result as `explorationResult`:
+```javascript
+const explorationResult = {
+  file_paths: [...],
+  patterns: [...],
+  dependencies: [...],
+  task_groups: {
+    parallel: [...],      // Independent tasks
+    sequential: [...]     // Tasks with dependencies
+  },
+  uncertainties: [...],
+  complexity: 'medium'
+};
+```
+
+Note: Explore agent runs in isolated context - doesn't fill main context
 
 **After agent analysis, evaluate implementation approach confidence (helpers/decision-helpers.md):**
 
@@ -412,38 +406,100 @@ const aiImplement = (answer === "AI implements now");
 
 **If AI implements (aiImplement === true):**
 
-4B. Invoke specialized agent to implement changes:
+4B. Chunked implementation via specialized agents (CONTEXT PROTECTION):
 
-console.log('\n🤖 Invoking specialized agent for implementation...');
+**🎯 IMPORTANT: Delegate to specialized agents to protect main context**
 
-// Smart-agent-selector automatically chooses optimal agent
-Task: `
-Implement the following based on the approved approach:
+See `helpers/agent-delegation.md` for full patterns.
 
-**Context:**
-- Issue: ${issueId} - ${issue.title}
-- Selected Phases: ${selectedPhases ? selectedPhases.join(', ') : 'All phases'}
-- Implementation Plan: ${analysisResult}
+console.log('\n🤖 Implementing via specialized agents...');
 
-**Your Task:**
-Implement the selected phases. Make actual code changes to the files identified in the analysis.
+**Agent Selection Function:**
 
-${visualContext?.available ? `
-**Visual Context Available**:
-You have direct access to UI mockups. For UI tasks, reference the visual mockups directly for pixel-perfect implementation (95-100% fidelity).
-` : ''}
+```javascript
+function selectAgent(taskContent) {
+  const task = taskContent.toLowerCase();
 
-**Constraints:**
-- Focus ONLY on selected phases: ${selectedPhases ? selectedPhases.join(', ') : 'All phases'}
-- Follow the implementation plan from analysis
-- Write production-quality code
-- Add necessary imports and dependencies
-- Follow project coding standards
+  // Frontend/UI signals
+  if (task.match(/\b(ui|component|react|css|tailwind|frontend|page|screen|layout|button|form)\b/)) {
+    return 'frontend-mobile-development:frontend-developer';
+  }
 
-**Important:** Make actual file changes. This is implementation, not planning.
-`
+  // Backend/API signals
+  if (task.match(/\b(api|endpoint|database|auth|backend|server|graphql|rest|model)\b/)) {
+    return 'backend-development:backend-architect';
+  }
 
-console.log('✅ Implementation complete');
+  // Mobile signals
+  if (task.match(/\b(mobile|react native|flutter|ios|android|app)\b/)) {
+    return 'frontend-mobile-development:mobile-developer';
+  }
+
+  // Testing signals
+  if (task.match(/\b(test|spec|jest|vitest|cypress|playwright)\b/)) {
+    return 'full-stack-orchestration:test-automator';
+  }
+
+  // Default: general purpose
+  return 'general-purpose';
+}
+```
+
+**Chunked Implementation - One agent per checklist item:**
+
+```javascript
+const checklistItems = selectedPhases || checklistData?.items.filter(i => !i.checked) || [];
+
+for (const item of checklistItems) {
+  const agentType = selectAgent(item.content);
+
+  console.log(`\n📦 Implementing: ${item.content}`);
+  console.log(`   Agent: ${agentType}`);
+
+  // Invoke specialized agent with minimal context
+  Task(subagent_type=agentType): `
+  Implement: ${item.content}
+
+  Context:
+  - Files: ${explorationResult.file_paths.join(', ')}
+  - Patterns: ${explorationResult.patterns.join(', ')}
+  ${visualContext?.available && agentType.includes('frontend') ? `
+  - Visual mockup available for pixel-perfect implementation
+  - Target: 95-100% design fidelity
+  ` : ''}
+
+  Make actual file changes. Return brief summary of changes.
+  `
+
+  console.log(`   ✅ Completed`);
+}
+```
+
+**Parallel Implementation (when tasks are independent):**
+
+If `explorationResult.task_groups.parallel` has multiple items:
+
+```javascript
+// Invoke multiple agents in parallel (single message, multiple Task calls)
+const parallelTasks = explorationResult.task_groups.parallel;
+
+if (parallelTasks.length > 1) {
+  console.log(`\n⚡ Running ${parallelTasks.length} independent tasks in parallel...`);
+
+  // These Task calls should be in a SINGLE message to run in parallel:
+  // Task(frontend-developer): "Implement ${parallelTasks[0]}"
+  // Task(backend-architect): "Implement ${parallelTasks[1]}"
+  // etc.
+}
+```
+
+**Benefits of chunked agent delegation:**
+- Main context: ~50 tokens per item (vs ~2000 without delegation)
+- Each agent has full context for its specific task
+- Parallel execution reduces total time by ~40-60%
+- Agent context discarded after each call
+
+console.log('\n✅ All implementations complete');
 
 4C. Auto-sync progress (detect git changes):
 
