@@ -29,17 +29,21 @@ Auto-detects issue from git branch and syncs progress to Linear with smart check
 ## Usage
 
 ```bash
-# Auto-detect issue from git branch
+# Auto-detect issue from git branch (full interactive mode)
 /ccpm:sync
 
 # Explicit issue ID
 /ccpm:sync PSN-29
 
-# With custom summary
+# With custom summary (still prompts for checklist items)
 /ccpm:sync PSN-29 "Completed auth implementation"
 
 # Auto-detect with summary
 /ccpm:sync "Finished UI components"
+
+# Quick mode: skip checklist prompt entirely (just add comment)
+/ccpm:sync PSN-29 "Quick update" --quick
+/ccpm:sync --quick "Just a note"
 ```
 
 ## Implementation
@@ -50,11 +54,20 @@ Auto-detects issue from git branch and syncs progress to Linear with smart check
 const args = process.argv.slice(2);
 let issueId = args[0];
 let summary = args[1];
+let quickMode = false;
 
 const ISSUE_ID_PATTERN = /^[A-Z]+-\d+$/;
 
+// Check for --quick flag (skip checklist prompt entirely)
+if (args.includes('--quick')) {
+  quickMode = true;
+  // Remove flag from args
+  const flagIndex = args.indexOf('--quick');
+  args.splice(flagIndex, 1);
+}
+
 // If first arg looks like summary (not issue ID), treat as summary
-if (args[0] && !ISSUE_ID_PATTERN.test(args[0])) {
+if (args[0] && !ISSUE_ID_PATTERN.test(args[0]) && !args[0].startsWith('--')) {
   summary = args[0];
   issueId = null;
 }
@@ -444,13 +457,55 @@ Completed auth implementation, all tests passing
 
 ## Quick Sync Mode (Manual Summary)
 
-If user provides summary, skip interactive mode:
+If user provides summary, use streamlined flow with **optional** checklist update:
 
-1. Skip checklist AI analysis
-2. Skip AskUserQuestion
-3. Use provided summary directly
-4. Create simple concise comment
-5. No automatic checklist updates
+1. Use provided summary directly (skip AI analysis)
+2. **Still show checklist items** for quick manual selection
+3. Create concise comment with progress
+4. Update checklist if items selected
+
+**Flow:**
+
+```javascript
+// Quick mode still offers checklist selection
+if (summary) {
+  console.log(`📝 Summary: "${summary}"\n`);
+
+  // Parse checklist for quick selection
+  const checklist = parseChecklist(issue.description);
+
+  if (checklist && checklist.items.some(i => !i.checked)) {
+    const uncheckedItems = checklist.items.filter(i => !i.checked);
+
+    // Show numbered list for quick reference
+    console.log('📋 Unchecked items:');
+    uncheckedItems.forEach((item, idx) => {
+      console.log(`  [${item.index}] ${item.content}`);
+    });
+
+    // Ask which to mark complete (can skip with empty selection)
+    AskUserQuestion({
+      questions: [{
+        question: "Mark any items as complete? (skip to just add comment)",
+        header: "Checklist",
+        multiSelect: true,
+        options: uncheckedItems.slice(0, 4).map(item => ({
+          label: item.content.substring(0, 50) + (item.content.length > 50 ? '...' : ''),
+          description: `Index ${item.index}`
+        }))
+      }]
+    });
+
+    // If items selected, update checklist
+    if (selectedIndices.length > 0) {
+      // Call update_checklist_items (same as full mode)
+    }
+  }
+
+  // Always add comment with summary
+  // ...
+}
+```
 
 **Example:**
 
@@ -461,9 +516,34 @@ If user provides summary, skip interactive mode:
 **Output:**
 
 ```
+📝 Summary: "Completed auth implementation, all tests passing"
+
+📋 Unchecked items:
+  [0] Implement JWT authentication
+  [2] Add password validation
+  [3] Write unit tests
+
+? Mark any items as complete? (skip to just add comment)
+  ☐ Implement JWT authentication
+  ☐ Add password validation
+  ☐ Write unit tests
+  ☐ Skip - just add comment
+
+[User selects items or skips]
+
 ✅ Quick sync complete!
-💬 Concise comment added to Linear
-📊 Summary: "Completed auth implementation, all tests passing"
+💬 Comment added to Linear
+📋 Checklist: 2 items completed (if selected)
+📊 Progress: 40% → 60% (if updated)
+```
+
+**Skip checklist entirely:**
+
+If no checklist exists or user wants pure quick mode, add `--quick` flag:
+
+```bash
+/ccpm:sync PSN-29 "Quick update" --quick
+# → Skips checklist prompt entirely, just adds comment
 ```
 
 ## Error Handling
