@@ -1,5 +1,8 @@
 # CCPM - Claude Code Project Management Plugin
 
+[![Run in Smithery](https://smithery.ai/badge/skills/duongdev)](https://smithery.ai/skills?ns=duongdev&utm_source=github&utm_medium=badge)
+
+
 **Comprehensive Project Management with Linear integration, smart agent auto-invocation, TDD enforcement, and quality gates.**
 
 Version: 2.1.0
