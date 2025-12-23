@@ -217,7 +217,7 @@ test_plugin_loading() {
 
     if [[ ! -d "$commands_full_path" ]]; then
         log_error "Commands path not found: $commands_path (looked at $commands_full_path)"
-        ((errors++))
+        ((errors++)) || true
     else
         log_success "Commands path accessible: $commands_path"
     fi
@@ -231,15 +231,19 @@ test_plugin_loading() {
             local agent_path="${agent#./}"
             if [[ ! -f "$PROJECT_ROOT/$agent_path" ]]; then
                 log_error "Agent file not found: $agent_path"
-                ((agent_errors++))
+                ((agent_errors++)) || true
             else
                 log_success "Agent file found: $agent_path"
             fi
         done <<< "$agents"
-        ((errors = errors + agent_errors))
+        errors=$((errors + agent_errors))
     fi
 
-    return $([[ $errors -eq 0 ]] && echo 0 || echo 1)
+    if [[ $errors -eq 0 ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 show_usage() {
