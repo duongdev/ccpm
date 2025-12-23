@@ -596,7 +596,7 @@ feat(auth): add JWT authentication system
 
 ### In Planning Phase
 
-When planning a task with `/ccpm:planning:create`:
+When planning a task with `/ccpm:plan`:
 
 ```markdown
 Task: "Implement JWT authentication"
@@ -616,7 +616,7 @@ Commits expected:
 
 ### During Implementation
 
-When making changes during `/ccpm:implementation:start`:
+When making changes during `/ccpm:work`:
 
 ```bash
 # 1. Work on feature
@@ -636,7 +636,7 @@ $ /ccpm:sync "Implemented JWT validation"
 
 ### Before Verification
 
-When verifying with `/ccpm:verification:verify`:
+When verifying with `/ccpm:verify`:
 
 **Commit history should show**:
 ```
@@ -653,7 +653,7 @@ c3d4e5f test(auth): add JWT validation tests
 
 ### Before Completion
 
-When finalizing with `/ccpm:complete:finalize`:
+When finalizing with `/ccpm:done`:
 
 **Check commit history**:
 ```bash
@@ -694,7 +694,7 @@ This skill activates when you:
 ```
 User: "I finished the JWT feature"
        ↓
-/ccpm:implementation:sync → Update Linear with progress
+/ccpm:sync → Update Linear with progress
        ↓
 /ccpm:commit → Create conventional commit
        ↓
@@ -723,4 +723,4 @@ This skill ensures:
 
 **Based on**: [Conventional Commits 1.0.0](https://www.conventionalcommits.org/)
 **License**: MIT
-**CCPM Integration**: `/ccpm:commit`, `/ccpm:implementation:sync`, `/ccpm:complete:finalize`
+**CCPM Integration**: `/ccpm:commit`, `/ccpm:sync`, `/ccpm:done`

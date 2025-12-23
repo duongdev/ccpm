@@ -225,7 +225,7 @@ Format: standard
 **Commands**:
 - `/ccpm:project:show <project-id>` - Detailed project info
 - `/ccpm:project:list` - List all projects
-- `/ccpm:utils:status <issue-id>` - Task with project context
+- `/ccpm:work <issue-id>` - Task with project context
 
 **Agent usage**:
 ```javascript
@@ -864,7 +864,7 @@ if (!config.validation.valid) {
 #### Example 1: Planning Command with Project Context
 
 ```markdown
-# In /ccpm:planning:create
+# In /ccpm:plan
 
 Task(project-context-manager): `
 Get active project context
@@ -885,7 +885,7 @@ linear_create_issue({
 #### Example 2: Implementation Command with Subproject Info
 
 ```markdown
-# In /ccpm:implementation:start
+# In /ccpm:work
 
 const context = Task(project-context-manager): "Get context"
 

@@ -137,7 +137,7 @@ Epic: Product Recommendations
   • Estimate: 3 days (with buffer)
 
 💡 Next Steps:
-  1. Create Linear issue: /ccpm:planning:create "Product Recommendations"
+  1. Create Linear issue: /ccpm:plan "Product Recommendations"
   2. Start with database indexes (critical path)
   3. Frontend and backend can proceed in parallel after indexes
 
@@ -380,10 +380,10 @@ Epic: GraphQL Migration
   3. Performance degradation → Load test early
 
 💡 Recommended Approach:
-  1. Create spec first: /ccpm:spec:create epic "GraphQL Migration"
+  1. Create spec first: /ccpm:plan epic "GraphQL Migration"
   2. Document in sections: architecture, api-design, testing
   3. Review with team before implementation
-  4. Then: /ccpm:spec:break-down (creates phases as features)
+  4. Then: /ccpm:plan (creates phases as features)
 
 📋 Critical Path:
   Infrastructure → Schema → Resolvers → Client SDK → Migration
@@ -542,7 +542,7 @@ Feature: Offline Article Reading
 
 💡 Next Steps:
   1. Research offline storage: Compare SQLite vs AsyncStorage
-  2. Create Linear issue: /ccpm:planning:create "Offline Article Reading"
+  2. Create Linear issue: /ccpm:plan "Offline Article Reading"
   3. Start with storage layer (critical path)
 
 📋 Implementation Order:

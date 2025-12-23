@@ -702,13 +702,13 @@ Bad:
 **Before Deploying**:
 ```bash
 # Test with actual CCPM commands
-/ccpm:planning:create "Add feature X" my-project
+/ccpm:plan "Add feature X" my-project
 
 # Test with implementation task
 /ccpm:work
 
 # Test with multiple files
-/ccpm:implementation:sync "Completed API design"
+/ccpm:sync "Completed API design"
 ```
 
 **Measure**:

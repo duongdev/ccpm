@@ -12,7 +12,7 @@ MCP server discovery, configuration, and troubleshooting for CCPM workflows.
 This skill auto-activates when:
 
 - User asks: **"MCP server"**, **"tools available"**, **"Linear not working"**, **"what tools do I have"**
-- Running **`/ccpm:utils:help`** command
+- Running **`/ccpm:work`** command
 - Plugin installation issues
 - MCP tools failing to load
 - Troubleshooting CCPM setup
@@ -29,13 +29,13 @@ This skill auto-activates when:
 
 **2. GitHub MCP Server**
 - **Purpose**: PR creation, repository operations
-- **Used by**: `/ccpm:complete:finalize`
+- **Used by**: `/ccpm:done`
 - **Tools**: `github_create_pr`, `github_list_prs`, `github_get_repo`
 - **Setup**: Required for completion workflow
 
 **3. Context7 MCP Server**
 - **Purpose**: Latest library documentation
-- **Used by**: `/ccpm:spec:write`, `docs-seeker` skill
+- **Used by**: `/ccpm:plan`, `docs-seeker` skill
 - **Tools**: `context7_fetch_docs`, `context7_search`
 - **Setup**: Required for spec writing
 
@@ -43,19 +43,19 @@ This skill auto-activates when:
 
 **4. Jira MCP Server** (if using Jira)
 - **Purpose**: Jira ticket integration
-- **Used by**: `/ccpm:planning:create`, `/ccpm:complete:finalize`
+- **Used by**: `/ccpm:plan`, `/ccpm:done`
 - **Tools**: `jira_get_issue`, `jira_update_status`
 - **Setup**: Optional, only if syncing with Jira
 
 **5. Confluence MCP Server** (if using Confluence)
 - **Purpose**: Confluence page integration
-- **Used by**: `/ccpm:planning:plan`
+- **Used by**: `/ccpm:plan`
 - **Tools**: `confluence_get_page`, `confluence_search`
 - **Setup**: Optional, for gathering context
 
 **6. Slack MCP Server** (if using Slack)
 - **Purpose**: Team notifications
-- **Used by**: `/ccpm:complete:finalize`
+- **Used by**: `/ccpm:done`
 - **Tools**: `slack_post_message`, `slack_list_channels`
 - **Setup**: Optional, for notifications
 
@@ -338,10 +338,10 @@ sudo npx @modelcontextprotocol/server-linear
 
 ## Integration with CCPM Commands
 
-### `/ccpm:utils:help` Integration
+### `/ccpm:work` Integration
 
 ```
-User: "/ccpm:utils:help"
+User: "/ccpm:work"
 
 Claude: [ccpm-mcp-management activates]
 
@@ -483,6 +483,6 @@ This skill provides:
 
 **Source**: Adapted from [claudekit-skills/mcp-management](https://github.com/mrgoonie/claudekit-skills)
 **License**: MIT
-**CCPM Integration**: `/ccpm:utils:help`, plugin installation, troubleshooting
+**CCPM Integration**: `/ccpm:work`, plugin installation, troubleshooting
 **Required Servers**: Linear, GitHub, Context7
 **Optional Servers**: Jira, Confluence, Slack, BitBucket

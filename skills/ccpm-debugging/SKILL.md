@@ -1,6 +1,6 @@
 ---
 name: ccpm-debugging
-description: Systematic debugging with defense-in-depth approach (symptoms → immediate cause → root cause → systemic issues → prevention). Auto-activates when user mentions "error", "failing", "broken", "debug", "bug", "issue" or when /ccpm:verification:fix runs. Uses Observe → Hypothesize → Test → Confirm → Fix → Verify → Document workflow. Updates Linear with findings and automatically logs blockers that require external fixes. Traces root causes instead of patching symptoms. Integrates with ccpm-code-review to verify fixes pass all gates before marking complete. Suggests binary search for intermittent issues and five-whys analysis for complex problems.
+description: Systematic debugging with defense-in-depth approach (symptoms → immediate cause → root cause → systemic issues → prevention). Auto-activates when user mentions "error", "failing", "broken", "debug", "bug", "issue" or when /ccpm:verify runs. Uses Observe → Hypothesize → Test → Confirm → Fix → Verify → Document workflow. Updates Linear with findings and automatically logs blockers that require external fixes. Traces root causes instead of patching symptoms. Integrates with ccpm-code-review to verify fixes pass all gates before marking complete. Suggests binary search for intermittent issues and five-whys analysis for complex problems.
 ---
 
 # CCPM Debugging
@@ -12,8 +12,8 @@ Systematic debugging with Linear integration and structured troubleshooting work
 This skill auto-activates when:
 
 - User mentions: **"error"**, **"failing"**, **"broken"**, **"debug"**, **"bug"**, **"issue"**
-- Running **`/ccpm:verification:fix`** command
-- Tests failing during `/ccpm:verification:check`
+- Running **`/ccpm:verify`** command
+- Tests failing during `/ccpm:verify`
 - Build errors during implementation
 - Runtime errors or exceptions
 - Unexpected behavior
@@ -39,19 +39,19 @@ Never skip steps. Each step builds on the previous.
 
 ## Integration with CCPM
 
-### Use with `/ccpm:verification:fix`
+### Use with `/ccpm:verify`
 
 When verification fails, this skill provides structured debugging:
 
 ```
-User: "/ccpm:verification:fix AUTH-123"
+User: "/ccpm:verify AUTH-123"
 
 Claude: [ccpm-debugging activates]
 
 Starting systematic debugging for AUTH-123...
 
 Step 1: GATHER SYMPTOMS
-Running /ccpm:verification:check to collect error information...
+Running /ccpm:verify to collect error information...
 
 Found failures:
 - 3 failing tests
@@ -437,11 +437,11 @@ Thought 6: Verification complete
 ```
 Debugging started
        ↓
-pm-workflow-guide suggests /ccpm:verification:fix
+pm-workflow-guide suggests /ccpm:verify
        ↓
 ccpm-debugging provides systematic approach
        ↓
-After fix: pm-workflow-guide suggests /ccpm:verification:check
+After fix: pm-workflow-guide suggests /ccpm:verify
 ```
 
 ## Examples
@@ -609,4 +609,4 @@ This skill provides:
 
 **Source**: Adapted from [claudekit-skills/debugging](https://github.com/mrgoonie/claudekit-skills)
 **License**: MIT
-**CCPM Integration**: `/ccpm:verification:fix`, `/ccpm:implementation:update`, Linear blocker tracking
+**CCPM Integration**: `/ccpm:verify`, `/ccpm:sync`, Linear blocker tracking

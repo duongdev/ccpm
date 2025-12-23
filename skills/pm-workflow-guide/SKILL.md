@@ -56,44 +56,43 @@ Finalizing    → /ccpm:done                       Create PR & finalize
 
 ### Command Details
 
-1. **`/ccpm:plan`** - Smart planning (PREFERRED over `/ccpm:planning:create`)
+1. **`/ccpm:plan`** - Smart planning
    - Create new task: `/ccpm:plan "title" <project>`
    - Plan existing issue: `/ccpm:plan <issue-id>`
    - Update plan: `/ccpm:plan <issue-id> "changes"`
 
-2. **`/ccpm:work`** - Smart work (PREFERRED over `/ccpm:implementation:start`)
+2. **`/ccpm:work`** - Smart work
    - Auto-detects: Not started → start, In progress → resume
    - Auto-detects issue from git branch name
 
-3. **`/ccpm:sync`** - Save progress (PREFERRED over `/ccpm:implementation:sync`)
+3. **`/ccpm:sync`** - Save progress
    - Auto-detects issue from git branch
    - Shows git changes summary
    - Updates Linear with findings
 
-4. **`/ccpm:commit`** - Git integration (NEW in v2.2)
+4. **`/ccpm:commit`** - Git integration
    - Conventional commits format (feat/fix/docs/refactor/etc)
    - Links commits to Linear issues automatically
    - Example: `fix(auth): handle token expiration`
 
-5. **`/ccpm:verify`** - Quality checks (PREFERRED over manual verification)
+5. **`/ccpm:verify`** - Quality checks
    - Auto-detects issue from branch
    - Runs tests, linting, build checks sequentially
    - Fails fast if checks don't pass
 
-6. **`/ccpm:done`** - Finalize (PREFERRED over `/ccpm:complete:finalize`)
+6. **`/ccpm:done`** - Finalize
    - Pre-flight safety checks
    - Creates PR with auto-generated description
    - Syncs Linear status to Jira
    - Requires confirmation for external writes (safety)
 
-### When to Use Extended Commands
+### When to Use Project Configuration Commands
 
-The 6 natural commands cover 90% of workflows. Use extended commands for:
-- **Complex planning**: `/ccpm:planning:plan <issue-id>` (more control, context gathering)
-- **Quick internal tasks**: `/ccpm:planning:quick-plan "task"` (skip external PM sync)
-- **Spec management**: `/ccpm:spec:*` (write architecture docs, break down epics)
-- **UI design**: `/ccpm:planning:design-ui` (generate mockups, iterate designs)
-- **Special workflows**: `/ccpm:utils:*` (status, insights, context, dependencies)
+The 6 natural commands cover 90% of workflows. Use project configuration commands for:
+- **Project setup**: `/ccpm:project:add` (add new project)
+- **Project management**: `/ccpm:project:list`, `/ccpm:project:show` (view projects)
+- **Project switching**: `/ccpm:project:set` (switch active project)
+- **Design refresh**: `/ccpm:figma-refresh` (refresh Figma design cache)
 
 ## Instructions
 
@@ -113,26 +112,23 @@ This skill activates when user mentions workflow-related keywords and provides c
 
 **Recommended commands**:
 
-1. **Natural command (PREFERRED)** → `/ccpm:plan "Task title" <project>`
+1. **Natural command** → `/ccpm:plan "Task title" <project>`
    - Simple, chainable planning
    - Creates Linear issue
    - Gathers context from Jira/Confluence/Slack
    - Analyzes codebase
    - Generates comprehensive plan
 
-2. **Extended planning** → `/ccpm:planning:plan <linear-issue-id> <jira-ticket-id>`
-   - Use for more control and detailed context gathering
-   - Same as above but with additional configuration options
+2. **Plan existing issue** → `/ccpm:plan <issue-id>`
+   - Plans an existing Linear issue
+   - Gathers context and generates checklist
+   - Use when issue already exists
 
-3. **Quick internal task** → `/ccpm:planning:quick-plan "<task-description>" <project>`
-   - Lightweight planning without external PM
-   - Ideal for quick fixes and internal tasks
-
-4. **Update existing plan** → `/ccpm:planning:update <linear-issue-id> "<update-request>"`
+3. **Update existing plan** → `/ccpm:plan <issue-id> "changes"`
    - Requirements changed during implementation
    - Interactive clarification
    - Impact analysis
-   - Side-by-side comparison
+   - Updates plan with changes
 
 **Example conversation**:
 ```
@@ -144,7 +140,7 @@ I'll help you plan this. Here's what to use:
 
 1. NEW TASK → /ccpm:plan "User authentication" my-app
 2. EXISTING ISSUE → /ccpm:plan <issue-id>
-3. QUICK INTERNAL → /ccpm:planning:quick-plan "task" my-app
+3. QUICK INTERNAL → /ccpm:plan "task" my-app
 
 The first option is recommended - it's simple and chainable!
 
@@ -162,56 +158,33 @@ Which applies to your situation?
 
 **Recommended commands**:
 
-1. **Create Epic/Feature** → `/ccpm:spec:create <type> "<title>" [parent-id]`
-   - Types: epic, feature, initiative
-   - Creates Linear issue + Document
-   - Links them together
-   - Populates with template
+1. **Plan the work** → `/ccpm:plan "Task title" <project>`
+   - Creates Linear issue with comprehensive plan
+   - Gathers context from Jira/Confluence/Slack
+   - Analyzes codebase
+   - Generates implementation checklist
 
-2. **Write spec content** → `/ccpm:spec:write <doc-id> <section>`
-   - Sections: requirements, architecture, api-design, data-model, testing, security, user-flow, timeline
-   - AI-assisted writing
-   - Fetches latest library docs via Context7
-
-3. **Review spec quality** → `/ccpm:spec:review <doc-id>`
-   - A-F grading system
-   - Identifies missing sections
-   - Suggests improvements
-   - Ensures completeness
-
-4. **Break down into tasks** → `/ccpm:spec:break-down <epic-or-feature-id>`
-   - Analyzes spec
-   - Creates Features from Epics
-   - Creates Tasks from Features
-   - Maintains hierarchy
-
-5. **Keep spec in sync** → `/ccpm:spec:sync <doc-id-or-issue-id>`
-   - Detects spec drift
-   - Compares spec vs implementation
-   - Updates spec with reality
-   - Flags discrepancies
-
-6. **Migrate old specs** → `/ccpm:spec:migrate <project-path> [category]`
-   - Converts `.claude/*.md` to Linear Docs
-   - Maintains organization
-   - Preserves content
+2. **Update plan with details** → `/ccpm:plan <issue-id> "additional requirements"`
+   - Add architecture details
+   - Specify API design requirements
+   - Document data model needs
+   - Add testing and security considerations
 
 **Example conversation**:
 ```
 User: "Let's implement the payment gateway integration"
 
-Claude: [pm-workflow-guide + spec-first-development activate]
+Claude: [pm-workflow-guide activates]
 
-⚠️ This sounds like a complex feature that needs a spec first.
+⚠️ This sounds like a complex feature that needs planning first.
 
 Recommended workflow:
-1. /ccpm:spec:create epic "Payment Gateway Integration"
-2. /ccpm:spec:write <doc-id> (all sections: architecture, security, api-design)
-3. /ccpm:spec:review <doc-id> (ensure A/B grade)
-4. /ccpm:spec:break-down <doc-id> (create implementation tasks)
-5. Then start implementation
+1. /ccpm:plan "Payment Gateway Integration" my-app
+2. Review the plan (architecture, security, API design)
+3. Update plan if needed: /ccpm:plan <issue-id> "additional details"
+4. Then start implementation: /ccpm:work
 
-Would you like to start with spec creation?
+Would you like to start with planning?
 ```
 
 ### Implementation Phase
@@ -227,7 +200,7 @@ Would you like to start with spec creation?
 
 **Recommended commands**:
 
-1. **Natural command (PREFERRED)** → `/ccpm:work`
+1. **Natural command** → `/ccpm:work`
    - Start or resume implementation
    - Auto-detects issue from git branch
    - Fetches full task context
@@ -246,11 +219,6 @@ Would you like to start with spec creation?
    - Auto-formats commit message
    - Links to Linear issue
    - Example: `feat(auth): add 2FA support`
-
-4. **Extended start** → `/ccpm:implementation:start <linear-issue-id>`
-   - Use for more control over setup
-   - Analyzes subtasks in detail
-   - Can assign agents explicitly
 
 **Example conversation**:
 ```
@@ -281,26 +249,12 @@ Ready to proceed?
 
 **Recommended commands**:
 
-1. **Natural command (PREFERRED)** → `/ccpm:verify`
+1. **Natural command** → `/ccpm:verify`
    - Run all quality checks
    - Auto-detects issue from git branch
    - Runs tests, linting, build checks
    - Comprehensive code review
    - Final approval when passing
-
-2. **Extended quality checks** → `/ccpm:verification:check <linear-issue-id>`
-   - Use for manual issue specification
-   - Resolves IDE warnings
-   - Runs linting (ESLint, Prettier)
-   - Executes test suite
-   - Checks build success
-
-3. **Fix failures** → `/ccpm:verification:fix <linear-issue-id>`
-   - Identifies verification failures
-   - Analyzes error messages
-   - Invokes relevant agents
-   - Fixes issues automatically
-   - Re-runs verification
 
 **Example conversation**:
 ```
@@ -333,19 +287,13 @@ Ready to proceed?
 
 **Recommended commands**:
 
-1. **Natural command (PREFERRED)** → `/ccpm:done`
+1. **Natural command** → `/ccpm:done`
    - Auto-detects issue from git branch
    - Creates PR with auto-generated description
    - Syncs Linear status to Jira
    - Sends Slack notification
    - Marks Linear issue complete
    - Requires confirmation for external writes (safety)
-
-2. **Extended finalization** → `/ccpm:complete:finalize <linear-issue-id>`
-   - Use for manual issue specification
-   - Creates BitBucket PR with full details
-   - Syncs to all external systems
-   - Cleans up local branches
 
 **Example conversation**:
 ```
@@ -370,44 +318,44 @@ Ready to proceed?
 
 ### Utility Commands (Context-Aware)
 
-**When user asks "what's the status"** → `/ccpm:utils:status <linear-issue-id>`
+**When user asks "what's the status"** → `/ccpm:work <linear-issue-id>`
 - Shows current Linear status
 - Formatted display
 - Progress indicators
 
-**When user asks "load this task"** → `/ccpm:utils:context <linear-issue-id>`
+**When user asks "load this task"** → `/ccpm:work <linear-issue-id>`
 - Quick context loading
 - Fetches issue details
 - Identifies related files
 - Sets up environment
 
-**When user asks "what's available"** → `/ccpm:utils:agents`
+**When user asks "what's available"** → `/ccpm:work`
 - Lists all available agents
 - Shows capabilities
 - From CLAUDE.md
 
-**When user asks "how complex"** → `/ccpm:utils:insights <linear-issue-id>`
+**When user asks "how complex"** → `/ccpm:work <linear-issue-id>`
 - AI-powered analysis
 - Complexity assessment
 - Risk identification
 - Timeline estimation
 
-**When user asks "what depends on what"** → `/ccpm:utils:dependencies <linear-issue-id>`
+**When user asks "what depends on what"** → `/ccpm:work <linear-issue-id>`
 - Visualizes dependencies
 - Shows execution order
 - Identifies blockers
 
-**When user asks "show progress"** → `/ccpm:utils:report <project>`
+**When user asks "show progress"** → `/ccpm:sync <project>`
 - Progress across all tasks
 - Team velocity
 - Burndown charts
 
-**When user asks "search tasks"** → `/ccpm:utils:search <project> "<query>"`
+**When user asks "search tasks"** → `/ccpm:work <project> "<query>"`
 - Text search in Linear
 - Lists matching tasks
 - Quick access
 
-**When user is stuck** → `/ccpm:utils:help [issue-id]`
+**When user is stuck** → `/ccpm:work [issue-id]`
 - Context-aware help
 - Command suggestions
 - Workflow guidance
@@ -418,28 +366,28 @@ Ready to proceed?
 ┌─────────────┐
 │   IDEA      │ "I need to..."
 └──────┬──────┘
-       │ /ccpm:spec:create (for epics/features)
-       │ /ccpm:planning:create (for tasks)
+       │ /ccpm:plan (for epics/features)
+       │ /ccpm:plan (for tasks)
        ▼
 ┌─────────────┐
 │  PLANNED    │ "Plan is ready"
 └──────┬──────┘
-       │ /ccpm:implementation:start
+       │ /ccpm:work
        ▼
 ┌─────────────┐
 │IMPLEMENTING │ "Working on it"
 └──────┬──────┘
-       │ /ccpm:verification:check
+       │ /ccpm:verify
        ▼
 ┌─────────────┐
 │  VERIFYING  │ "Testing & reviewing"
 └──────┬──────┘
-       │ /ccpm:verification:verify
+       │ /ccpm:verify
        ▼
 ┌─────────────┐
 │  VERIFIED   │ "All checks passed"
 └──────┬──────┘
-       │ /ccpm:complete:finalize
+       │ /ccpm:done
        ▼
 ┌─────────────┐
 │  COMPLETE   │ "Shipped! 🚀"
@@ -471,34 +419,34 @@ Ready to proceed?
 - "need wireframes"
 
 **Commands**:
-1. `/ccpm:planning:design-ui <issue-id>` - Generate multiple design options
-2. `/ccpm:planning:design-refine <issue-id> <option-number> "<feedback>"` - Iterate on design
-3. `/ccpm:planning:design-approve <issue-id> <option-number>` - Finalize and generate specs
+1. `/ccpm:plan <issue-id>` - Generate multiple design options
+2. `/ccpm:plan <issue-id> <option-number> "<feedback>"` - Iterate on design
+3. `/ccpm:plan <issue-id> <option-number>` - Finalize and generate specs
 
 ### Smart Suggestions Based on Context
 
 **If user mentions issue ID directly**:
 ```
 User: "What's the status of AUTH-123?"
-Claude: Let me check: /ccpm:utils:status AUTH-123
+Claude: Let me check: /ccpm:work AUTH-123
 ```
 
 **If user seems lost**:
 ```
 User: "I don't know what to do next with this task"
-Claude: Let me help: /ccpm:implementation:next <issue-id>
+Claude: Let me help: /ccpm:work <issue-id>
 ```
 
 **If user mentions external ticket**:
 ```
 User: "I need to plan JIRA-456"
-Claude: I'll create a Linear issue and plan it: /ccpm:planning:create
+Claude: I'll create a Linear issue and plan it: /ccpm:plan
 ```
 
 **If user asks about agents**:
 ```
 User: "What agents can help with backend work?"
-Claude: Let me show you: /ccpm:utils:agents
+Claude: Let me show you: /ccpm:work
 ```
 
 ### Integration with Other Skills
@@ -507,16 +455,16 @@ This skill works alongside:
 
 1. **external-system-safety**: Reminds user about confirmation requirements
    ```
-   Claude: Note: /ccpm:complete:finalize will require confirmation for:
+   Claude: Note: /ccpm:done will require confirmation for:
    - Jira status update
    - Slack notification
    ```
 
 2. **spec-first-development**: Encourages spec creation before implementation
    ```
-   Claude: Before using /ccpm:implementation:start, consider:
+   Claude: Before using /ccpm:work, consider:
    - Does this task have a spec?
-   - For complex features, use /ccpm:spec:create first
+   - For complex features, use /ccpm:plan first
    ```
 
 3. **tdd-practices**: Reminds about TDD workflow
@@ -529,14 +477,14 @@ This skill works alongside:
 
 **Prevent common mistakes**:
 
-❌ User: "/ccpm:planning:create without JIRA ticket"
-✅ Claude: "You'll need a Jira ticket ID. Do you have one, or should we use /ccpm:planning:quick-plan?"
+❌ User: "/ccpm:plan without JIRA ticket"
+✅ Claude: "You'll need a Jira ticket ID. Do you have one, or should we use /ccpm:plan?"
 
-❌ User: "/ccpm:implementation:start without planning"
-✅ Claude: "I don't see a plan for this issue yet. Run /ccpm:planning:plan first."
+❌ User: "/ccpm:work without planning"
+✅ Claude: "I don't see a plan for this issue yet. Run /ccpm:plan first."
 
-❌ User: "/ccpm:complete:finalize before verification"
-✅ Claude: "Run /ccpm:verification:verify first to ensure quality checks pass."
+❌ User: "/ccpm:done before verification"
+✅ Claude: "Run /ccpm:verify first to ensure quality checks pass."
 
 ### Natural Workflow Activation Triggers
 
@@ -588,11 +536,11 @@ CCPM has a simple 6-command workflow:
 
 These commands are chainable and auto-detect your issue from git branch!
 
-For more control, extended commands like /ccpm:planning:create also available.
+For more control, extended commands like /ccpm:plan also available.
 
 Which matches your situation?
 
-(Tip: For complex features, consider /ccpm:spec:create first)
+(Tip: For complex features, consider /ccpm:plan first)
 ```
 
 ## Examples
@@ -621,7 +569,7 @@ Then continue with:
 /ccpm:verify         # Quality checks
 /ccpm:done           # Create PR & ship
 
-For complex features, add /ccpm:spec:create before /ccpm:work
+For complex features, add /ccpm:plan before /ccpm:work
 
 Shall I start planning?
 ```
@@ -664,8 +612,8 @@ Ready to verify?
 
 ## Command Reference Quick Access
 
-**Full command list**: `/ccpm:utils:help`
-**Visual workflow**: `/ccpm:utils:cheatsheet`
+**Full command list**: `/ccpm:work`
+**Visual workflow**: `/ccpm:work`
 **Search commands**: Ask "what command should I use for..."
 
 ## Summary

@@ -88,7 +88,7 @@ Skills activate automatically based on:
 ```
 User: "I need to plan the authentication feature"
        ↓
-pm-workflow-guide activates → Suggests /ccpm:planning:create
+pm-workflow-guide activates → Suggests /ccpm:plan
 sequential-thinking activates → Guides task decomposition
        ↓
 Claude suggests optimal workflow
@@ -149,13 +149,13 @@ Use the `ccpm-skill-creator` skill to create team-specific or project-specific s
 |-------|---------------|----------------|
 | natural-workflow | `/ccpm:plan`<br>`/ccpm:work`<br>`/ccpm:sync`<br>`/ccpm:commit`<br>`/ccpm:verify`<br>`/ccpm:done` | "how do I start", "workflow", "walk me through" |
 | pm-workflow-guide | All commands | "which command should I use" |
-| workflow-state-tracking | `/ccpm:utils:status`<br>`/ccpm:utils:dependencies` | "where am I", "what should I do next" |
-| sequential-thinking | `/ccpm:planning:create`<br>`/ccpm:spec:write` | "break down", "analyze" |
-| docs-seeker | `/ccpm:spec:write` | "documentation", "API docs" |
-| figma-integration | `/ccpm:planning:design-ui`<br>`/ccpm:planning:design-refine`<br>`/ccpm:planning:design-approve`<br>`/ccpm:utils:figma-refresh` | "Figma", "design-to-code", "component" |
+| workflow-state-tracking | `/ccpm:work`<br>`/ccpm:work` | "where am I", "what should I do next" |
+| sequential-thinking | `/ccpm:plan`<br>`/ccpm:plan` | "break down", "analyze" |
+| docs-seeker | `/ccpm:plan` | "documentation", "API docs" |
+| figma-integration | `/ccpm:plan`<br>`/ccpm:plan`<br>`/ccpm:plan`<br>`/ccpm:figma-refresh` | "Figma", "design-to-code", "component" |
 | commit-assistant | `/ccpm:commit` | "commit changes", "conventional commits" |
 | ccpm-code-review | `/ccpm:verify`<br>`/ccpm:done` | "done", "ready to merge" |
-| ccpm-debugging | `/ccpm:verification:fix` | "error", "failing", "broken" |
+| ccpm-debugging | `/ccpm:verify` | "error", "failing", "broken" |
 | linear-subagent-guide | All Linear operations | When implementing commands with Linear |
 | hook-optimization | Hook development | "optimize hook", "benchmark hook" |
 
@@ -210,7 +210,7 @@ This is **expected and good**! Skills are designed to work together.
 ```
 User: "Plan this complex feature"
        ↓
-✓ pm-workflow-guide → Suggests /ccpm:planning:create
+✓ pm-workflow-guide → Suggests /ccpm:plan
 ✓ sequential-thinking → Guides decomposition
 ✓ docs-seeker → Finds relevant docs
        ↓

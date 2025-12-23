@@ -31,7 +31,7 @@ CCPM's natural workflow commands (`plan`, `work`, `sync`, `commit`, `verify`, `d
 5. **Verify** quality
 6. **Done** - complete and create PR
 
-Instead of remembering complex command hierarchies like `/ccpm:planning:create`, `/ccpm:implementation:start`, or `/ccpm:complete:finalize`, you use simple verbs that match how you think about work.
+Instead of remembering complex command hierarchies like `/ccpm:plan`, `/ccpm:work`, or `/ccpm:done`, you use simple verbs that match how you think about work.
 
 ## The 6 Commands
 
@@ -222,7 +222,7 @@ Before completing, make sure everything is production-ready.
 **If issues found:**
 - Shows exactly what failed
 - Suggests fixes
-- Use `/ccpm:verification:fix PSN-27` to get help fixing
+- Use `/ccpm:verify PSN-27` to get help fixing
 - Run `/ccpm:verify` again once fixed
 
 **All clear?**
@@ -560,25 +560,25 @@ If you need more control than natural workflow provides:
 /ccpm:plan "title"
 
 # Use detailed version:
-/ccpm:planning:create "title" project-id jira-ticket
+/ccpm:plan "title" project-id jira-ticket
 
 # Instead of:
 /ccpm:work PSN-29
 
 # Use:
-/ccpm:implementation:start PSN-29
+/ccpm:work PSN-29
 
 # Instead of:
 /ccpm:sync PSN-29
 
 # Use:
-/ccpm:implementation:sync PSN-29 "detailed summary"
+/ccpm:sync PSN-29 "detailed summary"
 
 # Instead of:
 /ccpm:done PSN-29
 
 # Use:
-/ccpm:complete:finalize PSN-29
+/ccpm:done PSN-29
 ```
 
 Natural workflow versions are optimized for the common path. Detailed versions provide more options.
@@ -589,16 +589,16 @@ Check your progress anytime:
 
 ```bash
 # View current status
-/ccpm:utils:status PSN-29
+/ccpm:work PSN-29
 
 # See what's next
-/ccpm:utils:dependencies PSN-29
+/ccpm:work PSN-29
 
 # View project progress
-/ccpm:utils:report my-project
+/ccpm:sync my-project
 
 # Get insights
-/ccpm:utils:insights PSN-29
+/ccpm:work PSN-29
 ```
 
 ---
@@ -649,7 +649,7 @@ Please commit first:
 ```
 ❌ Tests failed: 2 failures in __tests__/auth.test.ts
 
-Use `/ccpm:verification:fix PSN-29` to get help
+Use `/ccpm:verify PSN-29` to get help
 ```
 
 **Fix:**
@@ -748,8 +748,8 @@ Ready to start? Pick an approach:
 
 **If you need help:**
 ```bash
-/ccpm:utils:status PSN-29
-/ccpm:utils:help
+/ccpm:work PSN-29
+/ccpm:work
 ```
 
 ---
