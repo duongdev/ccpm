@@ -269,3 +269,26 @@ If rate limit is reached, cached data is used (even if stale) to avoid blocking 
 - ⏳ Accessibility analysis (color contrast, ARIA labels)
 
 Phase 2 provides **full design extraction and caching** - Phase 3 will add advanced analysis and code generation.
+
+## Gemini-Enhanced Analysis
+
+For complex designs requiring precise design system extraction, use Gemini's superior vision capabilities:
+
+```bash
+# Full design system extraction (colors, typography, spacing, components)
+./scripts/gemini-figma-analyze.sh figma-export.png full
+
+# Specific analysis types
+./scripts/gemini-figma-analyze.sh figma-export.png colors
+./scripts/gemini-figma-analyze.sh figma-export.png typography
+./scripts/gemini-figma-analyze.sh figma-export.png spacing
+./scripts/gemini-figma-analyze.sh figma-export.png components
+```
+
+**When to use Gemini:**
+- Need exact hex colors with Tailwind mappings
+- Pixel-perfect spacing and typography measurements
+- Component variant detection and specifications
+- Design system documentation generation
+
+See `helpers/gemini-figma-analysis.md` for detailed patterns, integration workflows, and best practices.
