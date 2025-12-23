@@ -2,46 +2,55 @@
 
 **Automatically invoke specialized agents based on task context using Claude Code hooks.**
 
-## 🎯 Overview (v1.0)
+## 🎯 Overview (v1.1)
 
-CCPM v1.0 uses a streamlined hook system focused on **smart agent selection**. The system analyzes every user request and automatically invokes the most appropriate specialized agents for optimal workflow efficiency.
+CCPM v1.1 uses an optimized two-phase hook system:
+1. **SessionStart** - Injects full CCPM context once per session (~1.2K tokens)
+2. **UserPromptSubmit** - Provides lightweight task-specific hints (~15 tokens max)
 
-**Key Changes in v1.0:**
-- ✅ **Kept**: Smart Agent Selector (optimized, 81.7% token reduction)
-- ❌ **Removed**: TDD Enforcer (developers manage their own testing)
-- ❌ **Removed**: Quality Gates (integrated into `/ccpm:verify` command)
+**Key Optimization in v1.1:**
+- ✅ **94% token reduction** - Context injected once, not per-message
+- ✅ **SessionStart** - Full agent discovery + rules injection (once)
+- ✅ **UserPromptSubmit** - Minimal keyword-based hints only
+- ❌ **Removed**: Per-message agent discovery (moved to SessionStart)
 
-## 📊 Architecture (v1.0)
+## 📊 Architecture (v1.1)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     User Submits Request                        │
+│                     Session Starts                               │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Hook: UserPromptSubmit (smart-agent-selector.sh)              │
-│  • Discovers all available agents dynamically                   │
-│  • Scores agents based on context (0-100+ points)               │
-│  • Plans execution (parallel vs sequential)                     │
-│  • Injects agent invocation instructions                        │
-│  • Caches results for 85-95% faster runs                        │
+│  Hook: SessionStart (session-init.cjs) - RUNS ONCE             │
+│  • Discovers all available agents (plugin + project)            │
+│  • Injects agent invocation rules table                         │
+│  • Injects CCPM slash command reference                         │
+│  • Detects project/issue from git branch                        │
+│  • ~1.2K tokens injected once per session                       │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     User Sends Message                           │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Hook: UserPromptSubmit (smart-agent-selector.sh) - MINIMAL    │
+│  • Detects task-specific keywords                               │
+│  • Outputs hint: "💡 Linear task → use ccpm:linear-operations" │
+│  • ~15 tokens max (or nothing if no match)                      │
+│  • 94% reduction vs per-message full injection                  │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Claude Starts Working                         │
-│  • Invokes selected agents automatically                        │
-│  • Uses optimal agents for the task                             │
-│  • Coordinates parallel/sequential execution                    │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              User Manages Quality Explicitly                     │
-│  • Run /ccpm:verify for quality checks                          │
-│  • Run /ccpm:commit when ready to commit                        │
-│  • Full control over testing and quality workflow               │
+│  • Has full context from SessionStart                           │
+│  • Gets per-message hints for specific tasks                    │
+│  • Invokes agents based on injected rules                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -60,67 +69,63 @@ hooks/
 └── README.md                               # This file
 ```
 
-## 🔧 Smart Agent Selector Hook
+## 🔧 Two-Phase Hook System
 
-### Purpose
+### Phase 1: SessionStart (session-init.cjs)
 
-Analyzes every user request to determine which specialized agents should be invoked for optimal task execution.
+**Purpose:** Inject full CCPM context once per session
 
-### How It Works
+**Triggers:** startup, resume, clear, compact
 
-1. **Discovery Phase** (cached)
-   - Scans `~/.claude/plugins/*/agents/` for plugin agents
-   - Scans `.claude/agents/` for project-specific agents
-   - Discovers global agents (general-purpose, Explore, Plan)
-   - Caches results for 85-95% faster subsequent runs
+**What it does:**
+1. Detects project from git remote
+2. Extracts issue ID from branch name (e.g., `feature/WORK-26-...`)
+3. Discovers all available agents (plugin + project)
+4. Injects agent invocation rules table
+5. Injects CCPM slash command reference
+6. Persists session state to `/tmp/ccpm-session-*.json`
 
-2. **Scoring Phase**
-   - Analyzes user request for keywords and intent
-   - Scores each agent (0-100+ points) based on:
-     - Keyword matches (+10 per match)
-     - Task type alignment (+20 for matching type)
-     - Tech stack relevance (+15 for stack match)
-     - Agent source (+5 for plugins, +25 for project-specific)
+**Output (~1.2K tokens, once):**
+```markdown
+## CCPM Session Initialized
 
-3. **Planning Phase**
-   - Determines execution order (sequential vs parallel)
-   - Example sequences:
-     - Design → TDD → Implementation → Review (sequential)
-     - Multiple independent agents (parallel)
+**Project:** my-app | **Issue:** WORK-26 | **Branch:** feature/WORK-26
 
-4. **Injection Phase**
-   - Injects agent invocation instructions into Claude's context
-   - Claude automatically invokes the selected agents
-   - Agents execute with full context awareness
+### Available Agents (18)
+ccpm:linear-operations, ccpm:frontend-developer, ccpm:backend-architect, ...
+
+### 🔴 Agent Invocation Rules (MANDATORY)
+| Task Type | Agent | Triggers |
+|-----------|-------|----------|
+| Linear ops | ccpm:linear-operations | issue, linear, status, sync |
+| Frontend | ccpm:frontend-developer | component, UI, React, CSS |
+...
+```
+
+### Phase 2: UserPromptSubmit (smart-agent-selector.sh)
+
+**Purpose:** Provide lightweight task-specific hints
+
+**Triggers:** Every user message
+
+**What it does:**
+1. Detects keywords in user message
+2. Outputs minimal hint if match found
+3. No agent discovery (already done in SessionStart)
+
+**Output (~15 tokens max, or nothing):**
+```
+💡 Linear task detected → use `ccpm:linear-operations` agent
+```
 
 ### Performance
 
-- **Token reduction**: 81.7% vs baseline
-- **Execution time**: <1s with caching (first run: ~2-3s)
-- **Cache hit rate**: 85-95%
-- **Agent discovery**: 30-50 agents in <100ms
-
-### Example
-
-**User Request**: "Add user authentication with JWT"
-
-**Agent Selector Output**:
-```yaml
-Agents to invoke:
-1. backend-architect (score: 85)
-   - Keyword matches: authentication, JWT
-   - Task type: backend API design
-   - Execution: Sequential (first)
-
-2. security-auditor (score: 75)
-   - Keyword matches: authentication
-   - Task type: security validation
-   - Execution: Sequential (after implementation)
-
-3. tdd-orchestrator (score: 60)
-   - Task type: testing strategy
-   - Execution: Parallel with implementation
-```
+| Metric | v1.0 | v1.1 |
+|--------|------|------|
+| Per-message injection | ~2.5K tokens | ~15 tokens |
+| 10-message session | ~25K tokens | ~1.35K tokens |
+| Token reduction | baseline | **94%** |
+| Execution time | <1s | <100ms |
 
 ## ⚙️ Configuration
 
