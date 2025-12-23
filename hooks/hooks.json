@@ -72,32 +72,33 @@
   },
   "notes": {
     "session_init": {
-      "purpose": "Initializes CCPM session state once per session",
+      "purpose": "Initializes CCPM session and injects full context once per session",
       "trigger": "SessionStart (startup, resume, clear, compact)",
       "execution": "At the start of each session",
-      "output": "Session context info (project, issue, branch)",
-      "problem_solved": "Avoids re-detecting project/issue context on every command",
+      "output": "Full CCPM context: agents, rules, commands (~1.2K tokens once)",
+      "problem_solved": "Avoids context flooding from per-message injection (94% reduction)",
       "features": [
         "Detects Linear issue from git branch (e.g., WORK-26)",
         "Detects project name from git remote or directory",
+        "Discovers all available agents (plugin + project)",
+        "Injects agent invocation rules table",
+        "Injects CCPM slash command reference",
         "Persists state to /tmp/ccpm-session-{sessionId}.json",
-        "Exports env vars: CCPM_SESSION_ID, CCPM_ACTIVE_ISSUE, CCPM_ACTIVE_PROJECT, CCPM_GIT_BRANCH, CCPM_SESSION_FILE",
-        "Reduces token waste from repeated context detection",
+        "Exports env vars: CCPM_SESSION_ID, CCPM_ACTIVE_ISSUE, CCPM_ACTIVE_PROJECT",
         "Fail-open design (doesn't block session start on errors)"
       ]
     },
     "smart_agent_selector": {
-      "purpose": "Analyzes every user prompt to determine which agents should be invoked",
+      "purpose": "Provides lightweight task-specific agent hints per message",
       "trigger": "UserPromptSubmit",
       "execution": "Before Claude starts responding",
-      "output": "Injects agent invocation instructions into Claude's context",
-      "performance": "Optimized version: 81.7% token reduction, <1s execution with caching",
+      "output": "Minimal hint (~15 tokens) when keywords detected, nothing otherwise",
+      "performance": "94% token reduction vs v1.0 (full context now in SessionStart)",
       "features": [
-        "Dynamic agent discovery from plugins and project",
-        "Context-aware scoring (0-100+ points)",
-        "Parallel vs sequential execution planning",
-        "Caching for 85-95% faster subsequent runs",
-        "+50 boost for linear-operations on Linear-related tasks"
+        "Keyword-based task detection",
+        "Minimal context injection (~15 tokens max)",
+        "No agent discovery (moved to SessionStart)",
+        "Fast execution (<100ms)"
       ]
     },
     "scout_block": {
