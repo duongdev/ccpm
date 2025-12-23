@@ -178,11 +178,18 @@ jobs:
       - name: Validate YAML in commands
         run: |
           echo "=== Validating Command Frontmatter ==="
+          # Exclude documentation files (README.md, SAFETY_RULES.md) and internal utilities (_*.md)
           for file in commands/*.md; do
+            basename=$(basename "$file")
+            # Skip non-command files
+            if [[ "$basename" == "README.md" || "$basename" == "SAFETY_RULES.md" || "$basename" == _* ]]; then
+              echo "⏭ Skipping $basename (documentation/utility file)"
+              continue
+            fi
             if head -20 "$file" | grep -q "^---"; then
-              echo "✓ $(basename $file) has valid frontmatter"
+              echo "✓ $basename has valid frontmatter"
             else
-              echo "✗ $(basename $file) missing frontmatter"
+              echo "✗ $basename missing frontmatter"
               exit 1
             fi
           done
