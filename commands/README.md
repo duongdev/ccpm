@@ -60,6 +60,13 @@ CCPM v1.0 provides a streamlined command set optimized for developer productivit
 /ccpm:rollback --git                              # Undo last commit (soft)
 /ccpm:rollback --git --hard                       # Undo commit and discard changes
 /ccpm:rollback --linear                           # Revert Linear status
+
+# Command Chaining (New in v1.1)
+/ccpm:chain full PSN-123                          # Complete feature workflow
+/ccpm:chain bugfix PSN-456 "fix message"          # Quick bug fix
+/ccpm:chain quality                               # Review + verify
+/ccpm:chain ship                                  # Verify + done
+/ccpm:chain --list                                # Show all templates
 ```
 
 ### Project Configuration Commands (6 commands)
@@ -291,6 +298,24 @@ Safely undo recent operations with confirmation.
 - File change restoration
 - Linear status reversion
 - Creates backup tags for recovery
+
+### /ccpm:chain (New in v1.1)
+
+Execute chained commands with conditional logic.
+
+**Templates:**
+- `full` - Complete feature: plan → work → verify → commit → done
+- `iterate` - Quick save: sync → commit
+- `quality` - Quality checks: review → verify
+- `bugfix` - Bug fix: work → commit → verify
+- `ship` - Finalize: verify → done
+- `morning` - Day start: status ; search --mine
+- `eod` - Day end: sync → status
+
+**Operators:**
+- `&&` - Run next if success
+- `||` - Run next if failure
+- `;` - Always run next
 
 ## 🔄 Migration from v2.x
 
