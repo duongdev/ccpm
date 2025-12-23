@@ -97,12 +97,13 @@ CCPM v1.0 provides a streamlined command set optimized for developer productivit
 **PLAN Mode:**
 - Deep research (codebase, Linear, external PM, git history)
 - Interactive clarification questions
-- Explicit confirmation before updating
+- Automatic Linear updates (no confirmation - internal tracking)
 - Updates issue description (single source of truth)
 
 **WORK Mode:**
 - Git branch safety (checks protected branches)
 - Phase planning (ask which tasks to do now)
+- Mandatory agent delegation (context protection)
 - Uncertainty documentation (immediate capture)
 - No auto-commit (you decide when)
 
@@ -259,6 +260,6 @@ If you were using old commands:
 CCPM v1.0 is built on lessons learned from v2.x:
 - PSN-31: Linear subagent pattern (50-60% token reduction)
 - PSN-37: Unified checklist updates
-- PSN-39: v1.0 simplification (78% command reduction)
+- PSN-39: v1.0 simplification (82% command reduction)
 
 Built for Claude Code with ❤️ by the CCPM team.
