@@ -24,7 +24,7 @@ add_agent() {
 if [ -f ~/.claude/plugins/installed_plugins.json ]; then
     while IFS= read -r plugin; do
         plugin_name=$(echo "$plugin" | cut -d'@' -f1)
-        plugin_path=$(jq -r ".plugins.\"$plugin\".installPath" ~/.claude/plugins/installed_plugins.json 2>/dev/null || echo "")
+        plugin_path=$(jq -r ".plugins.\"$plugin\"[0].installPath" ~/.claude/plugins/installed_plugins.json 2>/dev/null || echo "")
 
         if [ -n "$plugin_path" ] && [ -d "$plugin_path" ]; then
             # Read plugin manifest for agents
