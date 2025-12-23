@@ -482,6 +482,7 @@ CCPM v1.0 includes 10 reusable helper modules in `helpers/` that provide common 
 - `next-actions.md` - Smart next-action suggestions based on workflow state
 - `state-machine.md` - Workflow state machine (IDEA → PLANNED → IMPLEMENTING → etc.)
 - `project-config.md` - Project configuration loader for multi-project support
+- `gemini-fallback.md` - Gemini CLI fallback for large files (>25K tokens)
 
 **Helper Integration Strategy** (Staged Approach):
 - ✅ **Phase 10.5 (Complete)**: Fixed all v2.x command references in helpers
@@ -504,7 +505,33 @@ This command uses:
 - **Single source of truth** for common logic
 - **Token efficiency** through shared utilities
 
-### 8. Visual Context Integration (PSN-24 + PSN-25)
+### 8. Gemini Large File Fallback
+
+When Claude's Read tool fails on large files (>25K tokens), use Gemini CLI with 2M token context:
+
+```bash
+# Quick fallback for large files
+gemini -y -m gemini-2.0-flash-exp -f /path/to/large-file.md "Extract checklist items"
+
+# Or use helper script
+./scripts/gemini-fallback.sh /path/to/large-file.md "Extract checklist items"
+```
+
+**When to Use:**
+- Linear issue descriptions exceeding token limits
+- Large config files, logs, or documentation
+- Confluence pages or external specs
+- Any file where Read tool returns "exceeds maximum allowed tokens"
+
+**Best Practices:**
+- Always try Claude Read first (faster, integrated)
+- Use specific questions, not vague summaries
+- Prefer `gemini-2.0-flash-exp` for most cases
+- Extract only what you need, not full file contents
+
+See `helpers/gemini-fallback.md` for detailed patterns and examples.
+
+### 9. Visual Context Integration (PSN-24 + PSN-25)
 
 CCPM v1.0 includes automatic visual context detection and analysis for pixel-perfect UI implementation:
 
