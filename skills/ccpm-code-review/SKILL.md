@@ -1,6 +1,6 @@
 ---
 name: ccpm-code-review
-description: Enforces quality verification gates with four-step validation (tests pass, build succeeds, checklist complete, no blockers) before task completion, PR creation, or status updates. Auto-activates when user says "done", "complete", "finished", "ready to merge", or runs /ccpm:verify or /ccpm:done commands. Provides systematic verification workflow that prevents false completion claims and ensures production readiness. Blocks external system writes (Jira, Slack) until evidence collected. Integrates with external-system-safety for confirmation workflow. When verification fails, suggests /ccpm:verification:fix to debug issues systematically.
+description: Enforces quality verification gates with four-step validation (tests pass, build succeeds, checklist complete, no blockers) before task completion, PR creation, or status updates. Auto-activates when user says "done", "complete", "finished", "ready to merge", or runs /ccpm:verify or /ccpm:done commands. Provides systematic verification workflow that prevents false completion claims and ensures production readiness. Blocks external system writes (Jira, Slack) until evidence collected. Integrates with external-system-safety for confirmation workflow. When verification fails, suggests /ccpm:verify to debug issues systematically.
 allowed-tools: read-file, grep, bash
 ---
 
@@ -15,7 +15,7 @@ This skill auto-activates when:
 - User says **"done"**, **"complete"**, **"finished"**, **"ready to merge"**
 - Running **`/ccpm:verify`** command (natural workflow - recommended)
 - Running **`/ccpm:done`** command (includes pre-flight verification)
-- Running **`/ccpm:verification:verify`** command (advanced)
+- Running **`/ccpm:verify`** command (advanced)
 - Before updating Linear task status to "Done"
 - Before syncing Jira status
 - Before creating GitHub/BitBucket PR
@@ -38,7 +38,7 @@ Run linting, tests, and build checks to ensure technical correctness:
 - ✅ Build succeeds (no compilation errors)
 - ✅ Checklist complete (100% of implementation items)
 
-**If checks fail:** Command automatically suggests `/ccpm:verification:fix` to debug systematically.
+**If checks fail:** Command automatically suggests `/ccpm:verify` to debug systematically.
 
 ### Step 2: Agent Code Review
 After quality checks pass, agent review analyzes:
@@ -170,7 +170,7 @@ All verifications passed! Ready to finalize.
   ✅ Build
 
 To debug and fix issues:
-  /ccpm:verification:fix AUTH-123
+  /ccpm:verify AUTH-123
 
 Then run verification again:
   /ccpm:verify AUTH-123
@@ -236,16 +236,16 @@ Progress: 80% (4/5 completed)
 
 🔧 Actions Required:
 1. Complete remaining checklist items
-2. Update checklist: /ccpm:utils:update-checklist AUTH-123
+2. Update checklist: /ccpm:sync AUTH-123
 3. Then run: /ccpm:done AUTH-123
 ```
 
-### Advanced: With `/ccpm:verification:verify`
+### Advanced: With `/ccpm:verify`
 
 **For manual verification step (advanced users):**
 
 ```
-Claude runs /ccpm:verification:verify AUTH-123
+Claude runs /ccpm:verify AUTH-123
 
 [ccpm-code-review activates during verification]
 
@@ -399,7 +399,7 @@ Waiting for reviewer clarification before making changes...
 ❌ FAIL: 48 tests passed, 4 failures
 
 If failures exist:
-1. Run /ccpm:verification:fix to debug
+1. Run /ccpm:verify to debug
 2. Update Linear with findings
 3. Re-run verification after fixes
 4. Only proceed when 0 failures
@@ -434,7 +434,7 @@ Incomplete items:
 
 Action required:
 1. Complete remaining items, OR
-2. Update task scope (with /ccpm:planning:update)
+2. Update task scope (with /ccpm:plan)
 3. Mark items as out-of-scope explicitly
 4. Only proceed when justified
 ```
@@ -570,7 +570,7 @@ Step 1/2: Running Quality Checks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 To debug and fix issues:
-  /ccpm:verification:fix AUTH-123
+  /ccpm:verify AUTH-123
 
 Then run verification again:
   /ccpm:verify AUTH-123
@@ -607,7 +607,7 @@ Progress: 67% (4/6 completed)
 
 🔧 Actions Required:
 1. Complete remaining checklist items
-2. Update checklist: /ccpm:utils:update-checklist AUTH-456
+2. Update checklist: /ccpm:sync AUTH-456
 3. Then run: /ccpm:done AUTH-456
 
 Or update scope with /ccpm:plan AUTH-456 "mark items as Phase 2"
@@ -679,7 +679,7 @@ Before claiming "done":
   - [ ] README updated (if user-facing)
 
 Only after ALL checked:
-- [ ] Ready for /ccpm:complete:finalize
+- [ ] Ready for /ccpm:done
 
 ## Integration with Other CCPM Skills
 
@@ -687,7 +687,7 @@ Only after ALL checked:
 
 - **external-system-safety**: Enforces confirmation for external writes (Jira/Slack)
 - **pm-workflow-guide**: Suggests `/ccpm:verify` and `/ccpm:done` at right time
-- **ccpm-debugging**: Invoked via `/ccpm:verification:fix` when checks fail
+- **ccpm-debugging**: Invoked via `/ccpm:verify` when checks fail
 - **sequential-thinking**: For complex verification scenarios
 
 **Example combined activation**:
@@ -719,7 +719,7 @@ CCPM provides streamlined commands for the complete verification and finalizatio
 |---------|---------|-------------------|
 | `/ccpm:verify` | Quality checks + agent review | ✅ From git branch |
 | `/ccpm:done` | Pre-flight + PR + finalize | ✅ From git branch |
-| `/ccpm:verification:fix` | Debug failed checks | ❌ Explicit ID required |
+| `/ccpm:verify` | Debug failed checks | ❌ Explicit ID required |
 
 **Recommended workflow:**
 ```bash
@@ -753,11 +753,11 @@ This skill ensures:
 - Auto-activates on completion attempts
 - Enforces 4 verification gates
 - Integrates with `/ccpm:verify` and `/ccpm:done`
-- Suggests `/ccpm:verification:fix` for failures
+- Suggests `/ccpm:verify` for failures
 - Works with external-system-safety for confirmations
 
 ---
 
 **Source**: Adapted from [claudekit-skills/code-review](https://github.com/mrgoonie/claudekit-skills)
 **License**: MIT
-**CCPM Integration**: `/ccpm:verify`, `/ccpm:done`, `/ccpm:verification:verify`, quality-gate hook
+**CCPM Integration**: `/ccpm:verify`, `/ccpm:done`, `/ccpm:verify`, quality-gate hook

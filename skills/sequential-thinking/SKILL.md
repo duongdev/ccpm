@@ -115,7 +115,7 @@ Confidence: [how certain are you]
 
 ### Planning Phase
 
-**Use with `/ccpm:planning:create`**:
+**Use with `/ccpm:plan`**:
 
 When creating a new task plan, use sequential thinking to:
 1. Decompose the feature into logical components
@@ -126,7 +126,7 @@ When creating a new task plan, use sequential thinking to:
 
 **Example**:
 ```
-User: "/ccpm:planning:create 'Authentication System' my-project JIRA-123"
+User: "/ccpm:plan 'Authentication System' my-project JIRA-123"
 
 Claude: [sequential-thinking activates]
 
@@ -183,7 +183,7 @@ Next: Create Linear tasks with this structure
 
 ### Spec Writing Phase
 
-**Use with `/ccpm:spec:write architecture`**:
+**Use with `/ccpm:plan architecture`**:
 
 When writing complex spec sections, use sequential thinking to:
 1. Outline section structure
@@ -194,7 +194,7 @@ When writing complex spec sections, use sequential thinking to:
 
 **Example**:
 ```
-User: "/ccpm:spec:write DOC-456 architecture"
+User: "/ccpm:plan DOC-456 architecture"
 
 Claude: [sequential-thinking activates]
 
@@ -259,7 +259,7 @@ Next: Document this in architecture section with diagrams
 
 ### Complexity Analysis
 
-**Use with `/ccpm:utils:insights`**:
+**Use with `/ccpm:work`**:
 
 When assessing task complexity, use sequential thinking to:
 1. Identify all dimensions of complexity
@@ -269,7 +269,7 @@ When assessing task complexity, use sequential thinking to:
 
 **Example**:
 ```
-User: "/ccpm:utils:insights AUTH-789"
+User: "/ccpm:work AUTH-789"
 
 Claude: [sequential-thinking activates]
 
@@ -317,7 +317,7 @@ Recommendation:
 
 ### Debugging/Root-Cause Analysis
 
-**Use with `/ccpm:verification:fix`**:
+**Use with `/ccpm:verify`**:
 
 When debugging complex issues, use sequential thinking to:
 1. Gather symptoms
@@ -610,9 +610,9 @@ Sequential thinking is ideal for:
 - ✅ Epic breakdown into manageable tasks
 
 It integrates seamlessly with CCPM workflows:
-- Planning: `/ccpm:planning:create`, `/ccpm:spec:write`
-- Analysis: `/ccpm:utils:insights`
-- Debugging: `/ccpm:verification:fix`
+- Planning: `/ccpm:plan`, `/ccpm:plan`
+- Analysis: `/ccpm:work`
+- Debugging: `/ccpm:verify`
 
 **Philosophy**: Progressive refinement over premature perfection. Start with rough estimates, iterate, revise when needed, and branch when valuable.
 
