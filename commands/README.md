@@ -248,6 +248,32 @@ If you were using old commands:
 5. **complete:finalize** → Use `/ccpm:done`
 6. **utils:*** → Most functionality integrated into main commands
 
+## 🔧 Helper Utilities
+
+Commands use shared helper utilities from `helpers/`:
+
+| Helper | Used By | Purpose |
+|--------|---------|---------|
+| `checklist.md` | `/ccpm:work`, `/ccpm:sync` | Parse and update Linear checklists |
+| `decision-helpers.md` | `/ccpm:work`, `/ccpm:plan` | Confidence-based decisions (Always-Ask Policy) |
+| `image-analysis.md` | `/ccpm:plan` | Detect and analyze UI mockups |
+| `figma-detection.md` | `/ccpm:plan`, `/ccpm:figma-refresh` | Extract Figma links and design data |
+| `agent-delegation.md` | `/ccpm:work` | Delegate to specialized agents |
+| `linear.md` | All commands | Linear subagent delegation layer |
+| `gemini-fallback.md` | Large file handling | Process files >25K tokens via Gemini CLI |
+| `next-actions.md` | `/ccpm:work`, `/ccpm:sync` | Suggest next steps based on workflow state |
+| `state-machine.md` | All commands | Workflow states (IDEA→PLANNED→IMPLEMENTING→VERIFIED→COMPLETE) |
+| `planning-workflow.md` | `/ccpm:plan` | Planning workflow logic |
+| `project-config.md` | `/ccpm:project:*` | Multi-project configuration loader |
+| `workflow.md` | All commands | Detect uncommitted changes, stale sync, etc. |
+
+**New in v1.1:**
+- `gemini-fallback.md` - Handle large Linear descriptions via Gemini 2M context
+- `gemini-figma-analysis.md` - Design extraction with Gemini vision
+- `gemini-multimodal.md` - Audio/video processing support
+- `linear-background.md` - Background Linear operations for performance
+- `linear-direct.md` - Direct MCP call patterns (verified parameters)
+
 ## 📖 Documentation
 
 - [SAFETY_RULES.md](./SAFETY_RULES.md) - External PM system safety rules
