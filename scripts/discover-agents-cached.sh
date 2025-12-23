@@ -5,7 +5,13 @@
 set -euo pipefail
 
 # Cache configuration
-CACHE_FILE="${TMPDIR:-/tmp}/claude-agents-cache-$(id -u).json"
+# Include project directory hash for project-specific caching
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    PROJECT_HASH=$(echo "$PWD" | md5 | cut -c1-8)
+else
+    PROJECT_HASH=$(echo "$PWD" | md5sum | cut -c1-8)
+fi
+CACHE_FILE="${TMPDIR:-/tmp}/claude-agents-cache-$(id -u)-${PROJECT_HASH}.json"
 CACHE_MAX_AGE=300  # 5 minutes (300 seconds)
 
 # Check if cache is valid
@@ -46,7 +52,7 @@ add_agent() {
 if [ -f ~/.claude/plugins/installed_plugins.json ]; then
     while IFS= read -r plugin; do
         plugin_name=$(echo "$plugin" | cut -d'@' -f1)
-        plugin_path=$(jq -r ".plugins.\"$plugin\".installPath" ~/.claude/plugins/installed_plugins.json 2>/dev/null || echo "")
+        plugin_path=$(jq -r ".plugins.\"$plugin\"[0].installPath" ~/.claude/plugins/installed_plugins.json 2>/dev/null || echo "")
 
         if [ -n "$plugin_path" ] && [ -d "$plugin_path/agents" ]; then
             # Fast scan: only read agent files, skip plugin.json parsing
