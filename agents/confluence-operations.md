@@ -1,3 +1,10 @@
+---
+name: confluence-operations
+description: Specialized agent for centralized Confluence API operations with content-aware caching
+tools: mcp__agent-mcp-gateway__execute_tool, mcp__agent-mcp-gateway__get_server_tools, mcp__agent-mcp-gateway__list_servers, Read, Grep
+model: haiku
+---
+
 # confluence-operations
 
 **Specialized agent for centralized Confluence API operations with content-aware caching and Markdown transformation.**

@@ -2,6 +2,56 @@
 
 This helper provides patterns for making direct MCP calls to Linear, bypassing the subagent overhead. Use this for simple operations where you don't need caching, validation, or error handling from the subagent.
 
+## ⛔ EXACT LINEAR MCP PARAMETERS (from get_server_tools)
+
+**COPY THESE EXACTLY. Verified against actual MCP schema.**
+
+```javascript
+// GET ISSUE - uses "id"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "get_issue",
+  args: { id: "WORK-26" }  // ← "id" NOT "issueId"
+})
+
+// UPDATE ISSUE - uses "id"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "update_issue",
+  args: {
+    id: "WORK-26",          // ← "id" NOT "issueId"
+    description: "...",
+    state: "In Progress"
+  }
+})
+
+// CREATE COMMENT - uses "issueId"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "create_comment",
+  args: {
+    issueId: "WORK-26",     // ← "issueId" for comments
+    body: "Comment text"
+  }
+})
+
+// LIST COMMENTS - uses "issueId"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "list_comments",
+  args: { issueId: "WORK-26" }  // ← "issueId" for comments
+})
+```
+
+| Tool | Param | NOT |
+|------|-------|-----|
+| `get_issue` | **`id`** | ~~issueId~~ |
+| `update_issue` | **`id`** | ~~issueId~~ |
+| `create_comment` | **`issueId`** | ~~id~~ |
+| `list_comments` | **`issueId`** | ~~id~~ |
+
+---
+
 ## When to Use Direct Calls vs Subagent
 
 | Use Direct Calls | Use Subagent |

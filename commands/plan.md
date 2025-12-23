@@ -8,6 +8,32 @@ argument-hint: "[title]" OR <issue-id> OR <issue-id> "[changes]"
 
 Intelligent command that creates new tasks, plans existing tasks, or updates plans based on context.
 
+## ⛔ CRITICAL: Linear Operations
+
+**ALL Linear operations MUST use the Task tool with `ccpm:linear-operations` subagent.**
+
+```javascript
+// ✅ CORRECT - Use Task tool with subagent
+Task({
+  subagent_type: "ccpm:linear-operations",
+  prompt: `operation: get_issue\nparams:\n  issueId: WORK-26\ncontext:\n  cache: true`
+})
+
+// ❌ WRONG - Direct MCP call (will fail with wrong params)
+mcp__agent-mcp-gateway__execute_tool({ server: "linear", tool: "get_issue", args: { issueId: "X" } })
+```
+
+## ✅ LINEAR = AUTOMATIC (NO CONFIRMATION)
+
+**Linear is internal tracking. Execute ALL operations immediately:**
+- ✅ Create issues → Just do it
+- ✅ Update descriptions → Just do it
+- ✅ Post comments → Just do it
+
+**NEVER ask:** "Do you want me to update Linear?" - Just execute and report result.
+
+---
+
 ## 🎯 v1.0 Interactive Workflow Rules
 
 **PLAN Mode Philosophy:**

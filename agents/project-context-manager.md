@@ -1,3 +1,10 @@
+---
+name: project-context-manager
+description: Specialized agent for managing active project context in CCPM
+tools: Read, Grep, Glob, Bash
+model: haiku
+---
+
 # project-context-manager
 
 **Specialized agent for managing active project context in CCPM.**

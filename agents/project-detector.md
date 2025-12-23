@@ -1,3 +1,10 @@
+---
+name: project-detector
+description: Specialized agent for detecting active projects and subprojects in CCPM
+tools: Read, Grep, Glob, Bash
+model: haiku
+---
+
 # project-detector
 
 **Specialized agent for detecting active projects and subprojects in CCPM.**

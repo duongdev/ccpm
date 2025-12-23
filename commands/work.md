@@ -8,6 +8,32 @@ argument-hint: "[issue-id]"
 
 Intelligent command that detects whether to start new work or resume in-progress tasks.
 
+## ⛔ CRITICAL: Linear Operations
+
+**ALL Linear operations MUST use the Task tool with `ccpm:linear-operations` subagent.**
+
+```javascript
+// ✅ CORRECT - Use Task tool with subagent
+Task({
+  subagent_type: "ccpm:linear-operations",
+  prompt: `operation: get_issue\nparams:\n  issueId: WORK-26\ncontext:\n  cache: true`
+})
+
+// ❌ WRONG - Direct MCP call (will fail with wrong params)
+mcp__agent-mcp-gateway__execute_tool({ server: "linear", tool: "get_issue", args: { issueId: "X" } })
+```
+
+## ✅ LINEAR = AUTOMATIC (NO CONFIRMATION)
+
+**Linear is internal tracking. Execute ALL operations immediately:**
+- ✅ Get/update issues → Just do it
+- ✅ Post comments → Just do it
+- ✅ Change status → Just do it
+
+**NEVER ask:** "Do you want me to update Linear?" - Just execute and report result.
+
+---
+
 ## Helper Functions
 
 This command uses:
@@ -15,6 +41,27 @@ This command uses:
 - `helpers/checklist.md` - For robust checklist parsing and progress tracking
 - Git context detection - For repo labels from `git remote` or folder name
 - CLAUDE.md rules (all scopes) - For protected branches and workflow rules
+
+## ⛔ CRITICAL: Agent Delegation is MANDATORY
+
+**READ THIS BEFORE PROCEEDING - THESE RULES ARE ABSOLUTE:**
+
+| ⛔ FORBIDDEN (Will Fill Context) | ✅ REQUIRED (Sustainable) |
+|----------------------------------|---------------------------|
+| Using Edit/Write tools to implement | Task tool with subagent_type |
+| Reading files inline for analysis | Task tool with Explore agent |
+| Writing code in main context | Delegate to specialized agent |
+
+**Quick Reference - Agent Selection:**
+- Frontend/UI → `frontend-mobile-development:frontend-developer`
+- Backend/API → `backend-development:backend-architect`
+- Mobile → `frontend-mobile-development:mobile-developer`
+- Testing → `backend-development:tdd-orchestrator`
+- Default → `general-purpose`
+
+**See Section 4B for full Agent Selection Table and Subagent Prompt Template.**
+
+---
 
 ## 🎯 v1.0 Interactive Workflow Rules
 
@@ -597,125 +644,182 @@ const aiImplement = (answer === "AI implements now");
 
 4B. Chunked implementation via specialized agents (CONTEXT PROTECTION):
 
-## ⛔ CRITICAL: NEVER Implement Code Inline - ALWAYS Delegate to Agents
+## ⛔ MANDATORY: Agent Delegation for ALL Implementation
 
-**These rules are ABSOLUTE and MUST be followed:**
+**ABSOLUTE RULES - VIOLATION = FAILURE:**
 
-1. **NEVER** write implementation code directly in the main context
-2. **NEVER** use Read/Edit/Write tools to implement features yourself
-3. **NEVER** do codebase analysis inline - use Explore agent
-4. **ALWAYS** use `Task(subagent_type=...)` for ALL implementation work
-5. **ALWAYS** select the appropriate specialized agent for each task
-6. **ALWAYS** invoke agents via the Task tool, not inline code
+| ⛔ FORBIDDEN | ✅ REQUIRED |
+|--------------|-------------|
+| Using Edit tool to write code | Task tool with subagent_type |
+| Using Write tool to create files | Task tool with subagent_type |
+| Reading files to understand code | Task tool with Explore agent |
+| Inline implementation in main context | Delegate to specialized agent |
 
-**Why?** Main context fills up rapidly (~200k limit). Each agent call uses only ~50 tokens in main context, while inline implementation uses ~2000-5000 tokens per file.
+**WHY THIS MATTERS:**
+- Main context: ~200k token limit
+- Inline implementation: ~2000-5000 tokens per file → context exhaustion
+- Agent delegation: ~50 tokens per task → sustainable workflow
 
-**Violation example (WRONG):**
+---
+
+### Agent Selection Table (MUST USE)
+
+**Match task content to agent. Use EXACT agent names:**
+
+| Task Contains | Agent (subagent_type) |
+|---------------|----------------------|
+| ui, component, react, css, tailwind, frontend, page, screen, layout, button, form, style | `frontend-mobile-development:frontend-developer` |
+| api, endpoint, database, auth, backend, server, graphql, rest, model, schema, migration | `backend-development:backend-architect` |
+| mobile, react native, flutter, ios, android, app store | `frontend-mobile-development:mobile-developer` |
+| test, spec, jest, vitest, cypress, playwright, coverage | `backend-development:tdd-orchestrator` |
+| security, vulnerability, auth, oauth, jwt, encryption | `full-stack-orchestration:security-auditor` |
+| performance, optimization, caching, latency | `full-stack-orchestration:performance-engineer` |
+| deploy, ci/cd, pipeline, docker, kubernetes | `full-stack-orchestration:deployment-engineer` |
+| (none match) | `general-purpose` |
+
+---
+
+### Subagent Prompt Template (MUST FOLLOW)
+
+**Every Task call MUST include this structured prompt:**
+
 ```
-// DON'T DO THIS - implementing inline fills main context
-const code = `function login() { ... }`;
-Edit("src/auth.ts", code);  // ❌ WRONG - direct implementation
-```
+## Task
+{One-line description of what to implement}
 
-**Correct approach (RIGHT):**
-```
-Task(subagent_type="frontend-mobile-development:frontend-developer"): `
-Implement login component using existing patterns.
-Files: src/components/Login.tsx
-Make actual file changes.
-`  // ✅ RIGHT - delegated to agent
-```
+## Issue Context
+- Issue: {issueId} - {issue.title}
+- Branch: {currentBranch}
+- Checklist Item: {item.content}
 
-See `helpers/agent-delegation.md` for full patterns.
+## Technical Context
+- Files to modify: {explorationResult.file_paths}
+- Existing patterns: {explorationResult.patterns}
+- Dependencies: {explorationResult.dependencies}
 
-console.log('\n🤖 Implementing via specialized agents...');
+## Visual Context (if UI task)
+- Mockup: {visualContext.references[0].url if available}
+- Design system: {cached Figma data if available}
+- Target fidelity: 95-100%
 
-**Agent Selection Function:**
+## Quality Requirements
+- Follow existing code patterns in the codebase
+- Use TypeScript strict mode if applicable
+- Add necessary imports
+- Handle edge cases and errors
+- NO placeholder code - implement fully
 
-```javascript
-function selectAgent(taskContent) {
-  const task = taskContent.toLowerCase();
-
-  // Frontend/UI signals
-  if (task.match(/\b(ui|component|react|css|tailwind|frontend|page|screen|layout|button|form)\b/)) {
-    return 'frontend-mobile-development:frontend-developer';
-  }
-
-  // Backend/API signals
-  if (task.match(/\b(api|endpoint|database|auth|backend|server|graphql|rest|model)\b/)) {
-    return 'backend-development:backend-architect';
-  }
-
-  // Mobile signals
-  if (task.match(/\b(mobile|react native|flutter|ios|android|app)\b/)) {
-    return 'frontend-mobile-development:mobile-developer';
-  }
-
-  // Testing signals
-  if (task.match(/\b(test|spec|jest|vitest|cypress|playwright)\b/)) {
-    return 'full-stack-orchestration:test-automator';
-  }
-
-  // Default: general purpose
-  return 'general-purpose';
-}
-```
-
-**Chunked Implementation - One agent per checklist item:**
-
-```javascript
-const checklistItems = selectedPhases || checklistData?.items.filter(i => !i.checked) || [];
-
-for (const item of checklistItems) {
-  const agentType = selectAgent(item.content);
-
-  console.log(`\n📦 Implementing: ${item.content}`);
-  console.log(`   Agent: ${agentType}`);
-
-  // Invoke specialized agent with minimal context
-  Task(subagent_type=agentType): `
-  Implement: ${item.content}
-
-  Context:
-  - Files: ${explorationResult.file_paths.join(', ')}
-  - Patterns: ${explorationResult.patterns.join(', ')}
-  ${visualContext?.available && agentType.includes('frontend') ? `
-  - Visual mockup available for pixel-perfect implementation
-  - Target: 95-100% design fidelity
-  ` : ''}
-
-  Make actual file changes. Return brief summary of changes.
-  `
-
-  console.log(`   ✅ Completed`);
-}
+## Expected Output
+After making changes, return ONLY:
+1. Files modified (list)
+2. Summary of changes (2-3 sentences)
+3. Any blockers encountered
 ```
 
-**Parallel Implementation (when tasks are independent):**
+---
 
-If `explorationResult.task_groups.parallel` has multiple items:
+### Implementation Execution (IMPERATIVE)
 
-```javascript
-// Invoke multiple agents in parallel (single message, multiple Task calls)
-const parallelTasks = explorationResult.task_groups.parallel;
+**YOU MUST execute these steps in order:**
 
-if (parallelTasks.length > 1) {
-  console.log(`\n⚡ Running ${parallelTasks.length} independent tasks in parallel...`);
+**Step 1: Log start**
+Display: "🤖 Implementing via specialized agents..."
 
-  // These Task calls should be in a SINGLE message to run in parallel:
-  // Task(frontend-developer): "Implement ${parallelTasks[0]}"
-  // Task(backend-architect): "Implement ${parallelTasks[1]}"
-  // etc.
-}
+**Step 2: For EACH uncompleted checklist item, invoke Task tool:**
+
+For sequential tasks (or if only one task):
+
+**YOU MUST invoke the Task tool with these EXACT parameters:**
+- **Tool**: Task
+- **subagent_type**: Select from Agent Selection Table above based on task content
+- **prompt**: Use Subagent Prompt Template above, filling in all variables
+
+Example invocation for a frontend task:
+```
+Task tool parameters:
+  subagent_type: "frontend-mobile-development:frontend-developer"
+  prompt: |
+    ## Task
+    Create login form component with validation
+
+    ## Issue Context
+    - Issue: PSN-29 - Add user authentication
+    - Branch: feature/psn-29-auth
+    - Checklist Item: Implement login UI
+
+    ## Technical Context
+    - Files to modify: src/components/auth/LoginForm.tsx
+    - Existing patterns: Use existing Form component, Tailwind classes
+    - Dependencies: react-hook-form, zod
+
+    ## Quality Requirements
+    - Follow existing code patterns in the codebase
+    - Use TypeScript strict mode
+    - Add necessary imports
+    - Handle edge cases and errors
+    - NO placeholder code - implement fully
+
+    ## Expected Output
+    After making changes, return ONLY:
+    1. Files modified (list)
+    2. Summary of changes (2-3 sentences)
+    3. Any blockers encountered
 ```
 
-**Benefits of chunked agent delegation:**
-- Main context: ~50 tokens per item (vs ~2000 without delegation)
-- Each agent has full context for its specific task
-- Parallel execution reduces total time by ~40-60%
-- Agent context discarded after each call
+**Step 3: For PARALLEL tasks (independent items), invoke MULTIPLE Task tools in ONE message:**
 
-console.log('\n✅ All implementations complete');
+If `explorationResult.task_groups.parallel` contains multiple items, you MUST:
+1. Identify all independent tasks
+2. Send ONE message containing MULTIPLE Task tool calls
+3. Each Task call uses appropriate agent from selection table
+
+Example: If parallel tasks are ["Create API endpoint", "Build UI component"]:
+```
+// In a SINGLE message, invoke BOTH:
+
+Task #1:
+  subagent_type: "backend-development:backend-architect"
+  prompt: [Full template for API endpoint]
+
+Task #2:
+  subagent_type: "frontend-mobile-development:frontend-developer"
+  prompt: [Full template for UI component]
+```
+
+**Step 4: After each agent completes, display:**
+"✅ Completed: {item.content}"
+
+**Step 5: After all agents complete:**
+Display: "✅ All implementations complete"
+
+---
+
+### Output Consistency Requirements
+
+**Subagents MUST return structured output. Parse and display:**
+
+```
+📦 {item.content}
+   Agent: {agentType}
+   Files: {comma-separated list from agent response}
+   Changes: {2-3 sentence summary from agent response}
+   Status: ✅ Complete | ⚠️ Partial | ❌ Blocked
+```
+
+**If agent reports blockers:**
+1. Display blocker immediately
+2. Add to uncertainties list
+3. Continue with next item (don't stop workflow)
+
+---
+
+### Context Efficiency Metrics
+
+| Approach | Main Context Usage | Sustainability |
+|----------|-------------------|----------------|
+| Inline implementation | ~15,000 tokens | ❌ Context exhaustion |
+| Agent delegation | ~500 tokens | ✅ Sustainable |
+| Parallel agents (3 tasks) | ~600 tokens | ✅ Faster + sustainable |
 
 4C. Auto-sync progress (detect git changes):
 
@@ -1178,34 +1282,70 @@ if (progress < 100) {
     // Get remaining work context
     const remainingItems = checklistData?.items.filter(item => !item.checked) || [];
 
-    // Invoke specialized agent to continue implementation
-    Task: `
-    Continue implementation for: ${issue.title}
+    ## ⛔ MANDATORY: Use Agent Delegation (Same Rules as START Mode)
 
-    **Context:**
-    - Issue: ${issueId}
-    - Current Progress: ${progress}% (${completedItems}/${totalItems} items)
-    - Recent Activity: ${recentComments?.[0]?.body?.split('\n')[0] || 'None'}
+    **RESUME mode MUST follow the same agent delegation rules as START mode.**
 
-    **Remaining Work:**
-    ${remainingItems.map((item, i) => `${i+1}. ${item.content}`).join('\n')}
+    Refer to Section 4B above for:
+    - Agent Selection Table
+    - Subagent Prompt Template
+    - Parallel execution rules
 
-    ${uncertaintiesList.length > 0 ? `
-    **Uncertainties to Address:**
-    ${uncertaintiesList.map((u, i) => `${i+1}. ${u}`).join('\n')}
-    ` : ''}
+    **For EACH remaining checklist item, YOU MUST:**
 
-    **Your Task:**
-    Continue implementing the remaining checklist items. Make actual code changes to complete the work.
+    1. **Select agent** from Agent Selection Table based on item content
+    2. **Invoke Task tool** with full Subagent Prompt Template
+    3. **Display structured output** per Output Consistency Requirements
 
-    **Constraints:**
-    - Focus on remaining uncompleted items only
-    - Follow existing code patterns and standards
-    - Write production-quality code
-    - Add necessary imports and dependencies
+    **Example for RESUME mode:**
 
-    **Important:** Make actual file changes. This is continuation of implementation.
-    `
+    For each item in remainingItems:
+    ```
+    Task tool parameters:
+      subagent_type: {Select from Agent Selection Table based on item.content}
+      prompt: |
+        ## Task
+        {item.content}
+
+        ## Issue Context
+        - Issue: {issueId} - {issue.title}
+        - Branch: {currentBranch}
+        - Checklist Item: {item.content}
+        - Current Progress: {progress}% ({completedItems}/{totalItems} items)
+
+        ## Technical Context
+        - This is CONTINUATION of existing work
+        - Review recent changes before proceeding
+        - Previous activity: {recentComments?.[0]?.body?.split('\n')[0] || 'None'}
+
+        ## Uncertainties to Consider
+        {uncertaintiesList.length > 0 ? uncertaintiesList.join('\n') : 'None'}
+
+        ## Quality Requirements
+        - Follow existing code patterns in the codebase
+        - Use TypeScript strict mode if applicable
+        - Add necessary imports
+        - Handle edge cases and errors
+        - NO placeholder code - implement fully
+
+        ## Expected Output
+        After making changes, return ONLY:
+        1. Files modified (list)
+        2. Summary of changes (2-3 sentences)
+        3. Any blockers encountered
+    ```
+
+    **For PARALLEL remaining tasks:**
+    If multiple remaining items are independent, invoke multiple Task tools in ONE message.
+
+    **After each agent completes, display:**
+    ```
+    📦 {item.content}
+       Agent: {agentType}
+       Files: {files from response}
+       Changes: {summary from response}
+       Status: ✅ Complete | ⚠️ Partial | ❌ Blocked
+    ```
 
     console.log('✅ Implementation continued');
 

@@ -1,3 +1,10 @@
+---
+name: jira-operations
+description: Specialized agent for centralized Jira API operations with session-level caching
+tools: mcp__agent-mcp-gateway__execute_tool, mcp__agent-mcp-gateway__get_server_tools, mcp__agent-mcp-gateway__list_servers, Read, Grep
+model: haiku
+---
+
 # jira-operations
 
 **Specialized agent for centralized Jira API operations with session-level caching and intelligent batching.**
