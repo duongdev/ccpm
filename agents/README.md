@@ -36,6 +36,8 @@ The Linear operations subagent is the central handler for all Linear MCP operati
 - **Session-level caching** (85-95% hit rates)
 - **Performance**: <50ms for cached operations
 - **Structured error handling** with actionable suggestions
+- **Automatic parameter transformation** (issueId → id)
+- **Background execution** for non-blocking operations
 
 **Key Features:**
 - Issue management (create, update, fetch)
@@ -43,6 +45,35 @@ The Linear operations subagent is the central handler for all Linear MCP operati
 - State management with fuzzy matching
 - Team and project operations
 - Comment and document management
+
+**⛔ CRITICAL: Exact Parameter Names**
+
+```javascript
+// GET/UPDATE ISSUE - uses "id" (NOT issueId)
+{ tool: "get_issue", args: { id: "WORK-26" } }
+{ tool: "update_issue", args: { id: "WORK-26", state: "In Progress" } }
+
+// COMMENTS - uses "issueId"
+{ tool: "create_comment", args: { issueId: "WORK-26", body: "..." } }
+{ tool: "list_comments", args: { issueId: "WORK-26" } }
+```
+
+| Tool | Parameter | NOT This |
+|------|-----------|----------|
+| `get_issue` | **`id`** | ~~issueId~~ |
+| `update_issue` | **`id`** | ~~issueId~~ |
+| `create_comment` | **`issueId`** | ~~id~~ |
+| `list_comments` | **`issueId`** | ~~id~~ |
+
+**Background Execution (Non-Blocking):**
+
+```bash
+# For comments and status updates (fire-and-forget)
+./scripts/linear-background-ops.sh comment ${issueId} "Progress update"
+./scripts/linear-background-ops.sh update-status ${issueId} "In Progress"
+```
+
+Use blocking calls only when you need the result (get_issue, create_issue).
 
 **Documentation:**
 - [Linear Subagent Architecture](../docs/architecture/decisions/002-linear-subagent.md)
@@ -165,6 +196,6 @@ See [Subagent Template](../docs/templates/subagent-template.md) for standard str
 
 ---
 
-**Last updated:** 2025-11-24
+**Last updated:** 2025-12-23
 **Agent count:** 8 agents (7 core + 1 specialized)
-**Documentation version:** 2.4 (v1.0)
+**Documentation version:** 1.0.0
