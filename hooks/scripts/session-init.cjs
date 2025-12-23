@@ -117,15 +117,67 @@ async function main() {
       fs.appendFileSync(envFile, envContent);
     }
 
-    // Output session info (visible to user)
-    const lines = [
-      `Session ${source}`,
-      `Project: ${project.name}`,
-      issueId ? `Issue: ${issueId}` : null,
-      gitBranch ? `Branch: ${gitBranch}` : null
-    ].filter(Boolean);
+    // Discover available agents
+    const pluginRoot = path.resolve(__dirname, '../..');
+    const discoverScript = path.join(pluginRoot, 'scripts/discover-agents-cached.sh');
+    let agents = [];
+    let agentCount = 0;
 
-    console.log(lines.join(' | '));
+    try {
+      const agentsJson = execSafe(`"${discoverScript}"`);
+      if (agentsJson) {
+        agents = JSON.parse(agentsJson);
+        agentCount = agents.length;
+      }
+    } catch (e) {
+      // Fallback to minimal agents
+      agents = [
+        { name: 'general-purpose', type: 'global', description: 'General-purpose agent' },
+        { name: 'Explore', type: 'global', description: 'Codebase exploration' },
+        { name: 'Plan', type: 'global', description: 'Task planning' }
+      ];
+      agentCount = 3;
+    }
+
+    // Build agent names list (compact format)
+    const agentNames = agents.map(a => a.name);
+
+    // Output CCPM context injection (once per session)
+    const output = `## CCPM Session Initialized
+
+**Project:** ${project.name} | **Issue:** ${issueId || 'none'} | **Branch:** ${gitBranch || 'none'}
+
+### Available Agents (${agentCount})
+${agentNames.join(', ')}
+
+### 🔴 Agent Invocation Rules (MANDATORY)
+
+| Task Type | Agent | Triggers |
+|-----------|-------|----------|
+| Linear ops | \`ccpm:linear-operations\` | issue, linear, status, sync, checklist, WORK-, PSN- |
+| Frontend | \`ccpm:frontend-developer\` | component, UI, React, CSS, layout |
+| Backend | \`ccpm:backend-architect\` | API, endpoint, database, resolver |
+| Debug | \`ccpm:debugger\` | bug, error, fix, broken, not working |
+| Review | \`ccpm:code-reviewer\` | review, check code, quality |
+| Security | \`ccpm:security-auditor\` | security, vulnerability, OWASP |
+| TDD | \`ccpm:tdd-orchestrator\` | TDD, test first, write tests |
+| Explore | \`Explore\` | find, search, where is, how does |
+
+**⛔ NEVER make direct Linear MCP calls** - use \`ccpm:linear-operations\` agent
+
+### 🔵 CCPM Commands (use Skill tool)
+
+**Workflow:** \`/ccpm:plan\`, \`/ccpm:work\`, \`/ccpm:sync\`, \`/ccpm:commit\`, \`/ccpm:verify\`, \`/ccpm:done\`
+**Utility:** \`/ccpm:search\`, \`/ccpm:branch\`, \`/ccpm:review\`, \`/ccpm:rollback\`
+
+### Invocation Pattern
+\`\`\`
+Task(subagent_type="ccpm:<agent>", prompt="<details>")
+Skill(skill="ccpm:<command>", args="<args>")
+\`\`\`
+`;
+
+    console.log(output);
     process.exit(0);
   } catch (error) {
     // Fail-open: Don't block session start on errors
