@@ -20,6 +20,17 @@ CCPM uses a set of specialized agents to handle different aspects of project man
 | [project-config-loader.md](./project-config-loader.md) | Loads and validates project configuration | Automatic via project operations |
 | [project-context-manager.md](./project-context-manager.md) | Manages active project context | Automatic via project operations |
 
+### Development Agents (New in v1.1)
+
+| Agent | Purpose | Usage |
+|-------|---------|-------|
+| [frontend-developer.md](./frontend-developer.md) | React/UI implementation with design system integration | Via `/ccpm:work` for UI tasks |
+| [backend-architect.md](./backend-architect.md) | APIs, databases, authentication, NestJS | Via `/ccpm:work` for backend tasks |
+| [tdd-orchestrator.md](./tdd-orchestrator.md) | Test-driven development workflow | Via `/ccpm:work` for test tasks |
+| [code-reviewer.md](./code-reviewer.md) | Automated code review and quality assessment | Via `/ccpm:review` |
+| [debugger.md](./debugger.md) | Systematic debugging and issue investigation | Via `/ccpm:work` for bug fixes |
+| [security-auditor.md](./security-auditor.md) | Security vulnerability assessment | Via `/ccpm:review --security` |
+
 ### Specialized Agents
 
 | Agent | Purpose | Usage |
@@ -197,5 +208,5 @@ See [Subagent Template](../docs/templates/subagent-template.md) for standard str
 ---
 
 **Last updated:** 2025-12-23
-**Agent count:** 8 agents (7 core + 1 specialized)
-**Documentation version:** 1.0.0
+**Agent count:** 14 agents (7 core + 6 development + 1 specialized)
+**Documentation version:** 1.1.0
