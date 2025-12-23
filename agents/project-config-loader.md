@@ -1,3 +1,10 @@
+---
+name: project-config-loader
+description: Specialized agent for loading and validating CCPM project configuration
+tools: Read, Grep, Glob
+model: haiku
+---
+
 # project-config-loader
 
 **Specialized agent for loading and validating CCPM project configuration.**
