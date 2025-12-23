@@ -8,6 +8,24 @@ argument-hint: "[issue-id] [message]"
 
 Auto-detects issue from git branch and creates conventional commits linked to Linear issues.
 
+## ⛔ CRITICAL: Linear Operations
+
+**ALL Linear operations MUST use the Task tool with `ccpm:linear-operations` subagent.**
+
+```javascript
+// ✅ CORRECT - Use Task tool with subagent
+Task({ subagent_type: "ccpm:linear-operations", prompt: `operation: get_issue\nparams:\n  issueId: X` })
+
+// ❌ WRONG - Direct MCP call
+mcp__agent-mcp-gateway__execute_tool({ server: "linear", ... })
+```
+
+## ✅ LINEAR = AUTOMATIC (NO CONFIRMATION)
+
+**Linear is internal tracking. Execute immediately - NEVER ask for approval.**
+
+---
+
 ## ⚠️ IMPORTANT: Respect CLAUDE.md Rules (All Scopes)
 
 **Before executing any git commit operations, this command MUST check ALL CLAUDE.md files in the hierarchy:**

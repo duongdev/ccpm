@@ -10,6 +10,24 @@ argument-hint: "[issue-id]"
 
 Intelligent verification command that runs quality checks followed by final verification in sequence.
 
+## ⛔ CRITICAL: Linear Operations
+
+**ALL Linear operations MUST use the Task tool with `ccpm:linear-operations` subagent.**
+
+```javascript
+// ✅ CORRECT - Use Task tool with subagent
+Task({ subagent_type: "ccpm:linear-operations", prompt: `operation: get_issue\nparams:\n  issueId: X` })
+
+// ❌ WRONG - Direct MCP call
+mcp__agent-mcp-gateway__execute_tool({ server: "linear", ... })
+```
+
+## ✅ LINEAR = AUTOMATIC (NO CONFIRMATION)
+
+**Linear is internal tracking. Execute immediately - NEVER ask for approval.**
+
+---
+
 ## Usage
 
 ```bash

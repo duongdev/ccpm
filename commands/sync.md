@@ -8,6 +8,32 @@ argument-hint: "[issue-id] [summary]"
 
 Auto-detects issue from git branch and syncs progress to Linear with smart checklist updates and **concise comments**.
 
+## ⛔ CRITICAL: Linear Operations
+
+**ALL Linear operations MUST use the Task tool with `ccpm:linear-operations` subagent.**
+
+```javascript
+// ✅ CORRECT - Use Task tool with subagent
+Task({
+  subagent_type: "ccpm:linear-operations",
+  prompt: `operation: get_issue\nparams:\n  issueId: WORK-26\ncontext:\n  cache: true`
+})
+
+// ❌ WRONG - Direct MCP call
+mcp__agent-mcp-gateway__execute_tool({ server: "linear", ... })
+```
+
+## ✅ LINEAR = AUTOMATIC (NO CONFIRMATION)
+
+**Linear is internal tracking. Execute ALL operations immediately:**
+- ✅ Update checklist → Just do it
+- ✅ Post comment → Just do it
+- ✅ Change status → Just do it
+
+**NEVER ask user:** "Do you want me to sync?" or "Approve?"
+
+---
+
 ## 🎯 v1.0 Linear Comment Strategy (Native Collapsible)
 
 **Focus**: Scannable summary + detailed context using Linear's native collapsible syntax
@@ -252,7 +278,7 @@ context:
 
 **This operation will:**
 - Read the issue description
-- Use `_shared-checklist-helpers.md` for parsing
+- Parse checklist items inline (regex: `- \[([ x])\] (.+)`)
 - Update checkboxes from `- [ ]` to `- [x]` for selected indices
 - Recalculate progress percentage
 - Update the progress line with timestamp

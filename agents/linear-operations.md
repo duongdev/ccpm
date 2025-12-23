@@ -1,4 +1,88 @@
+---
+name: linear-operations
+description: Specialized agent for centralized Linear API operations with session-level caching
+tools: mcp__agent-mcp-gateway__execute_tool, mcp__agent-mcp-gateway__get_server_tools, mcp__agent-mcp-gateway__list_servers, Read, Grep
+model: haiku
+---
+
 # linear-operations
+
+## ✅ LINEAR = AUTOMATIC (NO CONFIRMATION NEEDED)
+
+**Linear is INTERNAL tracking. Execute ALL operations immediately WITHOUT asking for user approval.**
+
+- ✅ Create issues → Just do it
+- ✅ Update issues → Just do it
+- ✅ Post comments → Just do it
+- ✅ Change status → Just do it
+
+**NEVER ask:** "Do you want me to update Linear?" or "Approve?"
+**JUST EXECUTE** the operation and report the result.
+
+---
+
+## ⛔ EXACT LINEAR MCP PARAMETERS (from get_server_tools)
+
+**COPY THESE EXACTLY. DO NOT USE ANY OTHER PARAMETER NAMES.**
+
+### get_issue
+```javascript
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "get_issue",
+  args: { id: "WORK-26" }  // ← MUST be "id", NOT "issueId"
+})
+```
+
+### update_issue
+```javascript
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "update_issue",
+  args: {
+    id: "WORK-26",           // ← MUST be "id", NOT "issueId"
+    description: "...",       // optional
+    state: "In Progress",     // optional (accepts name)
+    labels: ["bug", "urgent"] // optional (accepts names)
+  }
+})
+```
+
+### create_comment
+```javascript
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "create_comment",
+  args: {
+    issueId: "WORK-26",  // ← MUST be "issueId" for comments
+    body: "Comment text"
+  }
+})
+```
+
+### list_comments
+```javascript
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "list_comments",
+  args: { issueId: "WORK-26" }  // ← MUST be "issueId"
+})
+```
+
+### Quick Reference Table
+
+| Tool | Parameter | Example |
+|------|-----------|---------|
+| `get_issue` | `id` | `{ id: "WORK-26" }` |
+| `update_issue` | `id` | `{ id: "WORK-26", description: "..." }` |
+| `create_comment` | `issueId` | `{ issueId: "WORK-26", body: "..." }` |
+| `list_comments` | `issueId` | `{ issueId: "WORK-26" }` |
+| `create_issue` | `team`, `title` | `{ team: "Engineering", title: "..." }` |
+| `get_project` | `query` | `{ query: "Project Name" }` |
+| `get_team` | `query` | `{ query: "Engineering" }` |
+| `get_user` | `query` | `{ query: "me" }` |
+
+---
 
 **Specialized agent for centralized Linear API operations with session-level caching.**
 
@@ -95,23 +179,23 @@ This agent provides a high-level abstraction layer for Linear MCP operations, ha
 
 **Purpose**: Retrieve a single issue by ID with optional related data.
 
-**Key Transformation**:
+**⛔ MANDATORY TRANSFORMATION**: `issueId` → `id`
+
 ```javascript
-// Agent accepts: issueId
-// Linear MCP expects: id
-const issue = await mcp__linear__get_issue({
-  id: params.issueId  // Transform: issueId → id
+// Input from command: params.issueId = "WORK-26"
+
+// ✅ CORRECT MCP CALL:
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "get_issue",
+  args: { id: params.issueId }  // ⚠️ MUST use "id", NOT "issueId"!
 });
 
-// Optional: Fetch comments separately
-if (params.include_comments) {
-  issue.comments = await mcp__linear__list_comments({
-    issueId: params.issueId  // Note: list_comments uses issueId (not id)
-  });
-}
+// ❌ WRONG (WILL FAIL):
+// args: { issueId: params.issueId }  // DON'T DO THIS
 ```
 
-**See**: `linear-subagent-guide` skill for complete `get_issue` and `list_comments` schemas.
+**See**: `linear-subagent-guide` skill for complete `get_issue` schema.
 
 ---
 
@@ -153,23 +237,26 @@ const issue = await mcp__linear__create_issue({
 
 **Purpose**: Update an existing Linear issue.
 
-**Key Transformation**:
+**⛔ MANDATORY TRANSFORMATION**: `issueId` → `id`
+
 ```javascript
-// Agent accepts: issueId
-// Linear MCP expects: id
-const updatedIssue = await mcp__linear__update_issue({
-  id: params.issueId,          // Transform: issueId → id
-  title: params.title,          // Optional
-  description: params.description,  // Optional
-  state: params.state,          // Optional (accepts state name)
-  labels: params.labels,        // Optional (array of label names)
-  assignee: params.assignee,    // Optional (name, email, or "me")
-  priority: params.priority,    // Optional (0-4)
-  estimate: params.estimate,    // Optional
-  dueDate: params.dueDate,      // Optional
-  cycle: params.cycle,          // Optional
-  project: params.project       // Optional
+// Input from command: params.issueId = "WORK-26"
+
+// ✅ CORRECT MCP CALL:
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "update_issue",
+  args: {
+    id: params.issueId,           // ⚠️ MUST use "id", NOT "issueId"!
+    description: params.description,  // Optional
+    state: params.state,              // Optional
+    labels: params.labels,            // Optional
+    // ... other optional params
+  }
 });
+
+// ❌ WRONG (WILL FAIL with "Required: id"):
+// args: { issueId: params.issueId, description: "..." }  // DON'T DO THIS
 ```
 
 **Note**: Linear MCP accepts names directly for all fields (state, labels, assignee, project, etc.).
@@ -370,121 +457,55 @@ data:
     items_already_correct: 3      # Items already in target state
 ```
 
-**Implementation**:
-```javascript
-// Step 1: Read shared helpers
-const {
-  parseChecklist,
-  updateChecklistItems,
-  calculateProgress
-} = require('../commands/_shared-checklist-helpers.md');
+**Implementation** (self-contained, no external helpers):
 
-// Step 2: Fetch current issue
-// Note: Linear MCP get_issue uses 'id' parameter
-const issue = await mcp__linear__get_issue({
-  id: params.issueId  // Transform: issueId → id
+```javascript
+// Step 1: Get issue using CORRECT parameter
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "get_issue",
+  args: { id: params.issueId }  // ← "id" not "issueId"
 });
 
-// Step 3: Parse current checklist
-const parsed = parseChecklist(issue.description);
+// Step 2: Parse checklist from description (inline)
+const checklistRegex = /- \[([ x])\] (.+)/g;
+const items = [...description.matchAll(checklistRegex)];
+const completed = items.filter(m => m[1] === 'x').length;
+const total = items.length;
 
-if (!parsed) {
-  return {
-    success: false,
-    error: {
-      code: "NO_CHECKLIST",
-      message: "No Implementation Checklist found in issue description",
-      suggestions: [
-        "Ensure issue has been planned with /ccpm:plan",
-        "Check if description contains checklist markers"
-      ]
-    }
-  };
-}
-
-// Step 4: Validate indices
-const invalidIndices = params.indices.filter(i => i < 0 || i >= parsed.items.length);
-if (invalidIndices.length > 0) {
-  return {
-    success: false,
-    error: {
-      code: "INVALID_INDICES",
-      message: `Invalid checklist indices: [${invalidIndices.join(', ')}]`,
-      details: {
-        available_indices: parsed.items.map((_, i) => i),
-        invalid_indices: invalidIndices
-      },
-      suggestions: [
-        `Indices must be between 0 and ${parsed.items.length - 1}`,
-        "Use parseChecklist() to get valid indices"
-      ]
-    }
-  };
-}
-
-// Step 5: Calculate previous progress
-const previousProgress = calculateProgress(parsed.items);
-
-// Step 6: Update checklist items
-const updateResult = updateChecklistItems(
-  issue.description,
-  params.indices,
-  params.mark_complete,
-  {
-    updateTimestamp: params.update_timestamp !== false
+// Step 3: Update checkboxes in description
+let updatedDescription = description;
+params.indices.forEach(idx => {
+  const item = items[idx];
+  if (item) {
+    const oldCheckbox = params.mark_complete ? '- [ ]' : '- [x]';
+    const newCheckbox = params.mark_complete ? '- [x]' : '- [ ]';
+    updatedDescription = updatedDescription.replace(
+      `${oldCheckbox} ${item[2]}`,
+      `${newCheckbox} ${item[2]}`
+    );
   }
+});
+
+// Step 4: Update progress line
+const newCompleted = params.mark_complete
+  ? completed + params.indices.length
+  : completed - params.indices.length;
+const newProgress = Math.round((newCompleted / total) * 100);
+updatedDescription = updatedDescription.replace(
+  /Progress: \d+%/,
+  `Progress: ${newProgress}%`
 );
 
-// Step 7: Update issue description via Linear API
-// Note: Linear MCP update_issue uses 'id' parameter
-const updatedIssue = await mcp__linear__update_issue({
-  id: issue.id,
-  description: updateResult.updatedDescription
-});
-
-// Step 8: (Optional) Add comment documenting changes
-if (params.add_comment) {
-  const verb = params.mark_complete ? "completed" : "unchecked";
-  const itemsList = updateResult.changedItems
-    .map(item => `- ${item.content}`)
-    .join('\n');
-
-  // Note: Linear MCP create_comment uses 'issueId' parameter (not 'id')
-  await mcp__linear__create_comment({
-    issueId: params.issueId,
-    body: `## ✅ Checklist Updated\n\n**${verb.charAt(0).toUpperCase() + verb.slice(1)}** ${updateResult.changedCount} item(s):\n\n${itemsList}\n\n**Progress**: ${previousProgress.percentage}% → ${updateResult.newProgress.percentage}%\n\n_Updated via checklist operation_`
-  });
-}
-
-// Step 9: Return structured result
-return {
-  success: true,
-  data: {
-    id: updatedIssue.id,
-    identifier: updatedIssue.identifier,
-    updated_description: updateResult.updatedDescription,
-    checklist_summary: {
-      items_updated: updateResult.changedCount,
-      items_already_correct: params.indices.length - updateResult.changedCount,
-      previous_progress: previousProgress.percentage,
-      new_progress: updateResult.newProgress.percentage,
-      completed: updateResult.newProgress.completed,
-      total: updateResult.newProgress.total
-    },
-    changed_items: updateResult.changedItems.map((item, idx) => ({
-      index: params.indices[idx],
-      content: item.content,
-      previous_state: params.mark_complete ? 'unchecked' : 'checked',
-      new_state: params.mark_complete ? 'checked' : 'unchecked'
-    }))
-  },
-  metadata: {
-    cached: false,
-    duration_ms: executionTime,
-    mcp_calls: params.add_comment ? 3 : 2,  // get + update + optional comment
-    used_shared_helpers: true
+// Step 5: Update issue using CORRECT parameter
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "update_issue",
+  args: {
+    id: params.issueId,  // ← "id" not "issueId"
+    description: updatedDescription
   }
-};
+});
 ```
 
 **Usage Examples**:

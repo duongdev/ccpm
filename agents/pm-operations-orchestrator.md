@@ -1,3 +1,10 @@
+---
+name: pm-operations-orchestrator
+description: Lightweight coordinator for multi-PM system operations with lazy loading
+tools: Task, mcp__agent-mcp-gateway__execute_tool, mcp__agent-mcp-gateway__get_server_tools, Read, Grep
+model: sonnet
+---
+
 # pm-operations-orchestrator
 
 **Lightweight coordinator for multi-PM system operations with lazy loading, parallel execution, and unified caching.**

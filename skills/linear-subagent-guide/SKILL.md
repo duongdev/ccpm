@@ -6,6 +6,64 @@ allowed-tools: [Task]
 
 # Linear Subagent Guide
 
+## ⛔ EXACT LINEAR MCP PARAMETERS (VERIFIED)
+
+**These are the EXACT parameter names from `get_server_tools`. Copy exactly.**
+
+### Most Common Operations
+
+```javascript
+// GET ISSUE - uses "id"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "get_issue",
+  args: { id: "WORK-26" }  // ✅ CORRECT - "id" not "issueId"
+})
+
+// UPDATE ISSUE - uses "id"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "update_issue",
+  args: {
+    id: "WORK-26",        // ✅ CORRECT - "id" not "issueId"
+    description: "...",
+    state: "In Progress"
+  }
+})
+
+// CREATE COMMENT - uses "issueId"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "create_comment",
+  args: {
+    issueId: "WORK-26",   // ✅ CORRECT - "issueId" for comments
+    body: "Comment text"
+  }
+})
+
+// LIST COMMENTS - uses "issueId"
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "list_comments",
+  args: { issueId: "WORK-26" }  // ✅ CORRECT
+})
+```
+
+### Parameter Reference Table
+
+| Tool | Required Parameter | Example Args |
+|------|-------------------|--------------|
+| `get_issue` | `id` | `{ id: "WORK-26" }` |
+| `update_issue` | `id` | `{ id: "WORK-26", ... }` |
+| `create_comment` | `issueId`, `body` | `{ issueId: "WORK-26", body: "..." }` |
+| `list_comments` | `issueId` | `{ issueId: "WORK-26" }` |
+| `create_issue` | `title`, `team` | `{ title: "...", team: "..." }` |
+| `get_project` | `query` | `{ query: "ProjectName" }` |
+| `get_team` | `query` | `{ query: "TeamName" }` |
+| `get_user` | `query` | `{ query: "me" }` |
+
+---
+
 ## Overview
 
 The **Linear subagent** (`ccpm:linear-operations`) is a dedicated MCP handler that optimizes all Linear API operations in CCPM. Rather than making direct Linear MCP calls, commands should delegate to this subagent, which provides:
@@ -29,6 +87,21 @@ The **Linear subagent** (`ccpm:linear-operations`) is a dedicated MCP handler th
 - Local file operations
 - Git commands
 - External API calls (except Linear)
+
+---
+
+## ⚠️ CRITICAL: Parameter Name Gotcha
+
+**Different Linear MCP tools use different parameter names for issue IDs:**
+
+| Tool | Parameter | WRONG | CORRECT |
+|------|-----------|-------|---------|
+| `get_issue` | `id` | `{ issueId: "X" }` ❌ | `{ id: "X" }` ✅ |
+| `update_issue` | `id` | `{ issueId: "X" }` ❌ | `{ id: "X" }` ✅ |
+| `create_comment` | `issueId` | `{ id: "X" }` ❌ | `{ issueId: "X" }` ✅ |
+| `list_comments` | `issueId` | `{ id: "X" }` ❌ | `{ issueId: "X" }` ✅ |
+
+**First-call failures** are often caused by using `issueId` instead of `id` for `get_issue`/`update_issue`.
 
 ---
 

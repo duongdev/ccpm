@@ -13,6 +13,19 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__agent-mcp-gateway__execute_tool",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/linear-param-fixer.sh",
+            "timeout": 2000,
+            "description": "Linear parameter fixer: Catches issueId vs id mistakes before they fail"
+          }
+        ]
+      }
     ]
   },
   "usage": {
@@ -31,7 +44,21 @@
         "Dynamic agent discovery from plugins and project",
         "Context-aware scoring (0-100+ points)",
         "Parallel vs sequential execution planning",
-        "Caching for 85-95% faster subsequent runs"
+        "Caching for 85-95% faster subsequent runs",
+        "+50 boost for linear-operations on Linear-related tasks"
+      ]
+    },
+    "linear_param_fixer": {
+      "purpose": "Catches and warns about common Linear MCP parameter mistakes",
+      "trigger": "PreToolUse (mcp__agent-mcp-gateway__execute_tool)",
+      "execution": "Before MCP tool execution",
+      "output": "Warning message if wrong parameters detected (issueId vs id)",
+      "problem_solved": "get_issue/update_issue use 'id', but create_comment uses 'issueId'",
+      "features": [
+        "Detects issueId used where id expected",
+        "Detects id used where issueId expected",
+        "Shows correct parameter format",
+        "Prevents token waste from failed calls"
       ]
     }
   },

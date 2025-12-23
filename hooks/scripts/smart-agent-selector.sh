@@ -45,6 +45,7 @@ $AVAILABLE_AGENTS
 ## Selection Strategy
 
 ### Task Classification
+- **Linear Operations** → ALWAYS use \`ccpm:linear-operations\` agent (NEVER direct MCP calls)
 - **Planning/Design** → architect agents (backend-architect, frontend-developer)
 - **Implementation** → TDD first (tdd-orchestrator), then dev agents
 - **Bug Fix** → debugger
@@ -52,6 +53,15 @@ $AVAILABLE_AGENTS
 - **Performance** → performance-engineer
 - **Refactoring** → legacy-modernizer
 - **Documentation** → skip agents (use Context7 MCP)
+
+### ⚠️ CRITICAL: Linear MCP Operations
+**NEVER make direct Linear MCP calls.** Always use the \`ccpm:linear-operations\` agent:
+- Handles parameter transformation (issueId → id)
+- Provides caching (85-95% hit rate)
+- Reduces tokens by 50-60%
+
+If you see a task involving: issue, Linear, status, sync, checklist, comment, label
+→ Use \`ccpm:linear-operations\` agent via Task tool
 
 ### Scoring Algorithm
 Score each agent from the discovered list:
@@ -62,7 +72,11 @@ score =
   + 15 * tech_stack_match(context, agent.description)
   + 5  * (agent.type == 'plugin')
   + 25 * (agent.type == 'project')  // HIGHEST PRIORITY
+  + 50 * (agent.name == 'ccpm:linear-operations' && has_linear_keywords)  // LINEAR BOOST
 \`\`\`
+
+**Linear Keywords** (trigger +50 boost for linear-operations):
+- issue, linear, status, sync, checklist, comment, label, update, get_issue, create_comment
 
 ### Execution Planning
 - **Sequential**: TDD → Implement → Review, Design → Implement
