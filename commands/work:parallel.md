@@ -8,6 +8,13 @@ argument-hint: "<issue-id>"
 
 Execute multiple independent checklist items simultaneously using parallel agent invocation.
 
+## Helper Functions
+
+This command uses:
+- `helpers/parallel-execution.md` - Dependency graph and execution wave management
+- `helpers/checklist.md` - Checklist parsing and progress tracking
+- `helpers/agent-delegation.md` - Agent selection for tasks
+
 ## Usage
 
 ```bash

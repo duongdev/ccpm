@@ -1,10 +1,10 @@
-# CCPM v1.0 Commands
+# CCPM v1.1 Commands
 
 **Simple, powerful workflow commands for Claude Code project management.**
 
-## 🎯 The Natural Workflow (6 Core + 5 Utility Commands)
+## 🎯 The Natural Workflow (6 Core + 6 Utility + 1 Chain)
 
-CCPM v1.0 provides a streamlined command set optimized for developer productivity.
+CCPM v1.1 provides a streamlined command set optimized for developer productivity.
 
 ### Core Workflow Commands
 
