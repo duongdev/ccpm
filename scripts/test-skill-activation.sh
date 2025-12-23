@@ -153,7 +153,7 @@ test_skill_name_validity() {
     # Extract declared name
     local closing_line=$(tail -n +2 "$skill_file" | grep -n "^---" | head -1 | cut -d: -f1)
     local frontmatter=$(head -n $((closing_line + 1)) "$skill_file" | tail -n $((closing_line)))
-    local declared_name=$(echo "$frontmatter" | grep "^name:" | cut -d: -f2- | xargs)
+    local declared_name=$(echo "$frontmatter" | grep "^name:" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
     # Name should match directory
     if [[ "$declared_name" != "$skill_name" ]]; then
@@ -172,10 +172,10 @@ test_skill_description_length() {
     log_test "Validating description for $skill_name"
     increment_test
 
-    # Extract description
+    # Extract description (using sed instead of xargs to handle quotes)
     local closing_line=$(tail -n +2 "$skill_file" | grep -n "^---" | head -1 | cut -d: -f1)
     local frontmatter=$(head -n $((closing_line + 1)) "$skill_file" | tail -n $((closing_line)))
-    local description=$(echo "$frontmatter" | grep "^description:" | cut -d: -f2- | xargs)
+    local description=$(echo "$frontmatter" | grep "^description:" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
     # Check description length (should be substantial, not just 1-2 words)
     local desc_length=${#description}
@@ -246,7 +246,7 @@ test_skill_allowed_tools() {
 
     # Check if allowed-tools is declared
     if echo "$frontmatter" | grep -q "^allowed-tools:"; then
-        local tools=$(echo "$frontmatter" | grep "^allowed-tools:" | cut -d: -f2- | xargs)
+        local tools=$(echo "$frontmatter" | grep "^allowed-tools:" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         log_verbose "Allowed tools: $tools"
         return 0
     else
