@@ -330,6 +330,56 @@ Commands → pm-operations-orchestrator → Tool-specific subagents → MCP serv
 
 See `commands/SAFETY_RULES.md` for external PM write confirmation workflow.
 
+## v1.1 Key Changes (PSN-65)
+
+### New Utility Commands (6)
+
+**Search & Discovery:**
+- `/ccpm:search` - Search Linear issues by query, status, label, assignee
+- `/ccpm:history` - Activity timeline combining git + Linear events
+
+**Branch Management:**
+- `/ccpm:branch` - Smart git branch management with Linear linking
+
+**Quality & Safety:**
+- `/ccpm:review` - AI-powered code review with interactive fixes
+- `/ccpm:rollback` - Safe undo for git commits, files, Linear status
+
+**Workflow Automation:**
+- `/ccpm:chain` - Execute chained commands with conditional logic
+
+### Command Variants (3)
+
+- `/ccpm:plan:quick` - Fast planning for simple tasks
+- `/ccpm:plan:deep` - Thorough research-based planning
+- `/ccpm:work:parallel` - Parallel execution of independent tasks
+
+### Development Agents (6)
+
+New agents for implementation support:
+
+| Agent | Purpose |
+|-------|---------|
+| `frontend-developer` | React/UI with design system integration |
+| `backend-architect` | APIs, NestJS, databases, authentication |
+| `tdd-orchestrator` | Test-driven development workflow |
+| `code-reviewer` | Automated code review and quality |
+| `debugger` | Systematic debugging investigation |
+| `security-auditor` | OWASP Top 10, security assessment |
+
+### New Helpers (2)
+
+- `helpers/parallel-execution.md` - DAG-based dependency graphs
+- `helpers/command-chaining.md` - Chain operators and workflow templates
+
+### Updated Totals
+
+| Component | v1.0 | v1.1 |
+|-----------|------|------|
+| Commands | 13 | 19 |
+| Agents | 8 | 14 |
+| Helpers | 10 | 12 |
+
 ## Key Architectural Concepts
 
 ### 1. Smart Agent Auto-Invocation

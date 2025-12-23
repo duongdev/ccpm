@@ -8,6 +8,13 @@ argument-hint: "[--staged] [--branch=X] [--file=X] [--severity=X]"
 
 AI-powered code review that analyzes changes and provides actionable feedback.
 
+## Agents Used
+
+This command uses specialized agents for comprehensive review:
+- `ccpm:code-reviewer` - Primary review agent (quality, bugs, style)
+- `ccpm:security-auditor` - Security vulnerability detection (with `--security` flag)
+- `ccpm:linear-operations` - Post findings to Linear (with `--post-to-linear`)
+
 ## Usage
 
 ```bash
