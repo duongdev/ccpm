@@ -1,0 +1,9 @@
+{
+  "$schema": "https://code.claude.com/schemas/settings.json",
+  "description": "CCPM Plugin Settings - Statusline and display configuration",
+  "statusLine": {
+    "type": "command",
+    "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/statusline.cjs",
+    "padding": 0
+  }
+}

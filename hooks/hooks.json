@@ -2,6 +2,19 @@
   "$schema": "https://code.claude.com/schemas/settings.json",
   "description": "CCPM Plugin Hooks - Smart agent auto-invocation for optimal workflow",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-init.cjs",
+            "timeout": 3000,
+            "description": "Initializes CCPM session: detects project, issue from branch, persists state"
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
@@ -26,6 +39,19 @@
           }
         ]
       }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/subagent-context-injector.cjs",
+            "timeout": 2000,
+            "description": "Injects CCPM context (issue, project, rules) to all subagents"
+          }
+        ]
+      }
     ]
   },
   "usage": {
@@ -34,6 +60,21 @@
     "optimization": "Using optimized hook prompts: 81.7% token reduction, <1s execution with caching"
   },
   "notes": {
+    "session_init": {
+      "purpose": "Initializes CCPM session state once per session",
+      "trigger": "SessionStart (startup, resume, clear, compact)",
+      "execution": "At the start of each session",
+      "output": "Session context info (project, issue, branch)",
+      "problem_solved": "Avoids re-detecting project/issue context on every command",
+      "features": [
+        "Detects Linear issue from git branch (e.g., WORK-26)",
+        "Detects project name from git remote or directory",
+        "Persists state to /tmp/ccpm-session-{sessionId}.json",
+        "Exports env vars: CCPM_SESSION_ID, CCPM_ACTIVE_ISSUE, CCPM_ACTIVE_PROJECT, CCPM_GIT_BRANCH, CCPM_SESSION_FILE",
+        "Reduces token waste from repeated context detection",
+        "Fail-open design (doesn't block session start on errors)"
+      ]
+    },
     "smart_agent_selector": {
       "purpose": "Analyzes every user prompt to determine which agents should be invoked",
       "trigger": "UserPromptSubmit",
@@ -60,7 +101,36 @@
         "Shows correct parameter format",
         "Prevents token waste from failed calls"
       ]
+    },
+    "subagent_context_injector": {
+      "purpose": "Injects CCPM context into all subagents automatically",
+      "trigger": "SubagentStart",
+      "execution": "When any subagent is spawned via Task tool",
+      "output": "Injects ~200 tokens of context (issue, project, rules)",
+      "problem_solved": "Subagents lose context about active Linear issue, project config, and CCPM rules",
+      "features": [
+        "Reads session state from /tmp/ccpm-session-*.json",
+        "Reads CCPM_ACTIVE_ISSUE and CCPM_ACTIVE_PROJECT env vars",
+        "Injects Linear issue ID and title (if available)",
+        "Injects active project name",
+        "Injects key CCPM rules (Linear ops via agent, no auto-commit)",
+        "Fail-open design (exits 0 with minimal context on errors)"
+      ]
     }
+  },
+  "statusline": {
+    "location": "hooks/settings.json",
+    "purpose": "Displays project, issue, progress, branch in CLI status bar",
+    "features": [
+      "Shows active CCPM project (cyan)",
+      "Shows current Linear issue ID (green)",
+      "Shows checklist progress % with color coding (red/yellow/green)",
+      "Shows git branch (magenta, shortened)",
+      "Reads session state from /tmp/ccpm-session-*.json",
+      "Falls back to CCPM_* env vars if session not available"
+    ],
+    "format": "project │ ISSUE-ID │ progress% │ branch",
+    "example": "ccpm │ WORK-26 │ 75% │ add-improvements"
   },
   "removed_hooks": {
     "tdd_enforcer": {
