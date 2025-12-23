@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ccpm.dev/schemas/ccpm.json",
+  "title": "CCPM Project Configuration",
+  "description": "Configuration schema for CCPM (Claude Code Project Management) v1.1",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema URL for validation"
+    },
+    "version": {
+      "type": "string",
+      "description": "CCPM config version",
+      "enum": ["1.0", "1.1"]
+    },
+    "project": {
+      "type": "object",
+      "description": "Project identification",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Project name (used for labels, display)"
+        },
+        "root": {
+          "type": "string",
+          "description": "Absolute path to project root"
+        },
+        "type": {
+          "type": "string",
+          "description": "Project type for template selection",
+          "enum": ["web", "api", "mobile", "fullstack", "monorepo", "library", "cli"]
+        }
+      },
+      "required": ["name"]
+    },
+    "linear": {
+      "type": "object",
+      "description": "Linear integration settings",
+      "properties": {
+        "team": {
+          "type": "string",
+          "description": "Linear team name or ID"
+        },
+        "project": {
+          "type": ["string", "null"],
+          "description": "Linear project name or ID (optional)"
+        },
+        "labels": {
+          "type": "array",
+          "description": "Default labels to apply to issues",
+          "items": {
+            "type": "string"
+          }
+        },
+        "states": {
+          "type": "object",
+          "description": "Custom state mappings",
+          "properties": {
+            "planning": {
+              "type": "string",
+              "default": "Backlog"
+            },
+            "inProgress": {
+              "type": "string",
+              "default": "In Progress"
+            },
+            "verified": {
+              "type": "string",
+              "default": "Done"
+            }
+          }
+        }
+      },
+      "required": ["team"]
+    },
+    "figma": {
+      "type": "object",
+      "description": "Figma integration settings",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "server": {
+          "type": "string",
+          "description": "MCP server name for Figma (e.g., 'figma-myproject')"
+        },
+        "fileKey": {
+          "type": "string",
+          "description": "Default Figma file key"
+        }
+      }
+    },
+    "jira": {
+      "type": "object",
+      "description": "Jira integration settings (optional)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "project": {
+          "type": "string",
+          "description": "Jira project key"
+        },
+        "syncStatus": {
+          "type": "boolean",
+          "description": "Sync status changes to Jira",
+          "default": false
+        }
+      }
+    },
+    "confluence": {
+      "type": "object",
+      "description": "Confluence integration settings (optional)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "space": {
+          "type": "string",
+          "description": "Confluence space key"
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "description": "Git configuration",
+      "properties": {
+        "branchPattern": {
+          "type": "string",
+          "description": "Branch naming pattern. Use {issue} and {slug} placeholders.",
+          "default": "feature/{issue}-{slug}",
+          "examples": [
+            "feature/{issue}-{slug}",
+            "{issue}/{slug}",
+            "dev/{issue}"
+          ]
+        },
+        "protectedBranches": {
+          "type": "array",
+          "description": "Branches that require confirmation before work",
+          "items": {
+            "type": "string"
+          },
+          "default": ["main", "master", "develop"]
+        },
+        "commitPrefix": {
+          "type": "string",
+          "description": "Prefix for commit messages",
+          "examples": ["{issue}: ", "[{issue}] "]
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "description": "Workflow behavior settings",
+      "properties": {
+        "requirePlanBeforeWork": {
+          "type": "boolean",
+          "description": "Require /ccpm:plan before /ccpm:work",
+          "default": true
+        },
+        "autoSyncOnCommit": {
+          "type": "boolean",
+          "description": "Auto-run /ccpm:sync after commits",
+          "default": false
+        },
+        "verifyBeforeDone": {
+          "type": "boolean",
+          "description": "Require /ccpm:verify before /ccpm:done",
+          "default": true
+        },
+        "aiImplementation": {
+          "type": "boolean",
+          "description": "Default to AI implementation in /ccpm:work",
+          "default": true
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "description": "Agent configuration",
+      "properties": {
+        "preferred": {
+          "type": "object",
+          "description": "Preferred agents by task type",
+          "properties": {
+            "frontend": {
+              "type": "string",
+              "default": "frontend-mobile-development:frontend-developer"
+            },
+            "backend": {
+              "type": "string",
+              "default": "backend-development:backend-architect"
+            },
+            "testing": {
+              "type": "string",
+              "default": "backend-development:tdd-orchestrator"
+            }
+          }
+        },
+        "disabled": {
+          "type": "array",
+          "description": "Agents to never auto-invoke",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "description": "Plan template configuration",
+      "properties": {
+        "feature": {
+          "type": "string",
+          "description": "Path to feature template"
+        },
+        "bugfix": {
+          "type": "string",
+          "description": "Path to bugfix template"
+        },
+        "refactor": {
+          "type": "string",
+          "description": "Path to refactor template"
+        }
+      }
+    }
+  },
+  "required": ["version", "project"]
+}
