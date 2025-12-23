@@ -37,8 +37,9 @@ FAILED_TESTS=0
 VERBOSE=false
 SIMULATE_TRIGGER=""
 
-# Test results
-declare -A SKILL_RESULTS
+# Test results (using simple variables instead of associative arrays for bash 3.x compatibility)
+SKILL_PASS_COUNT=0
+SKILL_FAIL_COUNT=0
 
 # Helper functions
 log_info() {
@@ -51,12 +52,12 @@ log_test() {
 
 log_pass() {
     echo -e "${GREEN}✓${NC} $*"
-    ((PASSED_TESTS++))
+    ((PASSED_TESTS++)) || true
 }
 
 log_fail() {
     echo -e "${RED}✗${NC} $*"
-    ((FAILED_TESTS++))
+    ((FAILED_TESTS++)) || true
 }
 
 log_verbose() {
@@ -66,7 +67,7 @@ log_verbose() {
 }
 
 increment_test() {
-    ((TOTAL_TESTS++))
+    ((TOTAL_TESTS++)) || true
 }
 
 # Test functions
@@ -304,7 +305,7 @@ run_all_skill_tests() {
     for skill_dir in "$SKILLS_DIR"/*; do
         if [[ -d "$skill_dir" ]]; then
             local skill_name=$(basename "$skill_dir")
-            ((skill_count++))
+            ((skill_count++)) || true
 
             echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
             echo -e "${YELLOW}Testing Skill: $skill_name${NC}"
@@ -317,49 +318,49 @@ run_all_skill_tests() {
             if ! test_skill_directory_structure "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_frontmatter "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_required_fields "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_name_validity "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_description_length "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_content_structure "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_activation_triggers "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if ! test_skill_allowed_tools "$skill_name"; then
                 skill_failed=true
             fi
-            ((TOTAL_TESTS++))
+            ((TOTAL_TESTS++)) || true
 
             if [[ "$skill_failed" == true ]]; then
-                SKILL_RESULTS["$skill_name"]="FAILED"
+                ((SKILL_FAIL_COUNT++)) || true
                 skill_failures+=("$skill_name")
                 log_fail "Skill '$skill_name' has test failures"
             else
-                SKILL_RESULTS["$skill_name"]="PASSED"
+                ((SKILL_PASS_COUNT++)) || true
                 log_pass "Skill '$skill_name' passed all tests"
             fi
 
@@ -378,15 +379,9 @@ run_all_skill_tests() {
     echo -e "Failed Tests:        ${RED}$FAILED_TESTS${NC}"
     echo ""
 
-    # Results by skill
-    echo -e "Results by Skill:"
-    for skill in "${!SKILL_RESULTS[@]}"; do
-        if [[ "${SKILL_RESULTS[$skill]}" == "PASSED" ]]; then
-            echo -e "  ${GREEN}✓${NC} $skill"
-        else
-            echo -e "  ${RED}✗${NC} $skill"
-        fi
-    done
+    # Results summary
+    echo -e "Skills Passed:       ${GREEN}$SKILL_PASS_COUNT${NC}"
+    echo -e "Skills Failed:       ${RED}$SKILL_FAIL_COUNT${NC}"
     echo ""
 
     if [[ ${#skill_failures[@]} -gt 0 ]]; then
