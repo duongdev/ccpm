@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # Note: No npm cache - this project uses shell scripts, not npm packages
 
       - name: Install dependencies
         run: |

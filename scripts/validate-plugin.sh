@@ -116,7 +116,12 @@ validate_all_commands() {
         else
             log_pass "$(basename "$file")"
         fi
-    done < <(find "$COMMANDS_DIR" -name "*.md" -type f -print0)
+    # Exclude documentation files (README.md, SAFETY_RULES.md) and internal utilities (_*.md)
+    done < <(find "$COMMANDS_DIR" -name "*.md" -type f \
+        ! -name "README.md" \
+        ! -name "SAFETY_RULES.md" \
+        ! -name "_*.md" \
+        -print0)
 
     log_info "Commands: $((command_count - invalid_count))/$command_count valid"
 
@@ -325,7 +330,10 @@ validate_no_duplicate_commands() {
     log_info "Checking for duplicate command names..."
     ((TOTAL_CHECKS++))
 
-    local duplicates=$(find "$COMMANDS_DIR" -name "*.md" -type f | xargs -I {} basename {} | sort | uniq -d)
+    # Exclude documentation files and internal utilities from duplicate check
+    local duplicates=$(find "$COMMANDS_DIR" -name "*.md" -type f \
+        ! -name "README.md" ! -name "SAFETY_RULES.md" ! -name "_*.md" | \
+        xargs -I {} basename {} | sort | uniq -d)
 
     if [[ -n "$duplicates" ]]; then
         log_fail "Duplicate commands found: $duplicates"
