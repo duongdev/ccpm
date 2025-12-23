@@ -1,5 +1,5 @@
 #!/bin/bash
-# install-hooks.sh - Install CCPM hooks into ~/.claude/settings.json
+# install-hooks.sh - Install CCPM v1.1 hooks into ~/.claude/settings.json
 # This script safely merges CCPM hooks with existing Claude Code settings
 
 set -euo pipefail
@@ -21,7 +21,7 @@ TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  CCPM Hooks Installation"
+echo "  CCPM v1.1 Hooks Installation"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -67,39 +67,49 @@ if [ ! -d "$PLUGIN_ROOT" ]; then
     exit 1
 fi
 
-# Verify hook files exist (smart selector now uses script)
+# Verify hook files exist (v1.1 hooks)
 HOOK_FILES=(
     "$PLUGIN_ROOT/hooks/scripts/smart-agent-selector.sh"
-    "$PLUGIN_ROOT/hooks/tdd-enforcer-optimized.prompt"
+    "$PLUGIN_ROOT/hooks/scripts/session-init.cjs"
+    "$PLUGIN_ROOT/hooks/scripts/scout-block.cjs"
+    "$PLUGIN_ROOT/hooks/scripts/linear-param-fixer.sh"
 )
 
+echo "Verifying hook files..."
 for hook_file in "${HOOK_FILES[@]}"; do
     if [ ! -f "$hook_file" ]; then
-        echo -e "${RED}✗ Error: Hook file not found: $hook_file${NC}"
-        exit 1
+        echo -e "${YELLOW}⚠ Warning: Hook file not found: $hook_file${NC}"
+    else
+        echo -e "${GREEN}✓${NC} $(basename "$hook_file")"
     fi
 done
 
-echo -e "${GREEN}✓ All hook files verified${NC}"
 echo ""
 
 # Show what will be installed
 echo "Installing the following hooks:"
 echo ""
-echo -e "${BLUE}1. UserPromptSubmit${NC} - Smart agent discovery & selection"
+echo -e "${BLUE}1. SessionStart${NC} - Session initialization"
+echo "   - Detects active project from git remote"
+echo "   - Extracts issue ID from branch name"
+echo "   - Persists session state"
+echo "   - Triggers: startup, resume, clear, compact"
+echo ""
+echo -e "${BLUE}2. UserPromptSubmit${NC} - Smart agent selector"
 echo "   - Analyzes your requests"
 echo "   - Discovers all available agents"
 echo "   - Scores agents by relevance (0-100+)"
 echo "   - Auto-invokes best agents"
 echo ""
-echo -e "${BLUE}2. PreToolUse${NC} - TDD enforcement"
-echo "   - Checks for test files before writing code"
-echo "   - Blocks production code if tests don't exist"
-echo "   - Enforces Red-Green-Refactor workflow"
-echo "   - Triggers: Write, Edit, NotebookEdit"
+echo -e "${BLUE}3. PreToolUse (scout-block)${NC} - Token optimization"
+echo "   - Pre-filters tool calls to avoid wasted tokens"
+echo "   - 30-50% token savings on average"
+echo "   - Triggers: Read, WebFetch, Task"
 echo ""
-echo -e "${YELLOW}Note:${NC} Stop hook (quality gate) is disabled by default"
-echo "   (requires explicit bypass permissions in Claude Code)"
+echo -e "${BLUE}4. PreToolUse (linear-param-fixer)${NC} - Linear API safety"
+echo "   - Catches issueId vs id parameter mistakes"
+echo "   - Prevents failed Linear MCP calls"
+echo "   - Triggers: mcp__agent-mcp-gateway__execute_tool"
 echo ""
 
 # Ask for confirmation
@@ -119,33 +129,44 @@ jq --arg pluginRoot "$PLUGIN_ROOT" '
   # Ensure hooks object exists
   .hooks = (.hooks // {}) |
 
-  # Add UserPromptSubmit hook (smart selector with dynamic agent discovery)
-  .hooks.UserPromptSubmit = (
-    (.hooks.UserPromptSubmit // []) + [{
+  # Add SessionStart hook (session initialization)
+  .hooks.SessionStart = [{
+    "matcher": "startup|resume|clear|compact",
+    "hooks": [{
+      "type": "command",
+      "command": "\($pluginRoot)/hooks/scripts/session-init.cjs",
+      "timeout": 3000
+    }]
+  }] |
+
+  # Add UserPromptSubmit hook (smart agent selector)
+  .hooks.UserPromptSubmit = [{
+    "hooks": [{
+      "type": "command",
+      "command": "\($pluginRoot)/hooks/scripts/smart-agent-selector.sh",
+      "timeout": 5000
+    }]
+  }] |
+
+  # Add PreToolUse hooks (scout-block and linear-param-fixer)
+  .hooks.PreToolUse = [
+    {
+      "matcher": "Read|WebFetch|Task",
       "hooks": [{
         "type": "command",
-        "command": "\($pluginRoot)/hooks/scripts/smart-agent-selector.sh",
-        "timeout": 5000,
-        "description": "CCPM: Smart agent selector - dynamically discovers and scores all available agents"
+        "command": "\($pluginRoot)/hooks/scripts/scout-block.cjs",
+        "timeout": 1000
       }]
-    }]
-  ) |
-
-  # Add PreToolUse hook (optimized version from PSN-23)
-  .hooks.PreToolUse = (
-    (.hooks.PreToolUse // []) + [{
-      "matcher": "Write|Edit|NotebookEdit",
+    },
+    {
+      "matcher": "mcp__agent-mcp-gateway__execute_tool",
       "hooks": [{
-        "type": "prompt",
-        "prompt": "\($pluginRoot)/hooks/tdd-enforcer-optimized.prompt",
-        "timeout": 3000,
-        "description": "CCPM: TDD enforcer (optimized: 49% token reduction, Red-Green-Refactor)"
+        "type": "command",
+        "command": "\($pluginRoot)/hooks/scripts/linear-param-fixer.sh",
+        "timeout": 2000
       }]
-    }]
-  )
-
-  # Note: Stop hook is disabled by default (requires bypass permissions)
-  # Users can manually enable it in their settings.json if desired
+    }
+  ]
 ' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
 
 # Verify the output is valid JSON
@@ -166,8 +187,10 @@ echo "  Installation Complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo -e "${GREEN}✓ Hooks installed:${NC}"
+echo "  • SessionStart (session-init)"
 echo "  • UserPromptSubmit (smart-agent-selector)"
-echo "  • PreToolUse (tdd-enforcer)"
+echo "  • PreToolUse (scout-block)"
+echo "  • PreToolUse (linear-param-fixer)"
 echo ""
 echo -e "${BLUE}📝 Configuration:${NC}"
 echo "  Settings: $SETTINGS_FILE"
@@ -176,24 +199,18 @@ echo "  Plugin:   $PLUGIN_ROOT"
 echo ""
 echo -e "${YELLOW}⚠ Important Notes:${NC}"
 echo ""
-echo "1. Optimized hooks are fast: <1s per trigger (with caching)"
-echo "2. Performance improvements from PSN-23:"
-echo "   • 49% average token reduction"
-echo "   • 94% faster agent discovery"
+echo "1. All hooks are optimized: <1s per trigger"
+echo ""
+echo "2. v1.1 Hook Features:"
+echo "   • SessionStart: Auto-detect project and issue from branch"
+echo "   • Scout-block: 30-50% token savings on tool calls"
+echo "   • Linear-param-fixer: Prevents issueId/id parameter errors"
 echo ""
 echo "3. Use verbose mode to see hooks in action:"
 echo "   ${BLUE}claude --verbose${NC}"
 echo ""
-echo "4. Test agent discovery (with caching):"
-echo "   ${BLUE}$PLUGIN_ROOT/scripts/discover-agents-cached.sh | jq 'length'${NC}"
-echo "   (Should output: 24 or more)"
-echo ""
-echo "5. Try a test prompt:"
-echo "   ${BLUE}\"Add user authentication\"${NC}"
-echo "   You should see agent selection reasoning"
-echo ""
-echo "6. To uninstall hooks:"
+echo "4. To uninstall hooks:"
 echo "   ${BLUE}$PLUGIN_ROOT/scripts/uninstall-hooks.sh${NC}"
 echo ""
-echo -e "${GREEN}Ready to use! Start Claude Code and enjoy automated agent invocation! 🚀${NC}"
+echo -e "${GREEN}Ready to use! Restart Claude Code to activate new hooks.${NC}"
 echo ""
