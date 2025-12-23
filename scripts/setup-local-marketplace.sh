@@ -209,44 +209,31 @@ test_plugin_loading() {
     # Test that all referenced files exist
     local errors=0
 
-    # Check commands path (can be absolute or relative)
+    # Check commands path (relative to project root, not plugin dir)
     local commands_path=$(jq -r '.commands' "$PLUGIN_JSON")
-    local commands_full_path="$PLUGIN_DIR/$commands_path"
-
-    # Handle relative paths
-    if [[ ! "$commands_path" = /* ]]; then
-        commands_full_path="$PLUGIN_DIR/$commands_path"
-    else
-        commands_full_path="$commands_path"
-    fi
+    # Strip leading ./ if present
+    commands_path="${commands_path#./}"
+    local commands_full_path="$PROJECT_ROOT/$commands_path"
 
     if [[ ! -d "$commands_full_path" ]]; then
-        # Also try just the commands_path in case it's documented differently
-        if [[ -d "$PLUGIN_DIR/commands" ]]; then
-            log_success "Commands path accessible (found at ./commands)"
-        else
-            log_error "Commands path not found: $commands_path"
-            ((errors++))
-        fi
+        log_error "Commands path not found: $commands_path (looked at $commands_full_path)"
+        ((errors++))
     else
-        log_success "Commands path accessible"
+        log_success "Commands path accessible: $commands_path"
     fi
 
-    # Check agents if referenced
+    # Check agents if referenced (paths are relative to project root)
     if jq -e '.agents' "$PLUGIN_JSON" >/dev/null 2>&1; then
         local agents=$(jq -r '.agents[]' "$PLUGIN_JSON")
         local agent_errors=0
         while IFS= read -r agent; do
-            if [[ ! -f "$PLUGIN_DIR/$agent" ]]; then
-                # Try without the ./agents prefix
-                if [[ -f "$PLUGIN_DIR/agents/$(basename "$agent")" ]]; then
-                    log_success "Agent file found: $(basename "$agent")"
-                else
-                    log_error "Agent file not found: $agent"
-                    ((agent_errors++))
-                fi
+            # Strip leading ./ if present
+            local agent_path="${agent#./}"
+            if [[ ! -f "$PROJECT_ROOT/$agent_path" ]]; then
+                log_error "Agent file not found: $agent_path"
+                ((agent_errors++))
             else
-                log_success "Agent file found: $agent"
+                log_success "Agent file found: $agent_path"
             fi
         done <<< "$agents"
         ((errors = errors + agent_errors))
