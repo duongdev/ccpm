@@ -205,8 +205,8 @@ test_skill_content_structure() {
     local closing_line=$(tail -n +2 "$skill_file" | grep -n "^---" | head -1 | cut -d: -f1)
     local content=$(tail -n +$((closing_line + 2)) "$skill_file")
 
-    # Check for heading
-    if ! echo "$content" | head -5 | grep -q "^#"; then
+    # Check for heading (use grep -m1 to avoid broken pipe with head)
+    if ! echo "$content" | grep -m1 -q "^#"; then
         log_fail "No heading found in $skill_name content"
         return 1
     fi
