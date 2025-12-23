@@ -2,7 +2,7 @@
 
 **Simple, powerful workflow commands for Claude Code project management.**
 
-## 🎯 The Natural Workflow (6 Commands)
+## 🎯 The Natural Workflow (6 Core + 5 Utility Commands)
 
 CCPM v1.0 provides a streamlined command set optimized for developer productivity.
 
@@ -33,6 +33,33 @@ CCPM v1.0 provides a streamlined command set optimized for developer productivit
 # 6. DONE - Finalize task
 /ccpm:done                                         # Create PR, sync status, complete task
 /ccpm:done WORK-123                                # Explicit issue ID
+```
+
+### Utility Commands (5 commands - New in v1.1)
+
+```bash
+# Search & Discovery
+/ccpm:search "auth"                                # Search issues by text
+/ccpm:search --status="In Progress" --mine        # Filter by status and assignee
+
+# Activity History
+/ccpm:history                                      # Show activity timeline
+/ccpm:history PSN-29 --days=14                    # Issue history for 2 weeks
+
+# Branch Management
+/ccpm:branch PSN-29                               # Create branch for issue
+/ccpm:branch --list                               # List branches with Linear info
+/ccpm:branch --cleanup                            # Delete merged branches
+
+# Code Review
+/ccpm:review                                       # Review current branch
+/ccpm:review --staged --post-to-linear            # Review staged, post to Linear
+
+# Rollback Operations
+/ccpm:rollback                                     # Interactive rollback menu
+/ccpm:rollback --git                              # Undo last commit (soft)
+/ccpm:rollback --git --hard                       # Undo commit and discard changes
+/ccpm:rollback --linear                           # Revert Linear status
 ```
 
 ### Project Configuration Commands (6 commands)
@@ -214,6 +241,56 @@ Manage project configurations for multi-project workflows.
 - Switch between projects
 - Configure external PM tools per project
 - Monorepo support via subdirectory patterns
+
+### /ccpm:search (New in v1.1)
+
+Search Linear issues with flexible filtering.
+
+**Features:**
+- Text search in issue titles
+- Filter by status, label, assignee
+- `--mine` shortcut for your issues
+- `--recent` for last 7 days activity
+
+### /ccpm:history (New in v1.1)
+
+View activity timeline combining git and Linear history.
+
+**Features:**
+- Chronological event view
+- Git commits + Linear comments + status changes
+- Filter by date range (`--days=N`)
+- Auto-detects issue from branch
+
+### /ccpm:branch (New in v1.1)
+
+Smart git branch management with Linear integration.
+
+**Features:**
+- Auto-generates branch names from issue titles
+- Lists branches with linked issue info
+- Cleanup merged branches
+- Respects CLAUDE.md protected branches
+
+### /ccpm:review (New in v1.1)
+
+AI-powered code review with actionable feedback.
+
+**Features:**
+- Reviews staged changes or branch diffs
+- Security, bugs, quality, best practices checks
+- Interactive fix suggestions
+- Posts findings to Linear
+
+### /ccpm:rollback (New in v1.1)
+
+Safely undo recent operations with confirmation.
+
+**Features:**
+- Git commit rollback (soft/hard)
+- File change restoration
+- Linear status reversion
+- Creates backup tags for recovery
 
 ## 🔄 Migration from v2.x
 
