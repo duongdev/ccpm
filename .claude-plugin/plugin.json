@@ -1,7 +1,7 @@
 {
   "name": "ccpm",
-  "version": "1.0.0",
-  "description": "Lean Project Management plugin for Claude Code. v1.0: 13 commands (6 natural workflow + 6 project config + 1 visual), 8 agents with Linear subagent (50-60% token reduction, 85-95% cache hit), smart agent auto-invocation, mandatory agent delegation for context protection, background Linear operations, exact MCP parameter docs, visual context for pixel-perfect UI. 82% simpler than v2.x.",
+  "version": "1.1.0",
+  "description": "Lean Project Management plugin for Claude Code. v1.1: 18 commands (6 workflow + 5 utility + 6 project + 1 visual), 14 agents (8 PM + 6 development), Linear subagent (50-60% token reduction, 85-95% cache hit), smart agent auto-invocation, visual context for pixel-perfect UI. New: search, history, branch, review, rollback commands + frontend, backend, TDD, code-review, debugger, security agents.",
   "author": {
     "name": "Dustin Do",
     "email": "dustin.do95@gmail.com",
@@ -35,6 +35,12 @@
     "./agents/pm:ui-designer.md",
     "./agents/project-config-loader.md",
     "./agents/project-context-manager.md",
-    "./agents/project-detector.md"
+    "./agents/project-detector.md",
+    "./agents/frontend-developer.md",
+    "./agents/backend-architect.md",
+    "./agents/tdd-orchestrator.md",
+    "./agents/code-reviewer.md",
+    "./agents/debugger.md",
+    "./agents/security-auditor.md"
   ]
 }
