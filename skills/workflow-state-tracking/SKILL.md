@@ -220,7 +220,7 @@ START
   │   ├─→ /ccpm:verify (check completion)
   │   │   ↓
   │   └─→ 🚫 BLOCKED (if blocker found)
-  │       └─→ /ccpm:verification:fix
+  │       └─→ /ccpm:verify
   │           ↓ (issue resolved)
   │           └─→ 🚀 IMPLEMENTING
   │
@@ -289,7 +289,7 @@ Reasoning: Checklist complete, verify before completion
 Current: 🚫 BLOCKED
 Question: What should I do next?
 
-Suggested: /ccpm:verification:fix
+Suggested: /ccpm:verify
 Description: Diagnose and fix blocker
 Confidence: 80%
 Reasoning: Address blocking issue to continue
@@ -339,7 +339,7 @@ Understanding which commands cause which state transitions:
 | `/ccpm:verify` | VERIFYING | VERIFIED | 85% (if checks pass) |
 | `/ccpm:verify` | VERIFYING | IMPLEMENTING | 100% (if checks fail) |
 | `/ccpm:done` | VERIFIED | COMPLETE | 95% |
-| `/ccpm:verification:fix` | BLOCKED | IMPLEMENTING | 85% |
+| `/ccpm:verify` | BLOCKED | IMPLEMENTING | 85% |
 
 ## Integration with Commands
 
@@ -384,7 +384,7 @@ Blockers automatically detected by:
 ### Resolving Blockers
 ```
 When BLOCKED:
-1. Suggested command: /ccpm:verification:fix
+1. Suggested command: /ccpm:verify
 2. Diagnose the specific issue
 3. Take corrective action
 4. Re-run verification
@@ -405,7 +405,7 @@ Suggestions:
   2. Fix: Add CSRF token middleware
   3. Fix: Move API key to environment variable
 
-Status: /ccpm:verification:fix
+Status: /ccpm:verify
 ```
 
 ## State Machine Queries
@@ -497,13 +497,13 @@ If displayed state doesn't match reality:
 4. Check git status for uncommitted changes
 
 If still misaligned:
-  /ccpm:utils:status PSN-29 (detailed state diagnostics)
+  /ccpm:work PSN-29 (detailed state diagnostics)
 ```
 
 ### Stuck in BLOCKED State
 ```
-1. Identify blocker: /ccpm:utils:status
-2. Diagnose issue: /ccpm:verification:fix
+1. Identify blocker: /ccpm:work
+2. Diagnose issue: /ccpm:verify
 3. Fix root cause
 4. Re-verify: /ccpm:verify
 5. Return to IMPLEMENTING: Automatic on successful verification
@@ -512,7 +512,7 @@ If still misaligned:
 ### Premature State Transition
 If transitioned too early (e.g., PLANNING → VERIFYING):
 ```
-1. Use /ccpm:planning:update to re-plan if needed
+1. Use /ccpm:plan to re-plan if needed
 2. Or transition back to IMPLEMENTING: /ccpm:work
 3. Complete actual implementation
 4. Then proceed with verification
@@ -547,15 +547,15 @@ If transitioned too early (e.g., PLANNING → VERIFYING):
 
 ### State Check Command
 ```bash
-/ccpm:utils:status <issue-id>
+/ccpm:work <issue-id>
 ```
 
 ### Workflow Visualization
 ```bash
-/ccpm:utils:dependencies <issue-id>
+/ccpm:work <issue-id>
 ```
 
 ### Progress Report
 ```bash
-/ccpm:utils:report <project>
+/ccpm:sync <project>
 ```

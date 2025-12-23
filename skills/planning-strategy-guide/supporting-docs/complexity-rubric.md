@@ -44,7 +44,7 @@ Quick reference for assessing task complexity in the planning-strategy-guide ski
 
 **Planning approach**: Moderate planning (Phases 1, 2, 5, 6)
 
-**Commands**: `/ccpm:plan "task"` or `/ccpm:planning:create`
+**Commands**: `/ccpm:plan "task"` or `/ccpm:plan`
 
 ---
 
@@ -66,7 +66,7 @@ Quick reference for assessing task complexity in the planning-strategy-guide ski
 
 **Planning approach**: Full planning (All 6 phases)
 
-**Commands**: `/ccpm:spec:create` + `/ccpm:planning:plan`
+**Commands**: `/ccpm:plan` + `/ccpm:plan`
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: docs-seeker
-description: Discovers and researches authoritative documentation with version-specific, context-aware search. Auto-activates when user asks "find documentation", "API docs", "how to use", "integration guide", "best practices", "design pattern", or when running /ccpm:spec:write or /ccpm:planning:plan. Fetches latest docs from official sources via Context7 MCP. Uses progressive discovery (overview → API reference → integration → best practices). Prioritizes: Official docs → Framework guides → API references → Community resources. Provides version-specific recommendations and code examples from documentation. Flags important caveats and performance considerations. Surfaces migration guides when upgrading frameworks.
+description: Discovers and researches authoritative documentation with version-specific, context-aware search. Auto-activates when user asks "find documentation", "API docs", "how to use", "integration guide", "best practices", "design pattern", or when running /ccpm:plan or /ccpm:plan. Fetches latest docs from official sources via Context7 MCP. Uses progressive discovery (overview → API reference → integration → best practices). Prioritizes: Official docs → Framework guides → API references → Community resources. Provides version-specific recommendations and code examples from documentation. Flags important caveats and performance considerations. Surfaces migration guides when upgrading frameworks.
 ---
 
 # Documentation Seeker
@@ -12,8 +12,8 @@ Intelligent documentation discovery and research for technical implementation.
 This skill auto-activates when:
 
 - User asks: **"find documentation"**, **"API docs"**, **"how to use"**, **"integration guide"**
-- Running **`/ccpm:spec:write`** (needs library docs)
-- Running **`/ccpm:planning:plan`** (technical research phase)
+- Running **`/ccpm:plan`** (needs library docs)
+- Running **`/ccpm:plan`** (technical research phase)
 - Implementing features requiring framework knowledge
 - Researching best practices or design patterns
 
@@ -57,19 +57,19 @@ Found:
 - Best practices: Use for data-heavy components, avoid client-side state
 - Integration: Works with Next.js 15 App Router
 
-Summary available for /ccpm:spec:write architecture section.
+Summary available for /ccpm:plan architecture section.
 ```
 
 ## Integration with CCPM
 
 ### Planning Phase Research
 
-**Use with `/ccpm:planning:plan`**:
+**Use with `/ccpm:plan`**:
 
 When planning a task, docs-seeker helps gather technical context:
 
 ```
-User: "/ccpm:planning:plan AUTH-123 JIRA-456"
+User: "/ccpm:plan AUTH-123 JIRA-456"
 
 Claude: [docs-seeker activates during research phase]
 
@@ -92,12 +92,12 @@ Documentation links saved to Linear task for implementation reference.
 
 ### Spec Writing Research
 
-**Use with `/ccpm:spec:write`**:
+**Use with `/ccpm:plan`**:
 
 When writing specs, docs-seeker finds authoritative sources:
 
 ```
-User: "/ccpm:spec:write DOC-789 api-design"
+User: "/ccpm:plan DOC-789 api-design"
 
 Claude: [docs-seeker activates]
 
@@ -225,7 +225,7 @@ Start broad, then narrow down:
 ### Example 1: Research for Spec Writing
 
 ```
-User: "/ccpm:spec:write DOC-456 architecture"
+User: "/ccpm:plan DOC-456 architecture"
 
 Claude: [docs-seeker activates]
 
@@ -355,7 +355,7 @@ This should be added to the implementation plan under "Webhook Handler" section.
 ### Workflow 1: Spec Writing
 
 ```
-1. User runs: /ccpm:spec:write DOC-123 architecture
+1. User runs: /ccpm:plan DOC-123 architecture
 2. docs-seeker activates automatically
 3. Finds relevant documentation
 4. Summarizes key patterns and best practices
@@ -366,7 +366,7 @@ This should be added to the implementation plan under "Webhook Handler" section.
 ### Workflow 2: Planning Phase
 
 ```
-1. User runs: /ccpm:planning:plan TASK-456
+1. User runs: /ccpm:plan TASK-456
 2. Task description: "Implement real-time notifications"
 3. docs-seeker activates for research
 4. Finds WebSocket, Server-Sent Events, and polling docs
@@ -504,4 +504,4 @@ This skill provides:
 
 **Source**: From [claudekit-skills/docs-seeker](https://github.com/mrgoonie/claudekit-skills)
 **License**: MIT
-**CCPM Integration**: `/ccpm:spec:write`, `/ccpm:planning:plan`, Context7 MCP
+**CCPM Integration**: `/ccpm:plan`, `/ccpm:plan`, Context7 MCP

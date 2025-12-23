@@ -294,8 +294,8 @@ Claude: I need explicit confirmation. Please respond with "yes" to proceed or "n
 This skill works alongside CCPM commands that write to external systems:
 
 **Commands that trigger this skill**:
-- `/ccpm:complete:finalize` (creates BitBucket PR, sends Slack notification)
-- `/ccpm:utils:sync-status` (updates Jira status)
+- `/ccpm:done` (creates BitBucket PR, sends Slack notification)
+- `/ccpm:sync` (updates Jira status)
 - Any command with external system integration
 
 **How it works**:

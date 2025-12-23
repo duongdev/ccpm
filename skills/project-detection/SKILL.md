@@ -139,7 +139,7 @@ projects:
 **Example 1: Web App Directory**
 ```bash
 $ cd /Users/dev/monorepo/apps/web/src/components
-$ /ccpm:planning:create "Add dark mode"
+$ /ccpm:plan "Add dark mode"
 
 # Detection flow:
 # 1. Git remote → matches "my-monorepo" ✓
@@ -156,7 +156,7 @@ $ /ccpm:planning:create "Add dark mode"
 **Example 2: Mobile App Directory**
 ```bash
 $ cd /Users/dev/monorepo/apps/mobile
-$ /ccpm:utils:status WORK-123
+$ /ccpm:work WORK-123
 
 # Detection:
 # → project="my-monorepo", subproject="mobile-app"

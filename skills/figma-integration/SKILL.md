@@ -1,6 +1,6 @@
 ---
 name: figma-integration
-description: Guides design-to-code workflow using Figma integration. Helps extract designs, analyze components, and generate implementation specs. Auto-activates when users mention Figma URLs, design implementation, component conversion, or design-to-code workflows. Works with /ccpm:planning:design-ui, design-approve, design-refine, and /ccpm:utils:figma-refresh commands.
+description: Guides design-to-code workflow using Figma integration. Helps extract designs, analyze components, and generate implementation specs. Auto-activates when users mention Figma URLs, design implementation, component conversion, or design-to-code workflows. Works with /ccpm:plan, design-approve, design-refine, and /ccpm:figma-refresh commands.
 ---
 
 # Figma Integration Skill
@@ -13,24 +13,24 @@ This skill auto-activates when:
 
 - User mentions **"Figma"** or **"design"** in implementation context
 - User asks about **"component"**, **"design system"**, or **"design tokens"**
-- Running **`/ccpm:planning:design-ui`** (starts design process)
-- Running **`/ccpm:planning:design-refine`** (refine designs)
-- Running **`/ccpm:planning:design-approve`** (generate specs)
-- Running **`/ccpm:utils:figma-refresh`** (refresh cached designs)
+- Running **`/ccpm:plan`** (starts design process)
+- Running **`/ccpm:plan`** (refine designs)
+- Running **`/ccpm:plan`** (generate specs)
+- Running **`/ccpm:figma-refresh`** (refresh cached designs)
 - User mentions **"design-to-code"**, **"design file"**, or **"Figma component"**
 
 ## The Figma Workflow
 
 ### Phase 1: Design Phase
 
-**Command**: `/ccpm:planning:design-ui ISSUE-ID`
+**Command**: `/ccpm:plan ISSUE-ID`
 
 Start the design process by attaching Figma links to your Linear issue:
 
 ```
 1. Create/update Linear issue with task description
 2. Attach Figma design link in issue description
-3. Run /ccpm:planning:design-ui TASK-123
+3. Run /ccpm:plan TASK-123
 4. CCPM extracts design metadata and creates options
 ```
 
@@ -43,7 +43,7 @@ Start the design process by attaching Figma links to your Linear issue:
 
 **Example**:
 ```
-/ccpm:planning:design-ui PSN-123
+/ccpm:plan PSN-123
 
 ✅ Detected Figma link: https://figma.com/file/ABC123/UserDashboard
 📦 Design Analysis:
@@ -53,19 +53,19 @@ Start the design process by attaching Figma links to your Linear issue:
    - Typography: 4 font families
    - Spacing pattern: 4px, 8px, 16px grid
 
-Ready for design review. Run: /ccpm:planning:design-refine PSN-123
+Ready for design review. Run: /ccpm:plan PSN-123
 ```
 
 ### Phase 2: Refinement Phase
 
-**Command**: `/ccpm:planning:design-refine ISSUE-ID [OPTION] [FEEDBACK]`
+**Command**: `/ccpm:plan ISSUE-ID [OPTION] [FEEDBACK]`
 
 Iterate on designs based on feedback:
 
 ```
 1. Review design options from Phase 1
 2. Provide feedback or request changes
-3. Run /ccpm:planning:design-refine TASK-123 "feedback"
+3. Run /ccpm:plan TASK-123 "feedback"
 4. CCPM creates refined design options
 ```
 
@@ -78,7 +78,7 @@ Iterate on designs based on feedback:
 
 **Example**:
 ```
-/ccpm:planning:design-refine PSN-123 1 "Make the buttons larger, use primary color"
+/ccpm:plan PSN-123 1 "Make the buttons larger, use primary color"
 
 🎨 Refining Design Option 1...
 
@@ -89,19 +89,19 @@ Changes applied:
 
 Preview: [design-option-1-v2]
 
-Ready for approval? Run: /ccpm:planning:design-approve PSN-123 1
+Ready for approval? Run: /ccpm:plan PSN-123 1
 ```
 
 ### Phase 3: Approval & Spec Generation
 
-**Command**: `/ccpm:planning:design-approve ISSUE-ID OPTION-NUMBER`
+**Command**: `/ccpm:plan ISSUE-ID OPTION-NUMBER`
 
 Approve final design and generate implementation specifications:
 
 ```
 1. Review refined design options
 2. Choose best option
-3. Run /ccpm:planning:design-approve TASK-123 1
+3. Run /ccpm:plan TASK-123 1
 4. CCPM generates comprehensive specs
 ```
 
@@ -119,7 +119,7 @@ Approve final design and generate implementation specifications:
 
 **Example**:
 ```
-/ccpm:planning:design-approve PSN-123 1
+/ccpm:plan PSN-123 1
 
 ✅ Design Approved!
 
@@ -135,13 +135,13 @@ Ready for implementation!
 
 ### Phase 4: Cache Management
 
-**Command**: `/ccpm:utils:figma-refresh ISSUE-ID`
+**Command**: `/ccpm:figma-refresh ISSUE-ID`
 
 Refresh cached design data when designs change:
 
 ```
 1. Update Figma designs
-2. Run /ccpm:utils:figma-refresh TASK-123
+2. Run /ccpm:figma-refresh TASK-123
 3. CCPM re-extracts design data
 4. Cache is updated with latest designs
 ```
@@ -282,7 +282,7 @@ WCAG 2.1 AA Compliance:
 1. Create Linear issue: PSN-100 "Design primary button"
 2. Add Figma link to issue description:
    https://figma.com/file/ABC123/Components?node-id=15:2
-3. Run: /ccpm:planning:design-ui PSN-100
+3. Run: /ccpm:plan PSN-100
 ```
 
 **Design phase output**:
@@ -321,7 +321,7 @@ export function PrimaryButton({ label, onClick }) {
 ```
 1. Create issue: PSN-200 "Design dashboard page"
 2. Add Figma file: https://figma.com/file/XYZ789/Dashboard
-3. Run: /ccpm:planning:design-ui PSN-200
+3. Run: /ccpm:plan PSN-200
 ```
 
 **Analysis reveals**:
@@ -357,7 +357,7 @@ Recommended approach:
 
 **Design refinement**:
 ```
-/ccpm:planning:design-refine PSN-200 1 "Increase sidebar width to 280px,
+/ccpm:plan PSN-200 1 "Increase sidebar width to 280px,
 make cards taller"
 
 ✅ Refined Design Option 1
@@ -374,7 +374,7 @@ Ready for approval!
 
 **Final approval**:
 ```
-/ccpm:planning:design-approve PSN-200 1
+/ccpm:plan PSN-200 1
 
 ✅ Dashboard Design Approved!
 
@@ -387,7 +387,7 @@ Implementation specs generated:
 
 Linear Document: [docs/specs/dashboard-implementation]
 
-Next: Run /ccpm:implementation:start PSN-200
+Next: Run /ccpm:work PSN-200
 ```
 
 ### Example 3: Design Iteration Workflow
@@ -402,13 +402,13 @@ Situation:
 
 Solution:
 1. Update Figma file with new layout
-2. Run: /ccpm:utils:figma-refresh PSN-300
+2. Run: /ccpm:figma-refresh PSN-300
 3. Specs automatically update
 ```
 
 **Cache refresh process**:
 ```
-/ccpm:utils:figma-refresh PSN-300
+/ccpm:figma-refresh PSN-300
 
 🔄 Refreshing Figma cache...
 
@@ -553,7 +553,7 @@ CCPM respects Figma API rate limits:
 
 **Check rate limit status**:
 ```
-/ccpm:utils:figma-refresh PSN-123 --status
+/ccpm:figma-refresh PSN-123 --status
 
 📊 Figma Rate Limit Status
 
@@ -567,41 +567,41 @@ Recommendation: Use community server to preserve official API calls
 
 ### Works With Planning Commands
 
-**`/ccpm:planning:design-ui`**
+**`/ccpm:plan`**
 - Starts design extraction
 - Creates design options
 - Caches metadata
 
-**`/ccpm:planning:design-refine`**
+**`/ccpm:plan`**
 - Iterates on designs
 - Applies feedback
 - Updates cache
 
-**`/ccpm:planning:design-approve`**
+**`/ccpm:plan`**
 - Finalizes design
 - Generates full specs
 - Creates Linear Document
 
 ### Works With Implementation Commands
 
-**`/ccpm:implementation:start`**
+**`/ccpm:work`**
 - Loads approved specs
 - Uses component breakdown
 - References styling guidelines
 
-**`/ccpm:implementation:sync`**
+**`/ccpm:sync`**
 - References design specs
 - Verifies implementation matches design
 - Flags design deviations
 
 ### Works With Utility Commands
 
-**`/ccpm:utils:figma-refresh`**
+**`/ccpm:figma-refresh`**
 - Force refresh design cache
 - Check rate limit status
 - View cache information
 
-**`/ccpm:utils:context`**
+**`/ccpm:work`**
 - Loads design specs for task context
 - Includes component breakdown
 - Shows styling guidelines
@@ -626,7 +626,7 @@ Recommendation: Use community server to preserve official API calls
 
 3. Try explicit link parameter
    ```
-   /ccpm:planning:design-ui PSN-123 --figma-url "https://..."
+   /ccpm:plan PSN-123 --figma-url "https://..."
    ```
 
 ### Colors Not Extracted
@@ -640,12 +640,12 @@ Recommendation: Use community server to preserve official API calls
 
 2. Refresh cache
    ```
-   /ccpm:utils:figma-refresh PSN-123
+   /ccpm:figma-refresh PSN-123
    ```
 
 3. Check server configuration
    ```
-   /ccpm:utils:figma-refresh PSN-123 --status
+   /ccpm:figma-refresh PSN-123 --status
    ```
 
 ### Rate Limit Exceeded
@@ -675,12 +675,12 @@ Recommendation: Use community server to preserve official API calls
 
 2. Try again with larger issue ID
    ```
-   /ccpm:planning:design-approve PSN-123 1 --retry
+   /ccpm:plan PSN-123 1 --retry
    ```
 
 3. Check cache validity
    ```
-   /ccpm:utils:figma-refresh PSN-123
+   /ccpm:figma-refresh PSN-123
    ```
 
 ## Summary
@@ -701,15 +701,15 @@ This skill enables:
 
 **Key commands**:
 ```
-/ccpm:planning:design-ui PSN-123          # Start design
-/ccpm:planning:design-refine PSN-123      # Iterate
-/ccpm:planning:design-approve PSN-123 1   # Generate specs
-/ccpm:utils:figma-refresh PSN-123         # Refresh cache
+/ccpm:plan PSN-123          # Start design
+/ccpm:plan PSN-123      # Iterate
+/ccpm:plan PSN-123 1   # Generate specs
+/ccpm:figma-refresh PSN-123         # Refresh cache
 ```
 
 ---
 
-**Integration**: Works with `/ccpm:planning:design-*` and `/ccpm:utils:figma-refresh` commands
+**Integration**: Works with `/ccpm:plan` and `/ccpm:figma-refresh` commands
 **MCP Servers**: Figma MCP (figma-repeat, figma-trainer-guru, etc.)
 **Linear Integration**: Stores designs and specs in Linear Documents
 **Shared Module**: Uses `_shared-figma-detection.md` for link detection

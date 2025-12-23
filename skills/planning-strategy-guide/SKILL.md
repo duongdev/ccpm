@@ -157,22 +157,22 @@ This skill enhances the following CCPM commands:
    - Suggests appropriate planning depth
    - Provides interactive guidance
 
-2. **`/ccpm:planning:create`** - Extended planning with research
+2. **`/ccpm:plan`** - Extended planning with research
    - Activates all 6 planning phases
    - Integrates with docs-seeker for research
    - Creates comprehensive Linear issue
 
-3. **`/ccpm:planning:update`** - Plan modifications
+3. **`/ccpm:plan`** - Plan modifications
    - Analyzes impact of changes
    - Re-evaluates complexity and scope
    - Provides side-by-side comparison
 
-4. **`/ccpm:spec:create`** - Spec-first development
+4. **`/ccpm:plan`** - Spec-first development
    - Helps structure spec sections
    - Identifies missing requirements
    - Ensures comprehensive coverage
 
-5. **`/ccpm:spec:break-down`** - Epic/feature decomposition
+5. **`/ccpm:plan`** - Epic/feature decomposition
    - Uses task breakdown phase
    - Analyzes dependencies
    - Creates properly ordered subtasks
@@ -295,7 +295,7 @@ Query: "Find Stripe API documentation and best practices"
 **Command suggestion needed** → Let pm-workflow-guide activate:
 ```
 [pm-workflow-guide auto-activates]
-Suggests: "/ccpm:spec:create epic 'Payment Integration'"
+Suggests: "/ccpm:plan epic 'Payment Integration'"
 ```
 
 ### Step 5: Update Linear with Plan
@@ -348,7 +348,7 @@ Show user what to do next:
 💡 Next Steps:
   1. Review the plan in Linear
   2. Start implementation: /ccpm:work ${issueId}
-  3. Create spec if complex: /ccpm:spec:create
+  3. Create spec if complex: /ccpm:plan
 ```
 
 ## Examples
@@ -435,8 +435,8 @@ Epic: Payment Gateway Integration
 - Story points: 21 points
 
 ✅ Planning complete! Would you like me to:
-1. Create Linear issue with this plan: /ccpm:planning:create
-2. Create spec document: /ccpm:spec:create
+1. Create Linear issue with this plan: /ccpm:plan
+2. Create spec document: /ccpm:plan
 3. Start implementation: /ccpm:work
 ```
 
@@ -558,7 +558,7 @@ Let me identify risks for your API migration:
 - Contingency: Fall back to old implementation
 
 **Recommendation**:
-Create detailed migration plan with /ccpm:spec:create
+Create detailed migration plan with /ccpm:plan
 Include rollback procedures and monitoring
 ```
 
@@ -597,7 +597,7 @@ Using T-shirt sizing:
 - Sprint 3: Elasticsearch (8 points)
 
 Would you like me to create tasks in Linear?
-/ccpm:planning:create (will break down into subtasks)
+/ccpm:plan (will break down into subtasks)
 ```
 
 ## Best Practices
@@ -625,7 +625,7 @@ Planning is not one-and-done:
 Initial plan → Implementation → Learning → Update plan
 ```
 
-Use `/ccpm:planning:update` to refine plans based on learnings.
+Use `/ccpm:plan` to refine plans based on learnings.
 
 ### 4. Document Assumptions
 
@@ -694,8 +694,8 @@ Dependency graphs, workflow diagrams, and architecture sketches help:
 **Output**: Hierarchical task structure in Linear
 
 **Integration**:
-- Use `/ccpm:spec:create epic` first (create spec)
-- Then `/ccpm:spec:break-down` (use this skill's Phase 5)
+- Use `/ccpm:plan epic` first (create spec)
+- Then `/ccpm:plan` (use this skill's Phase 5)
 
 ### Pattern 2: Complexity-First Planning
 
@@ -718,7 +718,7 @@ Dependency graphs, workflow diagrams, and architecture sketches help:
 **Output**: Dependency graph + execution order
 
 **Integration**:
-- Use `/ccpm:utils:dependencies` (visualize)
+- Use `/ccpm:work` (visualize)
 - Create tasks in dependency order
 
 ### Pattern 4: Risk-Aware Planning
@@ -730,7 +730,7 @@ Dependency graphs, workflow diagrams, and architecture sketches help:
 **Output**: Risk register + mitigation strategies
 
 **Integration**:
-- Document in spec: `/ccpm:spec:write <doc-id> security`
+- Document in spec: `/ccpm:plan <doc-id> security`
 - Add risks to Linear issue description
 
 ## Summary
@@ -770,8 +770,8 @@ The Planning Strategy Guide is your intelligent planning assistant, providing:
 
 **Integration commands**:
 - `/ccpm:plan` - Smart planning (uses this skill)
-- `/ccpm:spec:create` - Spec-first (uses Phase 2, 5)
-- `/ccpm:planning:update` - Refine plan (re-runs relevant phases)
+- `/ccpm:plan` - Spec-first (uses Phase 2, 5)
+- `/ccpm:plan` - Refine plan (re-runs relevant phases)
 
 ---
 

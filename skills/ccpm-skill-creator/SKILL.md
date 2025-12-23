@@ -87,7 +87,7 @@ Questions:
    → "When deploying to staging or production"
 
 3. Which CCPM commands does it work with?
-   → "/ccpm:complete:finalize for production deploys"
+   → "/ccpm:done for production deploys"
 
 4. Does it write to external systems?
    → "Yes - posts to Slack, updates Jira"
@@ -117,7 +117,7 @@ Generating SKILL.md with CCPM integration...
 ```yaml
 ---
 name: acme-deployment
-description: Automates Acme Corp deployment workflow with environment-specific checklists, Slack notifications, and Jira updates. Auto-activates when deploying to staging/production or running /ccpm:complete:finalize. Enforces deployment checklist completion before external notifications.
+description: Automates Acme Corp deployment workflow with environment-specific checklists, Slack notifications, and Jira updates. Auto-activates when deploying to staging/production or running /ccpm:done. Enforces deployment checklist completion before external notifications.
 ---
 
 # Acme Deployment Workflow
@@ -128,14 +128,14 @@ Custom deployment workflow for Acme Corp projects.
 
 Auto-activates when:
 - User mentions: "deploy to staging", "deploy to production", "ship it"
-- Running `/ccpm:complete:finalize` command
+- Running `/ccpm:done` command
 - Creating release PR
 
 ## Integration with CCPM
 
 ### Commands
-- `/ccpm:complete:finalize` - Triggers deployment checklist
-- `/ccpm:verification:verify` - Pre-deployment verification
+- `/ccpm:done` - Triggers deployment checklist
+- `/ccpm:verify` - Pre-deployment verification
 
 ### Skills
 - `external-system-safety` - Confirms Slack/Jira writes
@@ -242,7 +242,7 @@ Input: "Post to Slack #general"
 ✅ Requires explicit "yes"
 
 Test 3: Integration
-Input: "/ccpm:complete:finalize WORK-123"
+Input: "/ccpm:done WORK-123"
 ✅ acme-deployment runs deployment checklist
 ✅ Integrates with completion workflow
 
@@ -384,14 +384,14 @@ Store in `.claude/skills/` (not plugin):
 ```yaml
 ---
 name: team-pr-template
-description: Adds team-specific PR template when running /ccpm:complete:finalize
+description: Adds team-specific PR template when running /ccpm:done
 ---
 
 # Team PR Template
 
 ## Integration with CCPM
 
-Works with `/ccpm:complete:finalize`:
+Works with `/ccpm:done`:
 1. CCPM creates base PR
 2. This skill adds team-specific template
 3. Template includes:
