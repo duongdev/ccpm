@@ -63,6 +63,65 @@ Create `~/.claude-mem/settings.json` if needed:
 }
 ```
 
+## Implementation Details (v1.2)
+
+CCPM v1.2 includes full claude-mem integration:
+
+### Session State Detection
+
+The `session-init.cjs` hook detects claude-mem availability:
+
+```javascript
+// In session-init.cjs
+const claudeMemAvailable = isClaudeMemAvailable();
+const sessionState = {
+  // ... other fields
+  claudeMemAvailable,  // true/false
+  commitPatterns,       // Git history patterns for /ccpm:commit
+};
+```
+
+### Subagent Context Injection
+
+The `subagent-context-injector.cjs` injects claude-mem observations:
+
+```javascript
+// In subagent-context-injector.cjs
+if (isClaudeMemAvailable()) {
+  const observations = readClaudeMemContext(taskPrompt, 8);
+  // Scores observations by relevance to task
+  // Injects formatted context into subagent
+}
+```
+
+**Context injection order:**
+1. CLAUDE.md files (~3-5k tokens)
+2. Task context (~500 tokens)
+3. Agent rules (~500 tokens)
+4. **claude-mem observations** (~500 tokens) ← NEW
+5. Session activity (~500 tokens)
+6. Global rules (~200 tokens)
+
+### Commit Pattern Analysis
+
+The `session-init.cjs` hook analyzes git commit history:
+
+```javascript
+// Cached in session state
+commitPatterns = {
+  format: 'conventional',  // or 'simple', 'emoji'
+  usesScope: true,
+  confidence: 85,
+  topTypes: ['feat', 'fix', 'docs', 'chore'],
+  topScopes: ['hooks', 'commands', 'ci']
+};
+```
+
+The `/ccpm:commit` command uses these patterns for:
+- Suggesting appropriate commit types
+- Suggesting scopes from project history
+- Maintaining consistency with existing commits
+
 ## How They Work Together
 
 ### Session Start Flow

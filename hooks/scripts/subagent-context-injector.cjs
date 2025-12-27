@@ -10,9 +10,10 @@
  * 1. CLAUDE.md files (~3-5k tokens) - Full project instructions
  * 2. Task context (~500 tokens) - Issue, branch, progress, checklist
  * 3. Agent-specific rules (~500 tokens) - Detailed agent guidance
- * 4. Session context (~500 tokens) - Recent decisions, completions
- * 5. Git state (~200 tokens) - Uncommitted files, recent commits
- * 6. Global rules (~200 tokens) - CCPM-wide rules
+ * 4. claude-mem context (~500 tokens) - Cross-session semantic memory
+ * 5. Session context (~500 tokens) - Recent decisions, completions
+ * 6. Git state (~200 tokens) - Uncommitted files, recent commits
+ * 7. Global rules (~200 tokens) - CCPM-wide rules
  *
  * Input (stdin): JSON with { subagent_type, agent_id, cwd, prompt, ... }
  * Output (stdout): JSON with { hookSpecificOutput: { additionalContext } }
@@ -20,6 +21,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { hookLog } = require('./lib/hook-logger.cjs');
 
 // Token budget per section (approximate)
@@ -27,6 +29,7 @@ const TOKEN_BUDGET = {
   claudeMd: 5000,      // Full CLAUDE.md contents
   task: 500,           // Task context
   agentRules: 500,     // Agent-specific rules
+  claudeMem: 500,      // Cross-session memory from claude-mem
   sessionContext: 500, // Recent activity
   gitState: 200,       // Git info
   globalRules: 200,    // CCPM rules
@@ -306,6 +309,166 @@ const AGENT_RULES = {
 };
 
 /**
+ * Check if claude-mem plugin is available
+ * Looks for the plugin in common installation locations
+ */
+function isClaudeMemAvailable() {
+  const homeDir = process.env.HOME || '/tmp';
+  const pluginPaths = [
+    path.join(homeDir, '.claude/plugins/claude-mem'),
+    path.join(homeDir, '.claude-mem'),
+  ];
+
+  for (const pluginPath of pluginPaths) {
+    if (fs.existsSync(pluginPath)) {
+      return true;
+    }
+  }
+
+  // Also check if there's a recent claude-mem session file
+  try {
+    const tmpFiles = fs.readdirSync('/tmp');
+    return tmpFiles.some(f => f.startsWith('claude-mem'));
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Read claude-mem recent context if available
+ * Queries the claude-mem SQLite database for recent observations
+ * @param {string} taskPrompt - The task prompt to search for relevant context
+ * @param {number} limit - Max number of observations to return
+ */
+function readClaudeMemContext(taskPrompt, limit = 10) {
+  const homeDir = process.env.HOME || '/tmp';
+  const dbPath = path.join(homeDir, '.claude-mem/memory.db');
+
+  if (!fs.existsSync(dbPath)) {
+    return null;
+  }
+
+  try {
+    // Extract keywords from task prompt for relevance matching
+    const keywords = extractKeywords(taskPrompt);
+
+    // Query recent observations using sqlite3 CLI
+    // We use a simple approach that doesn't require native modules
+    const query = `
+      SELECT id, type, title, summary, created_at
+      FROM observations
+      WHERE type IN ('decision', 'bugfix', 'feature', 'discovery', 'change')
+      ORDER BY created_at DESC
+      LIMIT ${limit * 2}
+    `;
+
+    const result = execSync(
+      `sqlite3 -json "${dbPath}" "${query.replace(/"/g, '\\"')}"`,
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
+    );
+
+    const observations = JSON.parse(result || '[]');
+
+    // Filter and score by relevance to task
+    const scored = observations.map(obs => {
+      let score = 0;
+      const text = `${obs.title} ${obs.summary}`.toLowerCase();
+
+      for (const keyword of keywords) {
+        if (text.includes(keyword.toLowerCase())) {
+          score += 10;
+        }
+      }
+
+      // Boost decisions and bugfixes (more actionable)
+      if (obs.type === 'decision') score += 5;
+      if (obs.type === 'bugfix') score += 3;
+
+      return { ...obs, score };
+    });
+
+    // Return top relevant observations
+    return scored
+      .filter(obs => obs.score > 0 || keywords.length === 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+  } catch (e) {
+    // Silent fail - claude-mem may not be set up or sqlite3 not available
+    return null;
+  }
+}
+
+/**
+ * Extract keywords from task prompt for relevance matching
+ */
+function extractKeywords(prompt) {
+  if (!prompt) return [];
+
+  // Remove common words and extract meaningful terms
+  const stopWords = new Set([
+    'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+    'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',
+    'ought', 'used', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by',
+    'from', 'as', 'into', 'through', 'during', 'before', 'after', 'above',
+    'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here',
+    'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few', 'more',
+    'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own',
+    'same', 'so', 'than', 'too', 'very', 'just', 'and', 'but', 'if', 'or',
+    'because', 'until', 'while', 'this', 'that', 'these', 'those', 'it',
+    'its', 'i', 'you', 'he', 'she', 'we', 'they', 'what', 'which', 'who',
+    'implement', 'create', 'add', 'update', 'fix', 'make', 'use', 'get'
+  ]);
+
+  const words = prompt
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.has(word));
+
+  // Return unique keywords
+  return [...new Set(words)].slice(0, 10);
+}
+
+/**
+ * Format claude-mem observations for context injection
+ */
+function formatClaudeMemContext(observations) {
+  if (!observations || observations.length === 0) {
+    return null;
+  }
+
+  const typeEmoji = {
+    decision: '⚖️',
+    bugfix: '🔴',
+    feature: '🟣',
+    discovery: '🔵',
+    change: '✅',
+    refactor: '🔄'
+  };
+
+  let context = '# 🧠 CROSS-SESSION MEMORY (claude-mem)\n\n';
+  context += '> Relevant observations from past sessions. Use for context.\n\n';
+
+  for (const obs of observations) {
+    const emoji = typeEmoji[obs.type] || '📝';
+    const date = new Date(obs.created_at).toLocaleDateString();
+    context += `${emoji} **${obs.title}** (${date})\n`;
+    if (obs.summary) {
+      // Truncate long summaries
+      const summary = obs.summary.length > 200
+        ? obs.summary.substring(0, 200) + '...'
+        : obs.summary;
+      context += `   ${summary}\n`;
+    }
+    context += '\n';
+  }
+
+  return context;
+}
+
+/**
  * Read session state from /tmp/ccpm-session-*.json
  */
 function readSessionState() {
@@ -497,7 +660,19 @@ function buildContext(input, sessionState, envVars) {
   context += '\n';
 
   // ============================================================
-  // SECTION 4: Recent Session Activity
+  // SECTION 4: claude-mem Cross-Session Memory
+  // ============================================================
+  if (isClaudeMemAvailable()) {
+    const claudeMemObs = readClaudeMemContext(taskPrompt, 8);
+    const claudeMemFormatted = formatClaudeMemContext(claudeMemObs);
+    if (claudeMemFormatted) {
+      context += claudeMemFormatted;
+      context += '\n';
+    }
+  }
+
+  // ============================================================
+  // SECTION 5: Recent Session Activity
   // ============================================================
   if (recentContext.length > 0) {
     context += '# 📝 RECENT SESSION ACTIVITY\n\n';
@@ -509,7 +684,7 @@ function buildContext(input, sessionState, envVars) {
   }
 
   // ============================================================
-  // SECTION 5: Global CCPM Rules
+  // SECTION 6: Global CCPM Rules
   // ============================================================
   context += '# ⚠️ GLOBAL RULES (MANDATORY)\n\n';
   context += '**Linear Operations:**\n';
@@ -574,7 +749,8 @@ function main() {
       const agentType = input?.subagent_type || input?.agent_type || 'unknown';
       const tokenEstimate = (contextString.length / 4 / 1000).toFixed(1); // ~4 chars per token, convert to k
       const claudeMdCount = sessionState?.claudeMdFiles?.length || 0;
-      hookLog('subagent-context-injector', `✓ Injected ~${tokenEstimate}k tokens to ${agentType} | CLAUDE.md: ${claudeMdCount}`);
+      const hasClaudeMem = isClaudeMemAvailable() ? 'mem✓' : 'mem✗';
+      hookLog('subagent-context-injector', `✓ Injected ~${tokenEstimate}k tokens to ${agentType} | CLAUDE.md: ${claudeMdCount} | ${hasClaudeMem}`);
 
       process.exit(0);
     });
