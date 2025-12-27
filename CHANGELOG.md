@@ -5,6 +5,57 @@ All notable changes to the CCPM plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-28
+
+### Added
+
+- **Multi-Perspective Code Review** (`/ccpm:review --multi`)
+  - Parallel analysis from 4 expert viewpoints: Code Quality, Security, Architecture, UX/Accessibility
+  - Uses `ccpm:code-reviewer`, `ccpm:security-auditor`, `ccpm:backend-architect`, `ccpm:frontend-developer` agents
+  - Consolidated findings with perspective tags
+  - Catches more issues through diverse expertise
+
+- **Decisions Log Helper** (`helpers/decisions-log.md`)
+  - Track architectural and technical decisions with rationale
+  - `logDecision()` - Log to file + Linear comments
+  - `searchDecisions()` - Search past decisions
+  - `checkExistingDecision()` - Prevent re-debating settled decisions
+  - Inspired by Claude-Code-Harness SSOT pattern
+
+- **Guard Commit Hook** (Stop hook)
+  - Prevents work loss when session ends unexpectedly
+  - Warns if uncommitted changes exceed thresholds (>5 files or >100 lines)
+  - Suggests commit message with issue scope
+  - Configurable via `CCPM_GUARD_COMMIT_MAX_FILES`, `CCPM_GUARD_COMMIT_MAX_LINES`
+  - Inspired by CCharness guard-commit pattern
+
+- **Claude-Mem Integration Guide** (`helpers/claude-mem-integration.md`)
+  - Documentation for integrating claude-mem with CCPM
+  - Complementary features: CCPM for workflow, claude-mem for memory
+  - Installation and configuration instructions
+  - Usage patterns for semantic search and cross-session context
+
+- **Enhanced Hook Logging**
+  - All hooks now log to `/tmp/ccpm-hooks.log`
+  - Shared logger utility (`hooks/scripts/lib/hook-logger.cjs`)
+  - Timestamped entries with hook name and status
+  - Session log cleared on SessionStart
+
+### Changed
+
+- Hook system now has 6 phases: SessionStart, UserPromptSubmit, PreToolUse, SubagentStart, Stop
+- Updated plugin description for v1.2 features
+
+### Technical
+
+- New files:
+  - `helpers/decisions-log.md` (decision tracking utilities)
+  - `helpers/claude-mem-integration.md` (integration guide)
+  - `hooks/scripts/guard-commit.cjs` (Stop hook)
+  - `hooks/scripts/lib/hook-logger.cjs` (shared logging)
+
+---
+
 ## [1.0.0] - 2025-12-23 (v1.0 Release)
 
 ### 🎉 Major Release - CCPM v1.0

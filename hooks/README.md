@@ -2,17 +2,23 @@
 
 **Automatically invoke specialized agents based on task context using Claude Code hooks.**
 
-## 🎯 Overview (v1.1)
+## 🎯 Overview (v1.2)
 
-CCPM v1.1 uses an optimized two-phase hook system:
-1. **SessionStart** - Injects full CCPM context once per session (~1.2K tokens)
-2. **UserPromptSubmit** - Provides lightweight task-specific hints (~15 tokens max)
+CCPM v1.2 uses a comprehensive 6-phase hook system:
 
-**Key Optimization in v1.1:**
+| Phase | Hook | Purpose |
+|-------|------|---------|
+| 1 | **SessionStart** | Inject full CCPM context once (~1.2K tokens) |
+| 2 | **UserPromptSubmit** | Lightweight task-specific hints (~15 tokens) |
+| 3 | **PreToolUse** | Scout block, context capture, Linear param fix |
+| 4 | **SubagentStart** | Inject ~10K context to subagents |
+| 5 | **Stop** | Guard commit - prevent work loss |
+
+**Key Features in v1.2:**
 - ✅ **94% token reduction** - Context injected once, not per-message
-- ✅ **SessionStart** - Full agent discovery + rules injection (once)
-- ✅ **UserPromptSubmit** - Minimal keyword-based hints only
-- ❌ **Removed**: Per-message agent discovery (moved to SessionStart)
+- ✅ **Guard commit** - Warns about uncommitted changes on session end
+- ✅ **Hook logging** - All hooks log to `/tmp/ccpm-hooks.log`
+- ✅ **Subagent context** - Full CLAUDE.md + rules injected to agents
 
 ## 📊 Architecture (v1.1)
 
@@ -58,13 +64,17 @@ CCPM v1.1 uses an optimized two-phase hook system:
 
 ```
 hooks/
-├── hooks.json                               # Hook configuration
+├── hooks.json                               # Hook configuration (6 phases)
 ├── scripts/
-│   ├── smart-agent-selector.sh             # Agent discovery script
-│   └── discover-agents-cached.sh           # Cached discovery for performance
-├── smart-agent-selector.prompt             # Full prompt (fallback)
-├── smart-agent-selector-optimized.prompt   # Optimized prompt (81.7% reduction)
-├── agent-selector.prompt                   # Static selector (backup)
+│   ├── session-init.cjs                    # SessionStart: project detection, context
+│   ├── smart-agent-selector.sh             # UserPromptSubmit: agent hints
+│   ├── scout-block.cjs                     # PreToolUse: block invalid operations
+│   ├── context-capture.cjs                 # PreToolUse: log session activity
+│   ├── linear-param-fixer.sh               # PreToolUse: fix Linear params
+│   ├── subagent-context-injector.cjs       # SubagentStart: inject ~10K context
+│   ├── guard-commit.cjs                    # Stop: warn about uncommitted changes
+│   └── lib/
+│       └── hook-logger.cjs                 # Shared logging utility
 ├── SMART_AGENT_SELECTION.md                # Detailed documentation
 └── README.md                               # This file
 ```
@@ -126,6 +136,53 @@ ccpm:linear-operations, ccpm:frontend-developer, ccpm:backend-architect, ...
 | 10-message session | ~25K tokens | ~1.35K tokens |
 | Token reduction | baseline | **94%** |
 | Execution time | <1s | <100ms |
+
+### Phase 3: Stop (guard-commit.cjs)
+
+**Purpose:** Prevent work loss when session ends unexpectedly
+
+**Triggers:** Session end, throttle, context full
+
+**What it does:**
+1. Checks for uncommitted git changes
+2. Compares against thresholds (default: 5 files, 100 lines)
+3. Outputs warning with file list and suggested commit
+4. Logs trigger to session state
+
+**Configuration (env vars):**
+- `CCPM_GUARD_COMMIT_MAX_FILES` - Trigger if more than N files (default: 5)
+- `CCPM_GUARD_COMMIT_MAX_LINES` - Trigger if more than N lines (default: 100)
+
+**Output (when thresholds exceeded):**
+```markdown
+## ⚠️ Uncommitted Changes Detected
+
+| Metric | Value | Threshold |
+|--------|-------|-----------|
+| Files changed | 8 | 5 |
+| Lines changed | ~150 | 100 |
+
+### Suggested Commit
+git add . && git commit -m "wip(work-42): work in progress"
+```
+
+## 📋 Hook Logging
+
+All hooks log to `/tmp/ccpm-hooks.log` for debugging:
+
+```bash
+# Watch hook activity in real-time
+tail -f /tmp/ccpm-hooks.log
+```
+
+**Example output:**
+```
+19:15:45 [session-init] ✓ Project: ccpm | Branch: main | Issue: none
+19:16:02 [smart-agent-selector] ✓ Hint: 💡 Debug task → use `ccpm:debugger` agent
+19:30:00 [guard-commit] ⚠ 8 files, 150 lines UNCOMMITTED
+```
+
+The log is cleared at the start of each session.
 
 ## ⚙️ Configuration
 
