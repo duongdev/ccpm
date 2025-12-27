@@ -41,6 +41,9 @@
     "./agents/tdd-orchestrator.md",
     "./agents/code-reviewer.md",
     "./agents/debugger.md",
-    "./agents/security-auditor.md"
+    "./agents/security-auditor.md",
+    "./agents/claude-code-guide.md",
+    "./agents/ccpm-developer.md",
+    "./agents/ccpm-troubleshooter.md"
   ]
 }
