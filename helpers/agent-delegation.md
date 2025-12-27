@@ -32,47 +32,54 @@ Agent contexts (separate, isolated):
 
 ## Agent Selection Strategy
 
-### Available Specialized Agents
+### Core Agent: Explore (Always Available)
 
-| Agent Type | Use For | Subagent Name |
-|------------|---------|---------------|
-| Codebase exploration | Finding files, patterns | `Explore` |
-| Frontend/UI | React, CSS, components | `frontend-mobile-development:frontend-developer` |
-| Backend/API | APIs, databases, auth | `backend-development:backend-architect` |
-| Mobile | React Native, Flutter | `frontend-mobile-development:mobile-developer` |
-| Testing | Unit tests, E2E | `full-stack-orchestration:test-automator` |
-| Code review | Quality checks | `code-documentation:code-reviewer` |
-
-### Detection Logic
+The `Explore` agent is built into Claude Code and is **always available** for codebase analysis:
 
 ```javascript
-function selectAgent(task, techStack) {
-  const taskLower = task.toLowerCase();
-
-  // Frontend signals
-  if (taskLower.match(/\b(ui|component|react|css|tailwind|frontend|page|screen|layout)\b/)) {
-    return 'frontend-mobile-development:frontend-developer';
-  }
-
-  // Backend signals
-  if (taskLower.match(/\b(api|endpoint|database|auth|backend|server|graphql|rest)\b/)) {
-    return 'backend-development:backend-architect';
-  }
-
-  // Mobile signals
-  if (taskLower.match(/\b(mobile|react native|flutter|ios|android|app)\b/)) {
-    return 'frontend-mobile-development:mobile-developer';
-  }
-
-  // Testing signals
-  if (taskLower.match(/\b(test|spec|jest|vitest|cypress|playwright)\b/)) {
-    return 'full-stack-orchestration:test-automator';
-  }
-
-  // Default to general purpose
-  return 'general-purpose';
-}
+// ALWAYS use Explore first for understanding the codebase
+Task(subagent_type="Explore", model="haiku"): `
+Find files and patterns for: ${task.description}
+Return: file_paths, patterns, dependencies
+`
 ```
+
+### Dynamic Agent Selection via Hook
+
+The `smart-agent-selector.sh` hook provides task-specific agent suggestions:
+
+**Hook Hint Examples:**
+- `💡 Frontend task → use \`ccpm:frontend-developer\` agent`
+- `💡 Backend task → use \`ccpm:backend-architect\` agent`
+- `💡 Debug task → use \`ccpm:debugger\` agent`
+
+**Using Hook Suggestions:**
+
+```javascript
+// Extract suggested agent from hook hint
+const hookHint = context.systemMessages.find(m => m.includes('💡'));
+const suggestedAgent = hookHint?.match(/use `([^`]+)` agent/)?.[1];
+
+// Use suggested agent or fallback
+const agent = suggestedAgent || 'general-purpose';
+
+Task(subagent_type=agent): `...`
+```
+
+### Agent Type Reference (Project-Specific)
+
+Agent names vary by project. Common patterns:
+
+| Task Type | CCPM Agents | Other Projects |
+|-----------|-------------|----------------|
+| Codebase analysis | `Explore` | `Explore` (core) |
+| Frontend/UI | `ccpm:frontend-developer` | `{project}:frontend-developer` |
+| Backend/API | `ccpm:backend-architect` | `{project}:backend-architect` |
+| Debugging | `ccpm:debugger` | `{project}:debugger` |
+| Code review | `ccpm:code-reviewer` | `{project}:code-reviewer` |
+| Fallback | `general-purpose` | `general-purpose` |
+
+**NOTE:** Check hook hints for actual agent names available in your project.
 
 ## Delegation Patterns
 
@@ -110,11 +117,12 @@ Return ONLY:
 ```markdown
 ## Step: Implement Checklist Items
 
-For each checklist item, invoke specialized agent:
+For each checklist item, use hook-suggested agent or fallback:
 
 ### Item 1: "Create login component"
+// Hook hint: "💡 Frontend task → use `ccpm:frontend-developer` agent"
 
-Task(subagent_type="frontend-mobile-development:frontend-developer"): `
+Task(subagent_type="{suggested_agent}"): `
 Implement: Create login component
 
 Files to modify: ${explorationResult.file_paths}
@@ -127,8 +135,9 @@ Make actual file changes. Return summary of changes made.
 `
 
 ### Item 2: "Add authentication endpoint"
+// Hook hint: "💡 Backend task → use `ccpm:backend-architect` agent"
 
-Task(subagent_type="backend-development:backend-architect"): `
+Task(subagent_type="{suggested_agent}"): `
 Implement: Add authentication endpoint
 
 Files to modify: ${explorationResult.file_paths}
@@ -152,18 +161,22 @@ Make actual file changes. Return summary of changes made.
 ## Step: Parallel Implementation
 
 Independent tasks detected - invoking agents in parallel:
+// Use hook hints to determine appropriate agents for each task
 
-Task(subagent_type="frontend-mobile-development:frontend-developer"): `
+Task(subagent_type="{frontend_agent}"): `
 Implement frontend component for: ${task1}
 `
 
-Task(subagent_type="backend-development:backend-architect"): `
+Task(subagent_type="{backend_agent}"): `
 Implement API endpoint for: ${task2}
 `
 
-Task(subagent_type="full-stack-orchestration:test-automator"): `
+Task(subagent_type="{test_agent}"): `
 Write tests for: ${task3}
 `
+
+// If no specific agents suggested, use general-purpose:
+Task(subagent_type="general-purpose"): `...`
 
 **All three run simultaneously - total time reduced by ~60%**
 ```
@@ -175,7 +188,8 @@ Write tests for: ${task3}
 ```markdown
 ## Step: Pixel-Perfect UI Implementation
 
-Task(subagent_type="frontend-mobile-development:frontend-developer"): `
+// Use hook-suggested frontend agent (e.g., ccpm:frontend-developer)
+Task(subagent_type="{frontend_agent}"): `
 Implement UI component with pixel-perfect accuracy.
 
 **Visual References:**
