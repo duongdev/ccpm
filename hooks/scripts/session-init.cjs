@@ -93,6 +93,84 @@ function getGitState() {
 }
 
 /**
+ * Check if claude-mem plugin is available
+ */
+function isClaudeMemAvailable() {
+  const homeDir = process.env.HOME || '/tmp';
+  const pluginPaths = [
+    path.join(homeDir, '.claude/plugins/claude-mem'),
+    path.join(homeDir, '.claude-mem'),
+  ];
+
+  for (const pluginPath of pluginPaths) {
+    if (fs.existsSync(pluginPath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Analyze git commit patterns for consistency
+ * Returns detected patterns from recent commits
+ */
+function analyzeCommitPatterns(limit = 30) {
+  const patterns = {
+    format: 'unknown',
+    usesScope: false,
+    confidence: 0,
+    topTypes: [],
+    topScopes: []
+  };
+
+  const commits = execSafe(`git log --oneline -${limit} --format="%s"`);
+  if (!commits) return patterns;
+
+  const lines = commits.split('\n').filter(l => l.trim());
+  if (lines.length === 0) return patterns;
+
+  const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
+  let conventionalCount = 0;
+  const types = {};
+  const scopes = {};
+
+  for (const line of lines) {
+    const match = line.match(conventionalRegex);
+    if (match) {
+      conventionalCount++;
+      const [, type, scope] = match;
+      types[type] = (types[type] || 0) + 1;
+      if (scope) {
+        scopes[scope] = (scopes[scope] || 0) + 1;
+      }
+    }
+  }
+
+  const total = lines.length;
+  const ratio = conventionalCount / total;
+
+  if (ratio >= 0.5) {
+    patterns.format = 'conventional';
+    patterns.confidence = Math.round(ratio * 100);
+    patterns.usesScope = Object.keys(scopes).length > total * 0.2;
+    patterns.topTypes = Object.entries(types)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([t]) => t);
+    patterns.topScopes = Object.entries(scopes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([s]) => s);
+  } else {
+    patterns.format = 'simple';
+    patterns.confidence = 60;
+  }
+
+  return patterns;
+}
+
+/**
  * Discover all CLAUDE.md files in project hierarchy
  * Searches from cwd up to git root, plus common subdirectories
  */
@@ -247,6 +325,8 @@ async function main() {
     const gitState = getGitState();
     const claudeMdFiles = discoverClaudeMdFiles();
     const claudeMdSummaries = summarizeClaudeMdFiles(claudeMdFiles);
+    const claudeMemAvailable = isClaudeMemAvailable();
+    const commitPatterns = analyzeCommitPatterns(30);
 
     // Initialize context log
     const contextLogFile = initContextLog(sessionId, issueId);
@@ -261,6 +341,8 @@ async function main() {
       gitState,
       claudeMdFiles,
       claudeMdSummaries,
+      claudeMemAvailable,
+      commitPatterns,
       contextLogFile,
       cwd: process.cwd(),
       timestamp: Date.now()
@@ -309,11 +391,8 @@ async function main() {
 
     // Build git state summary
     let gitSummary = '';
-    if (gitState.uncommitted.length > 0) {
-      gitSummary = `\n**Uncommitted:** ${gitState.uncommitted.length} files`;
-    }
     if (gitState.lastCommit) {
-      gitSummary += ` | **Last commit:** "${gitState.lastCommit.message}" (${gitState.lastCommit.time})`;
+      gitSummary = ` | **Last commit:** "${gitState.lastCommit.message}" (${gitState.lastCommit.time})`;
     }
 
     // Build CLAUDE.md summary for output
@@ -322,10 +401,19 @@ async function main() {
       claudeSummary = `\n**CLAUDE.md files:** ${claudeMdFiles.length} found`;
     }
 
+    // Build integrations summary
+    let integrationsSummary = '';
+    if (claudeMemAvailable) {
+      integrationsSummary += ' | claude-mem: ✓';
+    }
+    if (commitPatterns.format === 'conventional' && commitPatterns.confidence >= 70) {
+      integrationsSummary += ` | Commits: ${commitPatterns.format} (${commitPatterns.confidence}%)`;
+    }
+
     // Output CCPM context injection
     const output = `## CCPM Session Initialized
 
-**Project:** ${project.name} | **Issue:** ${issueId || 'none'} | **Branch:** ${gitBranch || 'none'}${gitSummary}${claudeSummary}
+**Project:** ${project.name} | **Issue:** ${issueId || 'none'} | **Branch:** ${gitBranch || 'none'}${gitSummary}${claudeSummary}${integrationsSummary}
 
 ### Available Agents (${agentCount})
 ${agentNames.join(', ')}
@@ -362,7 +450,8 @@ Skill(skill="ccpm:<command>", args="<args>")
     // Log hook completion
     const claudeMdCount = claudeMdFiles.length;
     const uncommittedCount = gitState.uncommitted?.length || 0;
-    hookLog('session-init', `✓ Project: ${project.name} | Branch: ${gitBranch || 'none'} | Issue: ${issueId || 'none'} | CLAUDE.md: ${claudeMdCount} | Uncommitted: ${uncommittedCount}`);
+    const memStatus = claudeMemAvailable ? 'mem✓' : 'mem✗';
+    hookLog('session-init', `✓ Project: ${project.name} | Branch: ${gitBranch || 'none'} | Issue: ${issueId || 'none'} | CLAUDE.md: ${claudeMdCount} | Uncommitted: ${uncommittedCount} | ${memStatus}`);
 
     process.exit(0);
   } catch (error) {

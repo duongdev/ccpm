@@ -198,6 +198,91 @@ if (commitRules.sources.length > 0) {
 }
 ```
 
+### Step 0.5: Analyze Git History Patterns
+
+**Learn from project's commit history for consistency:**
+
+The session-init hook caches commit patterns in `/tmp/ccpm-session-*.json`. Read these patterns to:
+1. Detect conventional commit format usage
+2. Identify common types and scopes
+3. Maintain consistency with existing commits
+
+```javascript
+// Read session state (cached by session-init hook)
+const sessionFile = process.env.CCPM_SESSION_FILE || findLatestSessionFile();
+let commitPatterns = {
+  format: 'conventional',
+  usesScope: true,
+  confidence: 80,
+  topTypes: ['feat', 'fix', 'docs', 'chore'],
+  topScopes: []
+};
+
+if (sessionFile) {
+  const session = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+  if (session.commitPatterns) {
+    commitPatterns = session.commitPatterns;
+  }
+}
+
+// If session doesn't have patterns, analyze on the fly
+if (!commitPatterns.topTypes?.length) {
+  const recentCommits = await Bash('git log --oneline -30 --format="%s"');
+  const lines = recentCommits.split('\n').filter(l => l.trim());
+
+  // Detect format
+  const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
+  const types = {};
+  const scopes = {};
+
+  for (const line of lines) {
+    const match = line.match(conventionalRegex);
+    if (match) {
+      const [, type, scope] = match;
+      types[type] = (types[type] || 0) + 1;
+      if (scope) scopes[scope] = (scopes[scope] || 0) + 1;
+    }
+  }
+
+  commitPatterns.topTypes = Object.entries(types)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([t]) => t);
+
+  commitPatterns.topScopes = Object.entries(scopes)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([s]) => s);
+}
+
+// Display detected patterns
+if (commitPatterns.confidence >= 70) {
+  console.log(`📊 Commit patterns (${commitPatterns.confidence}% confidence):`);
+  console.log(`   Types: ${commitPatterns.topTypes.join(', ')}`);
+  if (commitPatterns.topScopes.length > 0) {
+    console.log(`   Scopes: ${commitPatterns.topScopes.join(', ')}`);
+  }
+}
+```
+
+### Step 0.6: Query claude-mem for Commit Decisions (Optional)
+
+**If claude-mem is available, check for past commit-related decisions:**
+
+```javascript
+// Check if claude-mem is available (detected by session-init)
+const claudeMemAvailable = session?.claudeMemAvailable || false;
+
+if (claudeMemAvailable) {
+  // Use the mem-search skill to find relevant commit decisions
+  // This happens automatically via subagent context injection
+  console.log('🧠 claude-mem: Checking past commit decisions...');
+
+  // Past decisions about commit format, scopes, or conventions
+  // will be injected into context by subagent-context-injector
+}
+```
+
 ### Step 1: Parse Arguments & Detect Issue
 
 ```javascript
@@ -307,29 +392,80 @@ console.log(`📊 Status: ${issue.state.name}\n`);
 ### Step 5: Determine Commit Type
 
 ```javascript
-function suggestCommitType(changes, issueLabels) {
-  // From Linear issue labels
+function suggestCommitType(changes, issueLabels, patterns) {
+  // From Linear issue labels (highest priority)
   if (issueLabels.includes('bug') || issueLabels.includes('fix')) return 'fix';
   if (issueLabels.includes('feature')) return 'feat';
 
   // From file analysis
+  const files = [...changes.modified, ...changes.added, ...changes.deleted];
+  const hasCi = files.some(f => f.includes('.github/') || f.includes('ci') || f.includes('workflow'));
+  const hasTests = files.some(f => f.includes('test') || f.includes('spec'));
+  const hasDocs = files.some(f => f.match(/\.(md|txt|rst)$/) || f.includes('docs/'));
+  const hasConfig = files.some(f => f.match(/\.(json|yml|yaml|toml)$/) && !f.includes('package'));
+
+  // Check for specific patterns that match project history
+  if (hasCi && patterns.topTypes?.includes('ci')) return 'ci';
+  if (hasTests && !changes.hasSource && patterns.topTypes?.includes('test')) return 'test';
+  if (hasDocs && !changes.hasSource) return 'docs';
+
+  // From file analysis defaults
   if (changes.hasSource && changes.added.length > 0) return 'feat';
-  if (changes.hasTests && !changes.hasSource) return 'test';
-  if (changes.hasDocs && !changes.hasSource) return 'docs';
+  if (hasConfig && !changes.hasSource) return 'chore';
 
   // Default for modifications
   if (changes.modified.length > 0 && changes.hasSource) return 'feat';
 
-  return 'chore';
+  // Fall back to most common type in project, or 'chore'
+  return patterns.topTypes?.[0] || 'chore';
 }
 
-const commitType = suggestCommitType(changes, issue?.labels || []);
+function suggestScope(changes, patterns) {
+  const files = [...changes.modified, ...changes.added, ...changes.deleted];
+
+  // Extract first-level directories
+  const directories = files
+    .map(f => f.split('/')[0])
+    .filter(d => d && !d.startsWith('.'));
+
+  // Count occurrences
+  const dirCounts = {};
+  for (const dir of directories) {
+    dirCounts[dir] = (dirCounts[dir] || 0) + 1;
+  }
+
+  // Find most common directory
+  const topDir = Object.entries(dirCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([dir]) => dir)[0];
+
+  // Check if it matches existing scopes from history
+  if (topDir && patterns.topScopes?.includes(topDir)) {
+    return topDir;
+  }
+
+  // Check for common scope patterns
+  const commonScopes = ['hooks', 'commands', 'agents', 'helpers', 'skills', 'scripts', 'ci', 'docs'];
+  for (const scope of commonScopes) {
+    if (files.some(f => f.includes(`${scope}/`))) {
+      return scope;
+    }
+  }
+
+  return topDir || null;
+}
+
+const commitType = suggestCommitType(changes, issue?.labels || [], commitPatterns);
+const suggestedScope = suggestScope(changes, commitPatterns);
 ```
 
 ### Step 6: Generate Commit Message
 
 ```javascript
 let commitMessage;
+
+// Determine scope: prefer detected scope from files, fall back to issueId
+const scope = suggestedScope || (commitPatterns.usesScope ? issueId : null);
 
 if (userMessage) {
   // Check if already in conventional format
@@ -339,23 +475,25 @@ if (userMessage) {
     // Use as-is
     commitMessage = userMessage;
   } else {
-    // Add conventional format
-    const scope = issueId || null;
+    // Add conventional format with detected scope
     commitMessage = `${commitType}${scope ? `(${scope})` : ''}: ${userMessage}`;
   }
 } else {
   // Auto-generate from issue title or file changes
-  const scope = issueId || null;
   let description;
 
   if (issue?.title) {
     // Use issue title (lowercase first letter for conventional format)
     description = issue.title.charAt(0).toLowerCase() + issue.title.slice(1);
   } else {
-    // Generate from changes
+    // Generate from changes - be more descriptive
+    const files = [...changes.modified, ...changes.added];
     if (changes.added.length > 0 && changes.hasSource) {
       const mainFile = changes.added[0].split('/').pop().replace(/\.(ts|js|tsx|jsx)$/, '');
       description = `add ${mainFile} module`;
+    } else if (suggestedScope && changes.modified.length > 0) {
+      // Use scope context for better description
+      description = `update ${suggestedScope} implementation`;
     } else if (changes.modified.length > 0 && changes.hasSource) {
       description = `update implementation`;
     } else if (changes.hasDocs) {
@@ -366,6 +504,11 @@ if (userMessage) {
   }
 
   commitMessage = `${commitType}${scope ? `(${scope})` : ''}: ${description}`;
+}
+
+// Show pattern confidence if available
+if (commitPatterns.confidence && commitPatterns.confidence < 70) {
+  console.log(`⚠️  Low pattern confidence (${commitPatterns.confidence}%) - commit format may vary`);
 }
 ```
 
