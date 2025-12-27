@@ -30,52 +30,46 @@ Manage git branches with automatic naming conventions and Linear issue linking.
 /ccpm:branch
 ```
 
+## Helper Functions
+
+This command uses:
+- `helpers/branching-strategy.md` - For type-based branch prefix mapping from multi-level CLAUDE.md
+
 ## Implementation
 
-### Step 0: Check CLAUDE.md Workflow Rules
+### Step 0: Load Branching Strategy from CLAUDE.md Hierarchy
+
+**Uses `helpers/branching-strategy.md` for type-based branch prefixes!**
 
 ```javascript
-// Get protected branches and naming conventions from CLAUDE.md files
-const homeDir = process.env.HOME;
-const gitRoot = await Bash('git rev-parse --show-toplevel 2>/dev/null');
+// Load branching strategy from multi-level CLAUDE.md files
+// See: helpers/branching-strategy.md for full implementation
 
+const strategy = await loadBranchingStrategy();
+// Returns:
+// {
+//   prefixes: { feature: 'feature/', fix: 'fix/', bug: 'bugfix/', ... },
+//   defaultPrefix: 'feature/',
+//   protectedBranches: ['main', 'master', 'develop', ...],
+//   format: '{prefix}{issue-id}-{title-slug}',
+//   sources: ['/path/to/CLAUDE.md', ...]
+// }
+
+// For backward compatibility
 let workflowRules = {
-  protectedBranches: ['main', 'master', 'develop', 'staging', 'production'],
-  branchPrefix: 'feature/',
-  branchFormat: '{prefix}{issue-id}-{title-slug}'
+  protectedBranches: strategy.protectedBranches,
+  branchPrefix: strategy.defaultPrefix,
+  branchingStrategy: strategy,
+  branchFormat: strategy.format
 };
 
-// Check hierarchy of CLAUDE.md files
-const claudeMdPaths = [
-  `${homeDir}/.claude/CLAUDE.md`,
-  `${gitRoot.trim()}/CLAUDE.md`,
-  `${process.cwd()}/CLAUDE.md`
-];
-
-for (const path of claudeMdPaths) {
-  try {
-    const content = await Read(path);
-    if (!content) continue;
-
-    // Extract branch prefix
-    const prefixMatch = content.match(/branch.*prefix[:\s]+([^\n\s]+)/i);
-    if (prefixMatch) {
-      workflowRules.branchPrefix = prefixMatch[1].trim();
-    }
-
-    // Extract protected branches
-    const protectedMatch = content.match(/protected.*branch(?:es)?[:\s]+([^\n]+)/i);
-    if (protectedMatch) {
-      const branches = protectedMatch[1].split(/[,\s]+/).filter(b => b.length > 0);
-      workflowRules.protectedBranches = [...new Set([...workflowRules.protectedBranches, ...branches])];
-    }
-  } catch (e) {
-    // File doesn't exist, continue
-  }
+// Display loaded configuration
+if (strategy.sources.length > 0) {
+  console.log('📋 Branching strategy loaded from:');
+  strategy.sources.forEach(src => console.log(`   • ${src}`));
 }
-
-console.log(`📋 Branch prefix: ${workflowRules.branchPrefix}`);
-console.log(`🔒 Protected: ${workflowRules.protectedBranches.join(', ')}`);
+console.log(`   Default prefix: ${strategy.defaultPrefix}`);
+console.log(`🔒 Protected: ${strategy.protectedBranches.join(', ')}`);
 ```
 
 ### Step 1: Parse Arguments
@@ -260,17 +254,31 @@ context:
 
   const issue = result.issue;
 
-  // Generate branch name
-  const slugify = (str) => str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .substring(0, 30);
+  // Generate branch name using type-based prefix selection
+  // See: helpers/branching-strategy.md → determineBranchPrefix() & generateBranchName()
 
+  const strategy = workflowRules.branchingStrategy;
+
+  // Determine prefix based on issue labels/type
+  const branchPrefix = determineBranchPrefix(issue, strategy);
+
+  // Show reasoning for prefix selection
+  if (issue.labels && issue.labels.length > 0) {
+    const matchingLabel = issue.labels.find(l =>
+      strategy.prefixes[(l.name || l).toLowerCase()]
+    );
+    if (matchingLabel) {
+      console.log(`🏷️  Using prefix '${branchPrefix}' (based on label: ${matchingLabel.name || matchingLabel})`);
+    }
+  } else if (issue.title.match(/^(feat|fix|docs|chore|refactor)/i)) {
+    const match = issue.title.match(/^(feat|fix|docs|chore|refactor)/i);
+    console.log(`🏷️  Using prefix '${branchPrefix}' (based on title: ${match[1]})`);
+  }
+
+  // Generate full branch name
   let branchName = options.suffix
-    ? `${workflowRules.branchPrefix}${issueId.toLowerCase()}-${slugify(options.suffix)}`
-    : `${workflowRules.branchPrefix}${issueId.toLowerCase()}-${slugify(issue.title)}`;
+    ? generateBranchName(issue, strategy, options.suffix)
+    : generateBranchName(issue, strategy);
 
   // Check if branch exists
   const existingBranches = await Bash(`git branch --list "*${issueId}*" "*${issueId.toLowerCase()}*"`);
