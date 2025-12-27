@@ -190,15 +190,15 @@
           "properties": {
             "frontend": {
               "type": "string",
-              "default": "frontend-mobile-development:frontend-developer"
+              "default": "ccpm:frontend-developer"
             },
             "backend": {
               "type": "string",
-              "default": "backend-development:backend-architect"
+              "default": "ccpm:backend-architect"
             },
             "testing": {
               "type": "string",
-              "default": "backend-development:tdd-orchestrator"
+              "default": "ccpm:tdd-orchestrator"
             }
           }
         },

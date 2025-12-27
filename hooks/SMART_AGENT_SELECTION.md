@@ -25,7 +25,7 @@ Instead of hardcoding agent lists, the system automatically discovers ALL availa
 # Returns JSON:
 # [
 #   {
-#     "name": "backend-development:backend-architect",
+#     "name": "ccpm:backend-architect",
 #     "type": "plugin",
 #     "description": "Expert backend architect...",
 #     "path": "~/.claude/plugins/..."
@@ -70,8 +70,8 @@ Score Calculation:
 + 25 points: Project-specific agents (HIGHEST - custom for this codebase)
 
 Example Scores:
-- backend-development:backend-architect: 95 (perfect match)
-- frontend-mobile-development:frontend-developer: 30 (wrong domain)
+- ccpm:backend-architect: 95 (perfect match)
+- ccpm:frontend-developer: 30 (wrong domain)
 - custom-api-validator (project): 110 (project-specific bonus!)
 ```
 
@@ -126,7 +126,7 @@ The selector makes intelligent choices:
 │ Step 1: Dynamic Agent Discovery (discover-agents.sh)             │
 │                                                                   │
 │ Scans:                                                            │
-│ ├─ Plugin agents: backend-development:*, code-review-ai:*        │
+│ ├─ Plugin agents: ccpm:*, code-review-ai:*                       │
 │ ├─ Global agents: general-purpose, Explore, Plan                 │
 │ └─ Project agents: .claude/agents/*                              │
 │                                                                   │
@@ -150,19 +150,19 @@ The selector makes intelligent choices:
 │ Step 3: Agent Scoring & Ranking                                  │
 │                                                                   │
 │ Scored Agents:                                                    │
-│ 1. backend-development:backend-architect       Score: 95         │
+│ 1. ccpm:backend-architect       Score: 95         │
 │    + Keyword: "API" (10), "authentication" (10)                  │
 │    + Task type: backend implementation (20)                       │
 │    + Tech: nodejs, express (30)                                   │
 │    + Plugin: (5)                                                  │
 │                                                                   │
-│ 2. full-stack-orchestration:security-auditor   Score: 90         │
+│ 2. ccpm:security-auditor   Score: 90         │
 │    + Keyword: "authentication" (10), "security" (10)              │
 │    + Task type: security-critical (20)                            │
 │    + Tech: jwt (15)                                               │
 │    + Plugin: (5)                                                  │
 │                                                                   │
-│ 3. backend-development:tdd-orchestrator        Score: 85         │
+│ 3. ccpm:tdd-orchestrator        Score: 85         │
 │    + Task type: implementation (20)                               │
 │    + Tech: nodejs (15)                                            │
 │    + Always for implementation (bonus)                            │
@@ -195,7 +195,7 @@ The selector makes intelligent choices:
 │ Step 5: Inject Instructions into Claude's Context                │
 │                                                                   │
 │ Injected:                                                         │
-│ "INVOKE backend-development:backend-architect to design JWT auth  │
+│ "INVOKE ccpm:backend-architect to design JWT auth  │
 │  system. Then INVOKE tdd-orchestrator to write tests. Then       │
 │  implement. Finally INVOKE security-auditor + code-reviewer."    │
 └────────────────────┬─────────────────────────────────────────────┘

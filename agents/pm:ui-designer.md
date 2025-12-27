@@ -36,7 +36,7 @@
 
 ```javascript
 // Automatically invoke appropriate frontend agent
-Task(frontend-mobile-development:frontend-developer): `
+Task(ccpm:frontend-developer): `
 Analyze the current frontend architecture and patterns to inform UI design for [feature name].
 
 **Analysis Needed**:
@@ -109,8 +109,8 @@ Provide a comprehensive analysis of current patterns so the UI designer can:
 `
 
 // OR if React Native / Mobile
-Task(frontend-mobile-development:mobile-developer): `
-[Same prompt adapted for mobile-specific patterns]
+Task(ccpm:frontend-developer): `
+[Same prompt adapted for mobile-specific patterns - frontend-developer handles React Native too]
 `
 ```
 

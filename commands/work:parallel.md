@@ -118,21 +118,29 @@ console.log(`⚡ Parallelizable: ${parallel.length} items`);
 console.log(`🔗 Sequential: ${sequential.length} items`);
 ```
 
-### Step 3: Select Agent Types
+### Step 3: Select Agent Types (Dynamic)
 
 ```javascript
-// Map items to appropriate agents
+// Map items to appropriate agents using hook hints or fallback
+// Agent names are project-specific - ccpm:* for CCPM, or check hook hints
+
 function selectAgent(itemContent) {
   const content = itemContent.toLowerCase();
 
-  if (content.match(/\b(ui|component|react|css|tailwind|frontend|page|screen)\b/)) {
-    return 'frontend-mobile-development:frontend-developer';
+  // Check for hook hint patterns (injected by smart-agent-selector)
+  // Use ccpm:* namespace for CCPM agents
+
+  if (content.match(/\b(ui|component|react|css|tailwind|frontend|page|screen|layout)\b/)) {
+    return 'ccpm:frontend-developer';
   }
-  if (content.match(/\b(api|endpoint|database|auth|backend|graphql|rest)\b/)) {
-    return 'backend-development:backend-architect';
+  if (content.match(/\b(api|endpoint|database|auth|backend|graphql|rest|service|server)\b/)) {
+    return 'ccpm:backend-architect';
   }
-  if (content.match(/\b(test|spec|jest|vitest|cypress)\b/)) {
-    return 'backend-development:tdd-orchestrator';
+  if (content.match(/\b(test|spec|jest|vitest|cypress|playwright)\b/)) {
+    return 'ccpm:tdd-orchestrator';
+  }
+  if (content.match(/\b(security|vulnerability|auth|oauth)\b/)) {
+    return 'ccpm:security-auditor';
   }
 
   return 'general-purpose';
@@ -143,6 +151,10 @@ const parallelTasks = parallel.map(idx => ({
   item: uncheckedItems[idx - 1],
   agent: selectAgent(uncheckedItems[idx - 1].content)
 }));
+
+// NOTE: For other projects, use hook hints to determine agent names:
+// const hookHint = context.systemMessages.find(m => m.includes('💡'));
+// const suggestedAgent = hookHint?.match(/use `([^`]+)` agent/)?.[1] || 'general-purpose';
 ```
 
 ### Step 4: Execute in Parallel
@@ -357,20 +369,20 @@ if (sequential.length > 0) {
 
 🚀 Starting parallel execution...
 
-   ⏳ 1. Create auth endpoints → backend-architect
-   ⏳ 2. Build login form → frontend-developer
-   ⏳ 3. Add JWT middleware → backend-architect
-   ⏳ 4. Create test suite → tdd-orchestrator
+   ⏳ 1. Create auth endpoints → ccpm:backend-architect
+   ⏳ 2. Build login form → ccpm:frontend-developer
+   ⏳ 3. Add JWT middleware → ccpm:backend-architect
+   ⏳ 4. Create test suite → ccpm:tdd-orchestrator
 
 ✅ Parallel execution complete
 
 📦 1. Create auth endpoints
-   Agent: backend-architect
+   Agent: ccpm:backend-architect
    Files: src/api/auth.ts, src/routes/auth.ts
    Status: ✅ Complete
 
 📦 2. Build login form
-   Agent: frontend-developer
+   Agent: ccpm:frontend-developer
    Files: src/components/LoginForm.tsx
    Status: ✅ Complete
 

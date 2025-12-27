@@ -268,11 +268,11 @@ Output:
 **Let smart-agent-selector determine best agent(s):**
 
 Based on task context (tech stack, requirements, approach), the smart-agent-selector will automatically choose optimal agent(s):
-- Backend/API → backend-development:backend-architect
-- Frontend/UI → frontend-mobile-development:frontend-developer
-- Mobile → frontend-mobile-development:mobile-developer
+- Backend/API → ccpm:backend-architect
+- Frontend/UI → ccpm:frontend-developer
+- Mobile → ccpm:frontend-developer (handles React Native/mobile)
 - Full-stack → Both backend + frontend (parallel)
-- And others based on scoring...
+- Check hook hints for project-specific agent names
 
 **Invoke selected agent(s) with strict scope constraints:**
 
@@ -736,11 +736,11 @@ Output:
 **Let smart-agent-selector determine best agent(s):**
 
 Based on task context (tech stack, requirements, approach), the smart-agent-selector will automatically choose optimal agent(s):
-- Backend/API → backend-development:backend-architect
-- Frontend/UI → frontend-mobile-development:frontend-developer
-- Mobile → frontend-mobile-development:mobile-developer
+- Backend/API → ccpm:backend-architect
+- Frontend/UI → ccpm:frontend-developer
+- Mobile → ccpm:frontend-developer (handles React Native/mobile)
 - Full-stack → Both backend + frontend (parallel)
-- And others based on scoring...
+- Check hook hints for project-specific agent names
 
 **Invoke selected agent(s) with strict scope constraints:**
 
