@@ -1,18 +1,36 @@
 ---
-description: Interactive AI-powered code review with Linear integration
+description: Multi-perspective AI-powered code review with Linear integration
 allowed-tools: [Bash, Task, AskUserQuestion, Read, Grep, Glob]
-argument-hint: "[--staged] [--branch=X] [--file=X] [--severity=X]"
+argument-hint: "[--staged] [--branch=X] [--file=X] [--severity=X] [--multi]"
 ---
 
-# /ccpm:review - Interactive Code Review
+# /ccpm:review - Multi-Perspective Code Review
 
-AI-powered code review that analyzes changes and provides actionable feedback.
+AI-powered code review that analyzes changes from **multiple perspectives** for comprehensive feedback.
+
+## Multi-Perspective Review (NEW)
+
+With `--multi` flag, review runs **parallel analysis** from different expert viewpoints:
+
+| Perspective | Agent | Focus Areas |
+|-------------|-------|-------------|
+| **Code Quality** | `ccpm:code-reviewer` | Bugs, style, complexity, maintainability |
+| **Security** | `ccpm:security-auditor` | OWASP Top 10, injection, auth flaws |
+| **Architecture** | `ccpm:backend-architect` | Patterns, coupling, scalability |
+| **UX/Accessibility** | `ccpm:frontend-developer` | A11y, UX patterns, responsive design |
+
+**Benefits:**
+- 🎯 **Catches more issues** - Different experts find different problems
+- ⚡ **Faster** - Parallel execution (not 4x slower)
+- 📊 **Consolidated report** - Single unified view with perspective tags
 
 ## Agents Used
 
 This command uses specialized agents for comprehensive review:
 - `ccpm:code-reviewer` - Primary review agent (quality, bugs, style)
-- `ccpm:security-auditor` - Security vulnerability detection (with `--security` flag)
+- `ccpm:security-auditor` - Security vulnerability detection (always in `--multi`, or `--security` flag)
+- `ccpm:backend-architect` - Architecture review (in `--multi` mode)
+- `ccpm:frontend-developer` - UX/accessibility review (in `--multi` mode for UI files)
 - `ccpm:linear-operations` - Post findings to Linear (with `--post-to-linear`)
 
 ## Usage
@@ -23,6 +41,9 @@ This command uses specialized agents for comprehensive review:
 
 # Review current branch against main
 /ccpm:review
+
+# Multi-perspective review (RECOMMENDED for PRs)
+/ccpm:review --multi
 
 # Review specific branch
 /ccpm:review --branch=feature/psn-29-auth
@@ -35,6 +56,9 @@ This command uses specialized agents for comprehensive review:
 
 # Review and post to Linear
 /ccpm:review --post-to-linear
+
+# Full comprehensive review before PR
+/ccpm:review --multi --post-to-linear
 ```
 
 ## Implementation
@@ -47,7 +71,8 @@ let options = {
   branch: null,
   file: null,
   severity: 'info',  // info, warning, error
-  postToLinear: false
+  postToLinear: false,
+  multi: false  // Multi-perspective review
 };
 
 for (const arg of args) {
@@ -61,6 +86,8 @@ for (const arg of args) {
     options.severity = arg.replace('--severity=', '');
   } else if (arg === '--post-to-linear') {
     options.postToLinear = true;
+  } else if (arg === '--multi') {
+    options.multi = true;
   }
 }
 
@@ -107,11 +134,155 @@ changedFiles.forEach(f => console.log(`   • ${f}`));
 console.log('');
 ```
 
-### Step 3: Analyze Each File
+### Step 3: Multi-Perspective Analysis (if --multi)
+
+When `--multi` flag is set, run **parallel reviews** from multiple expert agents:
 
 ```javascript
-const findings = [];
+if (options.multi) {
+  console.log('\n🎯 Multi-Perspective Review Mode');
+  console.log('   Running parallel analysis from 4 expert viewpoints...\n');
 
+  // Determine which perspectives to use based on file types
+  const hasBackendFiles = changedFiles.some(f =>
+    f.match(/\.(ts|js|go|py|java|rb|php)$/) &&
+    !f.match(/\.(tsx|jsx)$/) &&
+    (f.includes('api') || f.includes('service') || f.includes('controller') || f.includes('resolver'))
+  );
+
+  const hasFrontendFiles = changedFiles.some(f =>
+    f.match(/\.(tsx|jsx|css|scss|vue|svelte)$/) ||
+    f.includes('component') || f.includes('page') || f.includes('ui')
+  );
+
+  // Build parallel review tasks
+  const reviewTasks = [];
+
+  // Always include code quality review
+  reviewTasks.push({
+    perspective: 'Code Quality',
+    agent: 'ccpm:code-reviewer',
+    icon: '🔍',
+    focus: 'bugs, style, complexity, maintainability, error handling'
+  });
+
+  // Always include security review
+  reviewTasks.push({
+    perspective: 'Security',
+    agent: 'ccpm:security-auditor',
+    icon: '🔐',
+    focus: 'OWASP Top 10, injection, authentication, authorization, data exposure'
+  });
+
+  // Architecture review for backend files
+  if (hasBackendFiles) {
+    reviewTasks.push({
+      perspective: 'Architecture',
+      agent: 'ccpm:backend-architect',
+      icon: '🏗️',
+      focus: 'patterns, coupling, scalability, SOLID principles, API design'
+    });
+  }
+
+  // UX/Accessibility review for frontend files
+  if (hasFrontendFiles) {
+    reviewTasks.push({
+      perspective: 'UX/Accessibility',
+      agent: 'ccpm:frontend-developer',
+      icon: '♿',
+      focus: 'accessibility (a11y), UX patterns, responsive design, component reuse'
+    });
+  }
+
+  console.log(`   Perspectives: ${reviewTasks.map(t => t.perspective).join(', ')}\n`);
+
+  // Prepare combined diff for all files
+  const allDiffs = [];
+  for (const file of changedFiles.slice(0, 10)) {
+    let diff;
+    if (options.staged) {
+      diff = await Bash(`git diff --cached -- "${file}"`);
+    } else if (options.branch) {
+      diff = await Bash(`git diff main...${options.branch.trim()} -- "${file}"`);
+    } else {
+      diff = await Bash(`git diff HEAD -- "${file}"`);
+    }
+    allDiffs.push({ file, diff });
+  }
+
+  const combinedDiff = allDiffs.map(d => `### ${d.file}\n\`\`\`diff\n${d.diff}\n\`\`\``).join('\n\n');
+
+  // Launch parallel reviews using Task tool
+  // IMPORTANT: Call all Task tools in a SINGLE message for true parallelism
+  const parallelResults = await Promise.all(reviewTasks.map(async (task) => {
+    console.log(`   ${task.icon} Starting ${task.perspective} review...`);
+
+    const result = await Task({
+      subagent_type: task.agent,
+      prompt: `
+## ${task.perspective} Code Review
+
+You are reviewing code changes as a **${task.perspective} expert**.
+
+### Your Focus Areas
+${task.focus}
+
+### Files Changed
+${changedFiles.map(f => `- ${f}`).join('\n')}
+
+### Diffs
+${combinedDiff.substring(0, 15000)}  // Limit to 15k chars
+
+### Output Format
+
+Return findings as JSON array with perspective tag:
+\`\`\`json
+[
+  {
+    "perspective": "${task.perspective}",
+    "file": "path/to/file.ts",
+    "line": 42,
+    "severity": "error|warning|info",
+    "category": "specific-category",
+    "message": "Description of the issue",
+    "suggestion": "How to fix it"
+  }
+]
+\`\`\`
+
+If no issues found in your expertise area, return: []
+`
+    });
+
+    return { task, result };
+  }));
+
+  // Collect all findings from all perspectives
+  const allFindings = [];
+  for (const { task, result } of parallelResults) {
+    try {
+      const perspectiveFindings = JSON.parse(result.match(/\[[\s\S]*\]/)?.[0] || '[]');
+      perspectiveFindings.forEach(f => {
+        f.perspective = task.perspective;
+        f.icon = task.icon;
+        allFindings.push(f);
+      });
+      console.log(`   ${task.icon} ${task.perspective}: ${perspectiveFindings.length} finding(s)`);
+    } catch (e) {
+      console.log(`   ${task.icon} ${task.perspective}: Could not parse findings`);
+    }
+  }
+
+  // Continue to Step 4 with allFindings
+  findings.push(...allFindings);
+
+} else {
+  // Standard single-perspective review (existing logic)
+```
+
+### Step 3b: Single-Perspective Analysis (default)
+
+```javascript
 for (const file of changedFiles.slice(0, 10)) {  // Limit to 10 files
   console.log(`\n🔍 Reviewing: ${file}...`);
 
@@ -134,7 +305,7 @@ for (const file of changedFiles.slice(0, 10)) {  // Limit to 10 files
 
   // Use code-reviewer agent for analysis
   const reviewResult = await Task({
-    subagent_type: 'full-stack-orchestration:code-reviewer',
+    subagent_type: 'ccpm:code-reviewer',
     prompt: `
 ## Code Review Request
 

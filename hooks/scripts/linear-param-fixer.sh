@@ -4,6 +4,16 @@
 
 set -euo pipefail
 
+# Hook logging function
+HOOK_LOG_FILE="/tmp/ccpm-hooks.log"
+hook_log() {
+    local hook_name="$1"
+    local message="$2"
+    local timestamp=$(date +"%H:%M:%S")
+    echo "${timestamp} [${hook_name}] ${message}" >> "$HOOK_LOG_FILE"
+    echo "${timestamp} [${hook_name}] ${message}" >&2
+}
+
 # Read the tool call JSON from stdin
 INPUT=$(cat)
 
@@ -34,6 +44,8 @@ case "$LINEAR_TOOL" in
     HAS_ID=$(echo "$ARGS" | jq 'has("id")')
 
     if [[ "$HAS_ISSUE_ID" == "true" && "$HAS_ID" == "false" ]]; then
+      # Log the fix
+      hook_log "linear-param-fixer" "⚠ Fixed: $LINEAR_TOOL uses 'id' not 'issueId'"
       # Output warning and fix suggestion
       cat <<EOF
 ⚠️ **Linear Parameter Fix Required**
@@ -69,6 +81,8 @@ EOF
     HAS_ID=$(echo "$ARGS" | jq 'has("id")')
 
     if [[ "$HAS_ID" == "true" && "$HAS_ISSUE_ID" == "false" ]]; then
+      # Log the fix
+      hook_log "linear-param-fixer" "⚠ Fixed: $LINEAR_TOOL uses 'issueId' not 'id'"
       cat <<EOF
 ⚠️ **Linear Parameter Fix Required**
 
