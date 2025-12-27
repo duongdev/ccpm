@@ -1536,43 +1536,6 @@ context:
 
 ---
 
-## Migration Guide
-
-### Phased Approach
-
-**Phase 1**: Migrate high-traffic commands
-- `planning:plan` (5000+ tokens → 2000 tokens)
-- `planning:create` (4000+ tokens → 1600 tokens)
-- `implementation:start` (3500+ tokens → 1400 tokens)
-
-**Phase 2**: Migrate helper functions from `_shared-linear-helpers.md`
-
-**Phase 3**: Update remaining commands
-
-### Migration Pattern
-
-**Before**:
-```markdown
-Use Linear MCP to:
-1. Fetch team details
-2. List labels
-3. Create missing labels
-4. Create issue
-```
-
-**After**:
-```markdown
-Task(linear-operations): `
-operation: create_issue
-params:
-  team: ${TEAM_NAME}
-  title: "${TITLE}"
-  labels: ["planning", "backend"]
-`
-```
-
----
-
 ## Usage in Commands
 
 Commands invoke this agent using the Task tool with YAML-formatted requests:

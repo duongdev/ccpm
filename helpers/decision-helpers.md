@@ -885,31 +885,6 @@ console.log('Should ask test:', testAsk);
 
 ---
 
-## Migration Guide
-
-**Old Pattern (no confidence tracking)**:
-```javascript
-if (ISSUE_ID_PATTERN.test(arg1)) {
-  mode = 'PLAN';
-} else {
-  mode = 'CREATE';
-}
-```
-
-**New Pattern (with Always-Ask Policy)**:
-```javascript
-const issueIdCheck = detectIssueIdConfidence(arg1);
-const decision = shouldAsk(issueIdCheck.confidence);
-
-if (decision.shouldAsk) {
-  mode = await askUserForClarification({ ... });
-} else {
-  displayWithConfidence(issueIdCheck.confidence, `Mode: ${mode}`);
-}
-```
-
----
-
 ## Related Documents
 
 - `helpers/workflow.md` - Workflow state detection

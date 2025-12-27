@@ -529,56 +529,6 @@ This means **second and subsequent calls within a command are nearly instant**.
 
 ---
 
-## Migration Guide
-
-### For Command Developers
-
-**Old Pattern (with direct MCP calls)**:
-```markdown
-## Get team labels
-Read: commands/_shared-linear-helpers.md
-Get team ID for: ${TEAM_NAME}
-Ensure labels exist: ["planning", "backend"]
-Get state ID for: "In Progress"
-Create issue with:
-  - Team: ${TEAM_ID}
-  - Labels: [label-1, label-2]
-  - State: state-123
-```
-
-**New Pattern (delegating to subagent)**:
-```markdown
-## Create Issue with Labels and State
-
-Task(linear-operations): `
-operation: create_issue
-params:
-  team: ${TEAM_NAME}
-  title: "${ISSUE_TITLE}"
-  state: "In Progress"
-  labels: ["planning", "backend"]
-context:
-  command: "${COMMAND_NAME}"
-  purpose: "Creating task"
-`
-```
-
-**Token Savings**: 2500 tokens → 400 tokens (84% reduction)
-
-### For Helper Function Calls
-
-**When to use helpers:**
-- Validating a single state before conditional logic
-- Creating a single label with custom options
-- Checking if a label exists
-
-**When to use subagent directly (preferred):**
-- Creating issues with labels
-- Updating issues with state/labels
-- Any operation that requires multiple calls
-
----
-
 ## Performance Characteristics
 
 ### Latency Comparison

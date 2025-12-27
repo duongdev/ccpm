@@ -26,20 +26,19 @@
     "legacy_command_support": {
       "override": null,
       "enabled": true,
-      "description": "Show migration hints when using old commands"
+      "description": "Enable legacy command support"
     },
     "monitoring_collection": {
       "override": null,
       "enabled": true,
-      "description": "Collect metrics for Phase 6 monitoring"
+      "description": "Collect usage metrics"
     }
   },
   "rollout_preferences": {
     "auto_update": true,
     "beta_opt_in": false,
     "early_access_opt_in": false,
-    "disable_all_new_features": false,
-    "disable_migration_hints": false
+    "disable_all_new_features": false
   },
   "preferences": {
     "command_output_format": "detailed",

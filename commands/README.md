@@ -1,393 +1,614 @@
-# CCPM v1.1 Commands
+# CCPM Commands Reference
 
-**Simple, powerful workflow commands for Claude Code project management.**
+Complete reference for all CCPM slash commands.
 
-## 🎯 The Natural Workflow (6 Core + 6 Utility + 1 Chain)
+## Quick Reference
 
-CCPM v1.1 provides a streamlined command set optimized for developer productivity.
+| Category | Commands | Purpose |
+|----------|----------|---------|
+| **Core Workflow** | plan, work, sync, commit, verify, done | Main development cycle |
+| **Planning Variants** | plan:quick, plan:deep | Fast or thorough planning |
+| **Work Variants** | work:parallel | Parallel task execution |
+| **Utility** | search, history, branch, review, rollback, chain | Discovery and management |
+| **Visual Context** | figma-refresh | Design system updates |
+| **Project Config** | project:add, list, show, set, update, delete | Multi-project management |
+| **Setup** | init, status, org-docs | Initialization and status |
 
-### Core Workflow Commands
+---
 
-```bash
-# 1. PLAN - Create or plan tasks
-/ccpm:plan "Add user authentication"              # Create new task
-/ccpm:plan WORK-123                                # Plan existing task
-/ccpm:plan WORK-123 "Also add 2FA"                 # Update plan
+## Core Workflow Commands
 
-# 2. WORK - Start or resume work
-/ccpm:work WORK-123                                # Start/resume specific task
-/ccpm:work                                         # Auto-detect from git branch
-
-# 3. SYNC - Save progress
-/ccpm:sync                                         # Auto-detect issue, save progress
-/ccpm:sync "Completed auth endpoints"              # With custom summary
-
-# 4. COMMIT - Git integration
-/ccpm:commit                                       # Auto-generate conventional commit
-/ccpm:commit "custom message"                      # Custom commit message
-
-# 5. VERIFY - Quality checks
-/ccpm:verify                                       # Run linting, tests, build + code review
-/ccpm:verify WORK-123                              # Explicit issue ID
-
-# 6. DONE - Finalize task
-/ccpm:done                                         # Create PR, sync status, complete task
-/ccpm:done WORK-123                                # Explicit issue ID
-```
-
-### Utility Commands (5 commands - New in v1.1)
-
-```bash
-# Search & Discovery
-/ccpm:search "auth"                                # Search issues by text
-/ccpm:search --status="In Progress" --mine        # Filter by status and assignee
-
-# Activity History
-/ccpm:history                                      # Show activity timeline
-/ccpm:history PSN-29 --days=14                    # Issue history for 2 weeks
-
-# Branch Management
-/ccpm:branch PSN-29                               # Create branch for issue
-/ccpm:branch --list                               # List branches with Linear info
-/ccpm:branch --cleanup                            # Delete merged branches
-
-# Code Review
-/ccpm:review                                       # Review current branch
-/ccpm:review --staged --post-to-linear            # Review staged, post to Linear
-
-# Rollback Operations
-/ccpm:rollback                                     # Interactive rollback menu
-/ccpm:rollback --git                              # Undo last commit (soft)
-/ccpm:rollback --git --hard                       # Undo commit and discard changes
-/ccpm:rollback --linear                           # Revert Linear status
-
-# Command Chaining (New in v1.1)
-/ccpm:chain full PSN-123                          # Complete feature workflow
-/ccpm:chain bugfix PSN-456 "fix message"          # Quick bug fix
-/ccpm:chain quality                               # Review + verify
-/ccpm:chain ship                                  # Verify + done
-/ccpm:chain --list                                # Show all templates
-```
-
-### Project Configuration Commands (6 commands)
-
-```bash
-# Project management
-/ccpm:project:add <project-id>                     # Add new project
-/ccpm:project:list                                 # List all projects
-/ccpm:project:show <project-id>                    # Show project details
-/ccpm:project:set <project-id>                     # Set active project
-/ccpm:project:update <project-id>                  # Update project config
-/ccpm:project:delete <project-id>                  # Delete project
-```
-
-## 📖 Complete Example Workflow
-
-```bash
-# 1. Create and plan a new task
-/ccpm:plan "Add JWT authentication" my-app
-# → Creates Linear issue WORK-123
-# → Researches codebase, Jira, Confluence
-# → Updates issue with research and checklist
-
-# 2. Start implementation
-/ccpm:work WORK-123
-# → Git branch safety check
-# → Phase planning (which tasks to do now?)
-# → Documents uncertainties in Linear
-# → Loads context and suggests implementation
-
-# 3. Save progress regularly
-/ccpm:sync "Implemented JWT endpoints"
-# → Updates Implementation Checklist in Linear
-# → Adds concise comment with progress
-# → Shows git changes summary
-
-# 4. Commit your work
-/ccpm:commit
-# → Auto-generates conventional commit message
-# → Links commit to Linear issue
-# → Follows repository commit conventions
-
-# 5. Verify quality
-/ccpm:verify
-# → Runs linting, tests, build
-# → Invokes code-reviewer agent
-# → Updates Linear with results
-# → Marks task as verified if all pass
-
-# 6. Finalize and create PR
-/ccpm:done
-# → Pre-flight safety checks
-# → Creates GitHub pull request
-# → Optional: Sync with Jira/Slack (with confirmation)
-# → Marks Linear task as Done
-```
-
-## 🚀 Key Features
-
-### v1.0 Workflow Principles
-
-**PLAN Mode:**
-- Deep research (codebase, Linear, external PM, git history)
-- Interactive clarification questions
-- Automatic Linear updates (no confirmation - internal tracking)
-- Updates issue description (single source of truth)
-
-**WORK Mode:**
-- Git branch safety (checks protected branches)
-- Phase planning (ask which tasks to do now)
-- Mandatory agent delegation (context protection)
-- Uncertainty documentation (immediate capture)
-- No auto-commit (you decide when)
-
-**Quality Control:**
-- Explicit verification via `/ccpm:verify`
-- User controls when quality checks run
-- No automatic enforcement hooks
-- Clear separation: work vs. quality
-
-### Performance Optimizations
-
-- **Token Reduction**: 50-60% average across commands
-- **Caching**: Linear subagent with 85-95% cache hit rate
-- **Session-Level**: Metadata cached across operations
-- **Smart Agent Selection**: Automatic optimal agent invocation
-
-### Safety First
-
-- **External PM writes** require explicit confirmation (Jira, Confluence, etc.)
-- **Read operations** are always allowed
-- **Linear operations** are internal tracking (automatic)
-- **Git operations** follow standard git workflows
-
-See [SAFETY_RULES.md](./SAFETY_RULES.md) for complete safety documentation.
-
-## 📚 Command Details
+The six essential commands for the development lifecycle.
 
 ### /ccpm:plan
 
-Create, plan, or update tasks with deep research and interactive clarification.
+**Create, plan, or update tasks with intelligent research.**
 
-**Modes:**
-- `plan "title"` → Create new task (routes to planning workflow)
-- `plan WORK-123` → Plan existing task (research + checklist)
-- `plan WORK-123 "changes"` → Update plan (interactive clarification)
+```bash
+# Create new task
+/ccpm:plan "Add user authentication"
+
+# Plan existing task
+/ccpm:plan WORK-123
+
+# Update existing plan
+/ccpm:plan WORK-123 "Also add 2FA support"
+```
 
 **Features:**
-- Deep codebase research
+- Deep codebase analysis
 - External PM integration (Jira, Confluence)
 - Interactive clarification questions
-- Explicit confirmation required
+- Automatic Linear issue updates
+- Visual context detection (images, Figma)
+
+---
 
 ### /ccpm:work
 
-Start new work or resume in-progress tasks with git safety and phase planning.
+**Start or resume work with git safety and context loading.**
 
-**Modes:**
-- Auto-detection: Not started → start, In progress → resume
-- Git branch detection: Extracts issue ID from branch name
-- Phase planning: Ask which tasks to tackle first
+```bash
+# Start/resume specific task
+/ccpm:work WORK-123
+
+# Auto-detect from git branch
+/ccpm:work
+```
 
 **Features:**
 - Git branch safety checks
 - Phase planning for large tasks
 - Uncertainty documentation
-- Regular progress syncing
+- Agent delegation for implementation
+- Visual context loading (Figma designs)
+
+---
 
 ### /ccpm:sync
 
-Save progress to Linear with concise updates and checklist tracking.
+**Save progress to Linear with concise updates.**
+
+```bash
+# Auto-detect issue and sync
+/ccpm:sync
+
+# With custom summary
+/ccpm:sync "Completed JWT endpoints"
+
+# Explicit issue
+/ccpm:sync WORK-123 "Auth module complete"
+```
 
 **Features:**
 - Auto-detects issue from git branch
-- Shows git changes summary
 - Updates Implementation Checklist
+- Git changes summary
 - Concise Linear comments (50-100 words)
+
+---
 
 ### /ccpm:commit
 
-Create git commits with Linear integration and conventional format.
+**Create conventional commits linked to Linear issues.**
+
+```bash
+# Auto-generate commit message
+/ccpm:commit
+
+# Custom message
+/ccpm:commit "add JWT validation middleware"
+
+# Explicit issue
+/ccpm:commit WORK-123 "implement refresh tokens"
+```
 
 **Features:**
-- Auto-generates commit messages
-- Links commits to Linear issues
-- Conventional commits format
-- Smart commit type detection (feat/fix/docs)
+- Conventional commits format (feat/fix/docs)
+- Automatic issue linking
+- Smart commit type detection
+- Respects repository conventions
+
+---
 
 ### /ccpm:verify
 
-Run quality checks and final verification before completion.
+**Run quality checks and code review.**
 
-**Workflow:**
-1. Quality Checks: linting, tests, build
-2. Final Verification: code review, security validation
+```bash
+# Verify current work
+/ccpm:verify
+
+# Explicit issue
+/ccpm:verify WORK-123
+```
 
 **Features:**
-- Fail fast (stops at quality checks if they fail)
-- Checklist validation
-- Smart agent invocation for code review
-- Updates Linear with results
+- Sequential checks: lint, test, build
+- AI-powered code review
+- Fail-fast on quality issues
+- Results posted to Linear
+
+---
 
 ### /ccpm:done
 
-Finalize completed tasks with PR creation and status syncing.
+**Finalize task: create PR, update status, complete.**
+
+```bash
+# Finalize current task
+/ccpm:done
+
+# Explicit issue
+/ccpm:done WORK-123
+```
 
 **Features:**
 - Pre-flight safety checks
-- GitHub PR creation (automatic)
-- External PM sync (with confirmation)
-- Linear status update (automatic)
+- GitHub PR creation
+- Optional external PM sync (with confirmation)
+- Linear status to Done
 
-### /ccpm:project:*
+---
 
-Manage project configurations for multi-project workflows.
+## Planning Variants
+
+### /ccpm:plan:quick
+
+**Fast planning with minimal research.**
+
+```bash
+# Quick task creation
+/ccpm:plan:quick "Fix login button alignment"
+
+# With project
+/ccpm:plan:quick "Add dark mode toggle" my-app
+```
+
+**Differences from /ccpm:plan:**
+- Shallow codebase analysis (2-3 files vs 5-10)
+- No external research
+- Brief checklist (3-5 items vs 10+)
+- Skip Figma extraction
+- 5-10 seconds vs 30-60
+
+---
+
+### /ccpm:plan:deep
+
+**Comprehensive planning with thorough research.**
+
+```bash
+# Deep plan existing issue
+/ccpm:plan:deep PSN-29
+
+# Deep plan new task
+/ccpm:plan:deep "Implement OAuth2 with multiple providers"
+```
+
+**Differences from /ccpm:plan:**
+- Comprehensive codebase analysis (20+ files)
+- Extended research (docs, APIs, libraries)
+- Full dependency graph
+- Stakeholder analysis
+- Risk assessment
+- 2-5 minutes vs 30-60 seconds
+
+---
+
+## Work Variants
+
+### /ccpm:work:parallel
+
+**Execute independent tasks simultaneously.**
+
+```bash
+# Auto-detect parallel opportunities
+/ccpm:work:parallel PSN-29
+
+# Specific items to parallelize
+/ccpm:work:parallel PSN-29 --items 1,2,3
+
+# Maximum parallelism (up to 4 agents)
+/ccpm:work:parallel PSN-29 --max 4
+```
 
 **Features:**
-- Add/remove projects
-- Switch between projects
-- Configure external PM tools per project
-- Monorepo support via subdirectory patterns
+- Dependency graph analysis
+- Parallel agent invocation
+- Progress aggregation
+- Conflict detection
 
-### /ccpm:search (New in v1.1)
+---
 
-Search Linear issues with flexible filtering.
+## Utility Commands
 
-**Features:**
-- Text search in issue titles
-- Filter by status, label, assignee
-- `--mine` shortcut for your issues
-- `--recent` for last 7 days activity
+### /ccpm:search
 
-### /ccpm:history (New in v1.1)
+**Search Linear issues with flexible filters.**
 
-View activity timeline combining git and Linear history.
+```bash
+# Text search
+/ccpm:search authentication
 
-**Features:**
-- Chronological event view
-- Git commits + Linear comments + status changes
-- Filter by date range (`--days=N`)
-- Auto-detects issue from branch
+# Status filter
+/ccpm:search --status="In Progress"
 
-### /ccpm:branch (New in v1.1)
+# Label filter
+/ccpm:search --label=frontend
 
-Smart git branch management with Linear integration.
+# My assigned issues
+/ccpm:search --assignee=me
 
-**Features:**
-- Auto-generates branch names from issue titles
-- Lists branches with linked issue info
-- Cleanup merged branches
-- Respects CLAUDE.md protected branches
+# Combine filters
+/ccpm:search auth --status="In Progress" --label=backend
 
-### /ccpm:review (New in v1.1)
+# Recent issues (last 7 days)
+/ccpm:search --recent
+```
 
-AI-powered code review with actionable feedback.
+---
 
-**Features:**
-- Reviews staged changes or branch diffs
-- Security, bugs, quality, best practices checks
-- Interactive fix suggestions
-- Posts findings to Linear
+### /ccpm:history
 
-### /ccpm:rollback (New in v1.1)
+**View activity timeline from git and Linear.**
 
-Safely undo recent operations with confirmation.
+```bash
+# Current issue history
+/ccpm:history
 
-**Features:**
-- Git commit rollback (soft/hard)
-- File change restoration
-- Linear status reversion
-- Creates backup tags for recovery
+# Specific issue
+/ccpm:history PSN-29
 
-### /ccpm:chain (New in v1.1)
+# Git only
+/ccpm:history --git
 
-Execute chained commands with conditional logic.
+# Linear only
+/ccpm:history --linear
 
-**Templates:**
-- `full` - Complete feature: plan → work → verify → commit → done
-- `iterate` - Quick save: sync → commit
-- `quality` - Quality checks: review → verify
-- `bugfix` - Bug fix: work → commit → verify
-- `ship` - Finalize: verify → done
-- `morning` - Day start: status ; search --mine
-- `eod` - Day end: sync → status
+# Custom date range
+/ccpm:history --days=14
+
+# Combined
+/ccpm:history PSN-29 --days=3
+```
+
+---
+
+### /ccpm:branch
+
+**Smart branch management with Linear integration.**
+
+```bash
+# Create branch for issue
+/ccpm:branch PSN-29
+
+# Custom suffix
+/ccpm:branch PSN-29 --suffix=jwt-auth
+
+# Switch to existing branch
+/ccpm:branch PSN-29 --switch
+
+# List branches with Linear info
+/ccpm:branch --list
+
+# Delete merged branches
+/ccpm:branch --cleanup
+
+# Show current branch info
+/ccpm:branch
+```
+
+---
+
+### /ccpm:review
+
+**AI-powered code review with multiple perspectives.**
+
+```bash
+# Review current branch
+/ccpm:review
+
+# Review staged changes
+/ccpm:review --staged
+
+# Review specific branch
+/ccpm:review --branch=feature/auth
+
+# Multi-perspective review
+/ccpm:review --multi
+
+# Post to Linear
+/ccpm:review --post-to-linear
+```
+
+**Multi-perspective mode (`--multi`):**
+| Perspective | Focus Areas |
+|-------------|-------------|
+| Code Quality | Bugs, style, complexity |
+| Security | OWASP Top 10, injection, auth |
+| Architecture | Patterns, coupling, scalability |
+| UX/Accessibility | A11y, responsive design |
+
+---
+
+### /ccpm:rollback
+
+**Safely undo recent operations.**
+
+```bash
+# Interactive rollback menu
+/ccpm:rollback
+
+# Undo last commit (keeps changes)
+/ccpm:rollback --git
+
+# Undo last N commits
+/ccpm:rollback --git --last=3
+
+# Restore files from last commit
+/ccpm:rollback --files
+
+# Undo Linear status change
+/ccpm:rollback --linear
+
+# Hard reset (discards changes)
+/ccpm:rollback --git --hard
+```
+
+---
+
+### /ccpm:chain
+
+**Execute chained commands with conditional logic.**
+
+```bash
+# Use workflow template
+/ccpm:chain full PSN-123
+/ccpm:chain bugfix PSN-456 "null pointer fix"
+/ccpm:chain ship
+
+# Custom chain
+/ccpm:chain "/ccpm:work && /ccpm:verify"
+/ccpm:chain "/ccpm:verify || /ccpm:sync 'Issues found'"
+
+# List templates
+/ccpm:chain --list
+```
+
+**Built-in Templates:**
+| Template | Commands | Use Case |
+|----------|----------|----------|
+| `full` | plan -> work -> verify -> commit -> done | Complete feature |
+| `iterate` | sync -> commit | Quick save |
+| `quality` | review -> verify | Quality checks |
+| `bugfix` | work -> commit -> verify | Bug fix |
+| `ship` | verify -> done | Finalize |
+| `morning` | status ; search --mine | Day start |
+| `eod` | sync -> status | Day end |
 
 **Operators:**
 - `&&` - Run next if success
 - `||` - Run next if failure
 - `;` - Always run next
 
-## 🔄 Migration from v2.x
+---
 
-### What Changed in v1.0
+## Visual Context Commands
 
-**Removed:**
-- 40+ old commands (spec:*, planning:*, implementation:*, verification:*, utils:*)
-- TDD enforcer hook (too opinionated)
-- Quality gates hook (integrated into `/ccpm:verify`)
-- BitBucket/Slack specific integrations (tool-agnostic now)
+### /ccpm:figma-refresh
 
-**Simplified:**
-- 6 natural workflow commands (vs 49 total before)
-- 1 hook (smart agent selector) vs 3 hooks before
-- Tool-agnostic architecture (any PM tool via MCP)
+**Force refresh Figma design cache.**
 
-**Benefits:**
-- ✅ Simpler command set (easier to learn)
-- ✅ Faster execution (optimized, cached)
-- ✅ More control (explicit quality checks)
-- ✅ Better UX (less automatic enforcement)
-- ✅ Still powerful (smart agent selection)
+```bash
+# Refresh design data for task
+/ccpm:figma-refresh PSN-123
 
-### Migration Steps
+# After designer updates
+/ccpm:figma-refresh WORK-456
+```
 
-If you were using old commands:
+**Features:**
+- Fetches latest Figma data
+- Extracts design system (colors, fonts, spacing)
+- Updates Linear description with Tailwind mappings
+- Detects design changes
 
-1. **spec:*** → Use Linear Documents directly (no spec commands needed)
-2. **planning:*** → Use `/ccpm:plan` (consolidates all planning)
-3. **implementation:*** → Use `/ccpm:work` and `/ccpm:sync`
-4. **verification:*** → Use `/ccpm:verify`
-5. **complete:finalize** → Use `/ccpm:done`
-6. **utils:*** → Most functionality integrated into main commands
+---
 
-## 🔧 Helper Utilities
+## Project Configuration Commands
 
-Commands use shared helper utilities from `helpers/`:
+Manage multi-project setups and monorepo configurations.
 
-| Helper | Used By | Purpose |
-|--------|---------|---------|
-| `checklist.md` | `/ccpm:work`, `/ccpm:sync` | Parse and update Linear checklists |
-| `decision-helpers.md` | `/ccpm:work`, `/ccpm:plan` | Confidence-based decisions (Always-Ask Policy) |
-| `image-analysis.md` | `/ccpm:plan` | Detect and analyze UI mockups |
-| `figma-detection.md` | `/ccpm:plan`, `/ccpm:figma-refresh` | Extract Figma links and design data |
-| `agent-delegation.md` | `/ccpm:work` | Delegate to specialized agents |
-| `linear.md` | All commands | Linear subagent delegation layer |
-| `gemini-fallback.md` | Large file handling | Process files >25K tokens via Gemini CLI |
-| `next-actions.md` | `/ccpm:work`, `/ccpm:sync` | Suggest next steps based on workflow state |
-| `state-machine.md` | All commands | Workflow states (IDEA→PLANNED→IMPLEMENTING→VERIFIED→COMPLETE) |
-| `planning-workflow.md` | `/ccpm:plan` | Planning workflow logic |
-| `project-config.md` | `/ccpm:project:*` | Multi-project configuration loader |
-| `workflow.md` | All commands | Detect uncommitted changes, stale sync, etc. |
+### /ccpm:project:add
 
-**New in v1.1:**
-- `gemini-fallback.md` - Handle large Linear descriptions via Gemini 2M context
-- `gemini-figma-analysis.md` - Design extraction with Gemini vision
-- `gemini-multimodal.md` - Audio/video processing support
-- `linear-background.md` - Background Linear operations for performance
-- `linear-direct.md` - Direct MCP call patterns (verified parameters)
+**Add a new project configuration.**
 
-## 📖 Documentation
+```bash
+# Add project
+/ccpm:project:add my-app
 
-- [SAFETY_RULES.md](./SAFETY_RULES.md) - External PM system safety rules
-- [PM Tool Abstraction](../docs/architecture/pm-tool-abstraction.md) - Architecture guide
-- [Smart Agent Selection](../hooks/SMART_AGENT_SELECTION.md) - Agent auto-invocation
-- [Skills Catalog](../skills/README.md) - Available skills
+# With template
+/ccpm:project:add my-app --template fullstack-with-jira
+```
 
-## 🙏 Credits
+---
 
-CCPM v1.0 is built on lessons learned from v2.x:
-- PSN-31: Linear subagent pattern (50-60% token reduction)
-- PSN-37: Unified checklist updates
-- PSN-39: v1.0 simplification (82% command reduction)
+### /ccpm:project:list
 
-Built for Claude Code with ❤️ by the CCPM team.
+**List all configured projects.**
+
+```bash
+/ccpm:project:list
+```
+
+---
+
+### /ccpm:project:show
+
+**Show detailed project configuration.**
+
+```bash
+/ccpm:project:show my-app
+
+# Monorepo with subprojects
+/ccpm:project:show repeat
+```
+
+---
+
+### /ccpm:project:set
+
+**Set active project for commands.**
+
+```bash
+# Set specific project
+/ccpm:project:set my-app
+
+# Enable auto-detection
+/ccpm:project:set auto
+
+# Clear active project
+/ccpm:project:set none
+```
+
+---
+
+### /ccpm:project:update
+
+**Update project configuration.**
+
+```bash
+# Interactive update
+/ccpm:project:update my-app
+
+# Update specific field
+/ccpm:project:update my-app --field linear.team
+/ccpm:project:update my-app --field external_pm.jira.project_key
+```
+
+---
+
+### /ccpm:project:delete
+
+**Remove a project configuration.**
+
+```bash
+# With confirmation
+/ccpm:project:delete my-app
+
+# Force (skip confirmation)
+/ccpm:project:delete my-app --force
+```
+
+---
+
+## Setup Commands
+
+### /ccpm:init
+
+**Initialize CCPM in a new project.**
+
+```bash
+# Interactive setup
+/ccpm:init
+
+# With project name
+/ccpm:init my-project
+
+# In monorepo subdirectory
+/ccpm:init apps/web
+```
+
+---
+
+### /ccpm:status
+
+**Show current project and task status.**
+
+```bash
+# Overall status
+/ccpm:status
+
+# Specific issue
+/ccpm:status PSN-29
+
+# Project status
+/ccpm:status --project
+```
+
+---
+
+### /ccpm:org-docs
+
+**Organize repository documentation.**
+
+```bash
+# Organize current repo
+/ccpm:org-docs
+
+# Preview changes
+/ccpm:org-docs --dry-run
+
+# Specific path
+/ccpm:org-docs /path/to/repo
+```
+
+---
+
+## Complete Workflow Example
+
+```bash
+# 1. Create and plan task
+/ccpm:plan "Add JWT authentication" my-app
+# -> Creates Linear issue WORK-123
+# -> Researches codebase and external systems
+# -> Updates issue with checklist
+
+# 2. Start implementation
+/ccpm:work WORK-123
+# -> Creates feature branch
+# -> Loads visual context (Figma)
+# -> Delegates to implementation agents
+
+# 3. Save progress regularly
+/ccpm:sync "Completed auth endpoints"
+# -> Updates checklist in Linear
+# -> Posts progress comment
+
+# 4. Commit work
+/ccpm:commit
+# -> Generates conventional commit
+# -> Links to Linear issue
+
+# 5. Verify quality
+/ccpm:verify
+# -> Runs lint, test, build
+# -> AI code review
+# -> Posts results to Linear
+
+# 6. Finalize
+/ccpm:done
+# -> Creates GitHub PR
+# -> Marks Linear as Done
+```
+
+---
+
+## Safety Rules
+
+- **Linear operations** are automatic (internal tracking)
+- **External PM writes** (Jira, Confluence) require confirmation
+- **Read operations** are always allowed
+- **Git commits/pushes** require user approval
+
+See [SAFETY_RULES.md](./SAFETY_RULES.md) for details.
+
+---
+
+## Related Documentation
+
+- [SAFETY_RULES.md](./SAFETY_RULES.md) - External PM system rules
+- [Hooks](../hooks/README.md) - Smart agent selection
+- [Agents](../agents/README.md) - Specialized agents
+- [Skills](../skills/README.md) - Available skills

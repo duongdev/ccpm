@@ -201,51 +201,6 @@ The subagent (`ccpm:linear-operations`) is still valuable for:
 4. **Batch operations** - `ensure_labels_exist` creates multiple labels efficiently
 5. **Complex operations** - `update_checklist_items` with parsing logic
 
-## Command Migration Guide
-
-**Before (all via subagent):**
-```markdown
-Task(linear-operations): `
-operation: get_issue
-params:
-  issueId: PSN-123
-context:
-  command: "work"
-`
-
-Task(linear-operations): `
-operation: update_issue
-params:
-  issueId: PSN-123
-  state: "In Progress"
-`
-
-Task(linear-operations): `
-operation: create_comment
-params:
-  issueId: PSN-123
-  body: "Started work"
-`
-```
-
-**After (hybrid approach):**
-```markdown
-# Get issue - direct call (blocking, need data)
-mcp__agent-mcp-gateway__execute_tool({
-  server: "linear",
-  tool: "get_issue",
-  args: { id: "PSN-123" }
-})
-
-# Update status - background (non-blocking)
-Bash(background=true): `./scripts/linear-background-ops.sh update-status PSN-123 "In Progress"`
-
-# Post comment - background (non-blocking)
-Bash(background=true): `./scripts/linear-background-ops.sh comment PSN-123 "Started work"`
-```
-
-**Performance improvement:** ~4+ minutes → ~1 minute (blocking) + ~0ms (background)
-
 ## Notes
 
 1. **MCP server name** - Always use `"linear"` (not `"linear-operations"`)

@@ -259,18 +259,18 @@ async function suggestAfterVerify(issueId, verificationPassed) {
     // Verification failed - fix issues
     return {
       primary: {
-        action: 'fix',
-        command: `/ccpm:verification:fix ${issueId}`,
+        action: 'work',
+        command: `/ccpm:work ${issueId}`,
         label: 'Fix Issues',
         description: 'Debug and fix verification failures',
         icon: '🔧'
       },
       alternatives: [
         {
-          action: 'work',
-          command: `/ccpm:work ${issueId}`,
-          label: 'Make Changes',
-          description: 'Continue implementation'
+          action: 'verify',
+          command: `/ccpm:verify`,
+          label: 'Re-verify',
+          description: 'Run verification again'
         }
       ]
     }

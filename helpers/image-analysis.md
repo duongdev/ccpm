@@ -230,17 +230,11 @@ Here's how a command would implement this logic:
 ### Commands That Should Use This Utility
 
 **Planning Commands**:
-- `/ccpm:planning:plan` - Analyze images during task planning
-- `/ccpm:planning:create` - Detect images when creating new tasks
-- `/ccpm:planning:update` - Process new images in plan updates
+- `/ccpm:plan` - Analyze images during task planning
 
 **Implementation Commands**:
-- `/ccpm:implementation:start` - Load images as context
-- `/ccpm:implementation:sync` - Sync image analysis to Linear
-
-**Utility Commands**:
-- `/ccpm:utils:context` - Include images in task context
-- `/ccpm:utils:status` - Show images attached to task
+- `/ccpm:work` - Load images as context for implementation
+- `/ccpm:sync` - Sync image analysis to Linear
 
 ### fetchAndAnalyzeImage(imageUrl, promptText)
 
@@ -966,8 +960,8 @@ image_analysis:
 ```
 
 **Expected behavior**:
-- Planning commands (`/ccpm:planning:plan`, `/ccpm:planning:create`) analyze images normally
-- Implementation commands (`/ccpm:implementation:start`) skip image analysis
+- Planning commands (`/ccpm:plan`) analyze images normally
+- Implementation commands (`/ccpm:work`) skip image analysis
 - Linear descriptions contain text analysis from planning phase
 - No visual references passed to implementation agents
 
@@ -1496,7 +1490,7 @@ for (let i = 0; i < images.length; i++) {
 if (issue.description.includes("## 🖼️ Visual Context Analysis")) {
   console.log("✅ Images have been analyzed - see Linear description for details")
 } else {
-  console.log("ℹ️  Run /ccpm:planning:plan to analyze these images")
+  console.log("ℹ️  Run /ccpm:plan to analyze these images")
 }
 ```
 ```

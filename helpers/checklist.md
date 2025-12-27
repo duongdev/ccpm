@@ -779,16 +779,6 @@ To find all commands using these helpers:
 grep -r "parseChecklist\|updateChecklistItems\|calculateProgress" commands/ | grep -v "_shared-checklist"
 ```
 
-### Version History
-
-- **v1.0.0** - Initial implementation (Phase 1 of PSN-37)
-  - Core parsing functions
-  - Update logic with progress calculation
-  - Validation utilities
-  - Support for both marker and header formats
-
----
-
 ## Related Files
 
 - `helpers/linear.md` - Linear API delegation utilities
@@ -796,7 +786,3 @@ grep -r "parseChecklist\|updateChecklistItems\|calculateProgress" commands/ | gr
 - `commands/verify.md` - Verification command with checklist validation
 - `commands/done.md` - Finalization command with completion checks
 - `agents/linear-operations.md` - Linear operations subagent
-
----
-
-**This file is part of CCPM's unified checklist management system (PSN-37).**

@@ -1,220 +1,291 @@
 # CCPM Agents
 
-**Specialized subagents for CCPM operations**
+Specialized subagents for CCPM operations and development workflows.
 
 ## Overview
 
-CCPM uses a set of specialized agents to handle different aspects of project management and development workflows. These agents work together to provide intelligent automation and context-aware operations.
+CCPM agents are specialized components that handle specific domains of functionality. They are invoked automatically by commands, hooks, or explicitly via the Task tool, providing focused expertise and optimized token usage through caching and batching.
 
-## Available Agents
+## Agent Categories
 
-### Core Operations
+### Linear and PM Operations
 
-| Agent | Purpose | Usage |
-|-------|---------|-------|
-| [linear-operations.md](./linear-operations.md) | Central handler for all Linear MCP operations (50-60% token reduction) | Automatic via commands |
-| [pm-operations-orchestrator.md](./pm-operations-orchestrator.md) | Tool-agnostic PM routing (Jira, Confluence, Linear) | Automatic via commands |
-| [jira-operations.md](./jira-operations.md) | Jira API operations with session-level caching | Automatic when Jira configured |
-| [confluence-operations.md](./confluence-operations.md) | Confluence API operations with Markdown transformation | Automatic when Confluence configured |
-| [project-detector.md](./project-detector.md) | Automatically detects project context | Automatic on command execution |
-| [project-config-loader.md](./project-config-loader.md) | Loads and validates project configuration | Automatic via project operations |
-| [project-context-manager.md](./project-context-manager.md) | Manages active project context | Automatic via project operations |
+These agents handle project management integrations and provide centralized API operations with caching.
 
-### Development Agents (New in v1.1)
+| Agent | Purpose |
+|-------|---------|
+| [linear-operations](./linear-operations.md) | Central handler for all Linear API operations with session-level caching |
+| [pm-operations-orchestrator](./pm-operations-orchestrator.md) | Lightweight coordinator for multi-PM system operations with lazy loading |
+| [jira-operations](./jira-operations.md) | Jira API operations with caching and Markdown/ADF conversion |
+| [confluence-operations](./confluence-operations.md) | Confluence API operations with content-aware caching |
 
-| Agent | Purpose | Usage |
-|-------|---------|-------|
-| [frontend-developer.md](./frontend-developer.md) | React/UI implementation with design system integration | Via `/ccpm:work` for UI tasks |
-| [backend-architect.md](./backend-architect.md) | APIs, databases, authentication, NestJS | Via `/ccpm:work` for backend tasks |
-| [tdd-orchestrator.md](./tdd-orchestrator.md) | Test-driven development workflow | Via `/ccpm:work` for test tasks |
-| [code-reviewer.md](./code-reviewer.md) | Automated code review and quality assessment | Via `/ccpm:review` |
-| [debugger.md](./debugger.md) | Systematic debugging and issue investigation | Via `/ccpm:work` for bug fixes |
-| [security-auditor.md](./security-auditor.md) | Security vulnerability assessment | Via `/ccpm:review --security` |
+### Project Management
 
-### Specialized Agents
+These agents manage project detection, configuration, and context across CCPM workflows.
 
-| Agent | Purpose | Usage |
-|-------|---------|-------|
-| [pm:ui-designer.md](./pm:ui-designer.md) | UI design and wireframe generation | `/ccpm:planning:design-ui` |
+| Agent | Purpose |
+|-------|---------|
+| [project-detector](./project-detector.md) | Detects active project and subproject from git remote, working directory, or patterns |
+| [project-config-loader](./project-config-loader.md) | Loads and validates project configuration from CCPM config file |
+| [project-context-manager](./project-context-manager.md) | Manages active project context including setting, displaying, and switching projects |
 
-### Claude Code & CCPM Agents (New in v1.2)
+### Development Agents
 
-| Agent | Purpose | Usage |
-|-------|---------|-------|
-| [claude-code-guide.md](./claude-code-guide.md) | Claude Code features, settings, CLI documentation | Via user questions about Claude Code |
-| [ccpm-developer.md](./ccpm-developer.md) | Extend CCPM with new commands, agents, skills, hooks | Via `/ccpm:work` for CCPM extension tasks |
-| [ccpm-troubleshooter.md](./ccpm-troubleshooter.md) | Debug and troubleshoot Claude Code and CCPM issues | Via user reports of issues |
+These agents handle implementation tasks across different technology domains.
 
-## Agent Architecture
+| Agent | Purpose |
+|-------|---------|
+| [frontend-developer](./frontend-developer.md) | React/UI implementation with design system integration and Tailwind styling |
+| [backend-architect](./backend-architect.md) | API design, NestJS implementation, database operations, and authentication |
+| [tdd-orchestrator](./tdd-orchestrator.md) | Test-driven development workflow orchestration with coverage requirements |
+| [code-reviewer](./code-reviewer.md) | Automated code review covering security, bugs, performance, and quality |
+| [debugger](./debugger.md) | Systematic debugging and issue investigation with root cause analysis |
+| [security-auditor](./security-auditor.md) | Security vulnerability assessment covering OWASP Top 10 and compliance |
 
-### Linear Operations Subagent
+### Design Agents
 
-The Linear operations subagent is the central handler for all Linear MCP operations, providing:
+| Agent | Purpose |
+|-------|---------|
+| [pm:ui-designer](./pm:ui-designer.md) | UI/UX design with wireframes, design system analysis, and developer specifications |
 
-- **50-60% token reduction** through optimized prompts
-- **Session-level caching** (85-95% hit rates)
-- **Performance**: <50ms for cached operations
-- **Structured error handling** with actionable suggestions
-- **Automatic parameter transformation** (issueId → id)
-- **Background execution** for non-blocking operations
+### CCPM Support Agents
 
-**Key Features:**
-- Issue management (create, update, fetch)
-- Label operations with smart caching
-- State management with fuzzy matching
-- Team and project operations
-- Comment and document management
+These agents help users work with Claude Code and extend CCPM functionality.
 
-**⛔ CRITICAL: Exact Parameter Names**
+| Agent | Purpose |
+|-------|---------|
+| [claude-code-guide](./claude-code-guide.md) | Answers questions about Claude Code features, settings, hooks, skills, and MCP |
+| [ccpm-developer](./ccpm-developer.md) | Creates and extends CCPM commands, agents, skills, and hooks |
+| [ccpm-troubleshooter](./ccpm-troubleshooter.md) | Diagnoses and resolves Claude Code and CCPM configuration issues |
+
+## Agent Selection
+
+### Automatic Selection
+
+The smart-agent-selector hook automatically scores and suggests agents based on:
+
+- **Keyword matching**: +10 per matching keyword in user message
+- **Task type alignment**: +20 for task type relevance
+- **Tech stack relevance**: +15 for matching technologies
+- **Plugin agent bonus**: +5 for CCPM agents
+- **Project-specific bonus**: +25 for project-configured agents
+
+Agents scoring above threshold are automatically invoked or suggested.
+
+### Manual Invocation
+
+Invoke agents explicitly using the Task tool:
 
 ```javascript
-// GET/UPDATE ISSUE - uses "id" (NOT issueId)
-{ tool: "get_issue", args: { id: "WORK-26" } }
-{ tool: "update_issue", args: { id: "WORK-26", state: "In Progress" } }
+Task({
+  subagent_type: 'ccpm:frontend-developer',
+  prompt: `
+## Task
+Create login form component
 
-// COMMENTS - uses "issueId"
-{ tool: "create_comment", args: { issueId: "WORK-26", body: "..." } }
-{ tool: "list_comments", args: { issueId: "WORK-26" } }
+## Context
+- Issue: PSN-123
+- Branch: feature/psn-123-auth
+
+## Requirements
+- TypeScript strict mode
+- Tailwind styling
+- Accessible (a11y)
+`
+});
 ```
 
-| Tool | Parameter | NOT This |
-|------|-----------|----------|
-| `get_issue` | **`id`** | ~~issueId~~ |
-| `update_issue` | **`id`** | ~~issueId~~ |
-| `create_comment` | **`issueId`** | ~~id~~ |
-| `list_comments` | **`issueId`** | ~~id~~ |
+### Command Delegation
 
-**Background Execution (Non-Blocking):**
+Commands delegate to agents internally based on task type:
+
+| Task Type | Agent |
+|-----------|-------|
+| UI/Frontend | frontend-developer |
+| API/Backend | backend-architect |
+| Testing | tdd-orchestrator |
+| Code Review | code-reviewer |
+| Debugging | debugger |
+| Security | security-auditor |
+| Design | pm:ui-designer |
+
+## Linear Operations
+
+The linear-operations agent is the central handler for all Linear API interactions. It provides significant token reduction through caching and batching.
+
+### Key Benefits
+
+- **50-60% token reduction** compared to direct MCP calls
+- **85-95% cache hit rate** for teams, labels, statuses
+- **Automatic parameter transformation** (handles issueId vs id)
+- **Structured error handling** with suggestions
+
+### Critical: Parameter Names
+
+The Linear MCP uses specific parameter names that differ between operations:
+
+| Tool | Parameter | Example |
+|------|-----------|---------|
+| `get_issue` | `id` | `{ id: "WORK-26" }` |
+| `update_issue` | `id` | `{ id: "WORK-26", state: "..." }` |
+| `create_comment` | `issueId` | `{ issueId: "WORK-26", body: "..." }` |
+| `list_comments` | `issueId` | `{ issueId: "WORK-26" }` |
+| `create_issue` | `team`, `title` | `{ team: "Engineering", title: "..." }` |
+
+### Background Operations
+
+For non-blocking updates, use background execution:
 
 ```bash
-# For comments and status updates (fire-and-forget)
-./scripts/linear-background-ops.sh comment ${issueId} "Progress update"
-./scripts/linear-background-ops.sh update-status ${issueId} "In Progress"
+# Post comment (fire-and-forget)
+./scripts/linear-background-ops.sh comment PSN-123 "Progress update"
+
+# Update status (fire-and-forget)
+./scripts/linear-background-ops.sh update-status PSN-123 "In Progress"
 ```
 
-Use blocking calls only when you need the result (get_issue, create_issue).
+Use blocking calls only when you need the result:
+- `get_issue` - Need the data to continue
+- `create_issue` - Need the issue ID
+- `update_checklist_items` - Need progress for display
 
-**Documentation:**
-- [Linear Subagent Architecture](../docs/architecture/decisions/002-linear-subagent.md)
-- [API Reference](../docs/reference/api/linear-subagent-quick-reference.md)
-- [Usage Patterns](../docs/reference/agents/usage-patterns.md)
+## PM Operations Orchestrator
 
-### Project Management Agents
+The pm-operations-orchestrator provides multi-PM system coordination with:
 
-The project management agents work together to provide seamless multi-project support:
+- **Lazy loading**: 89% token reduction vs eager loading
+- **Parallel execution**: 50%+ speedup for independent operations
+- **Dependency management**: Correct ordering of dependent operations
+- **Unified caching**: Coordinated cache across all PM systems
 
-1. **Project Detector**: Automatically identifies which project you're working on
-2. **Config Loader**: Loads project-specific configuration with validation
-3. **Context Manager**: Maintains active project state across command executions
+### Operations
 
-**Benefits:**
-- Automatic project switching based on working directory
-- Support for monorepo subdirectory detection
-- Manual override capability
-- Configuration validation and error reporting
+| Operation | Purpose |
+|-----------|---------|
+| `lazy_gather_context` | Gather context from multiple PM systems |
+| `smart_delegate` | Route single operation to appropriate subagent |
+| `batch_parallel_execute` | Execute multiple operations with dependencies |
+| `cache_status` | Report unified cache metrics |
 
-**Documentation:**
-- [Dynamic Project Configuration](../docs/architecture/patterns/dynamic-configuration.md)
-- [Project Setup Guide](../docs/guides/getting-started/project-setup.md)
-- [Monorepo Workflow](../docs/guides/workflows/monorepo-workflow.md)
+## Creating Agents
 
-### UI Designer Agent
+### Agent Structure
 
-The UI designer agent provides intelligent design assistance:
+```markdown
+# Agent Name
 
-- Generates multiple design options from requirements
-- Creates ASCII wireframes for visualization
-- Integrates with Figma for design handoff
-- Produces comprehensive developer specifications
+**Specialized agent for [specific domain]**
 
-**Usage:**
-```bash
-/ccpm:planning:design-ui PSN-123
+## Purpose
+
+What this agent does and why.
+
+## Capabilities
+
+- Capability 1
+- Capability 2
+
+## Input Contract
+
+```yaml
+task:
+  type: string
+  description: string
+context:
+  issueId: string?
 ```
 
-**Documentation:**
-- [UI Design Workflow](../docs/guides/workflows/ui-design-workflow.md)
-- [Design Commands](../docs/reference/commands/planning.md#design-commands)
+## Output Contract
 
-## How Agents Work
-
-### Invocation Methods
-
-**1. Automatic Invocation** (via hooks)
-- Smart agent selector hook analyzes context
-- Scores agents based on relevance
-- Automatically invokes best-fit agents
-
-**2. Explicit Invocation** (via Task tool)
-```typescript
-Task('linear-operations', 'operation: get_issue, params: {...}')
+```yaml
+result:
+  status: "success" | "partial" | "blocked"
+  filesModified: string[]
+  summary: string
 ```
 
-**3. Command Delegation** (internal)
-- Commands delegate to appropriate agents
-- Agents handle specialized operations
-- Results returned to command
+## Implementation Patterns
 
-### Agent Communication
+Code examples and patterns.
 
-Agents communicate via:
-- **Direct invocation**: Commands → Agents
-- **Subagent delegation**: Agents → Sub-agents
-- **Shared helpers**: Common utilities in `commands/_shared-*.md`
-- **Linear subagent**: Centralized Linear operations
+## Integration with CCPM
 
-### Caching Strategy
+How commands invoke this agent.
 
-Agents use multi-level caching:
-- **Session cache**: In-memory for current session (85-95% hit rate)
-- **Operation cache**: Results cached by operation type
-- **Invalidation**: Smart cache invalidation on writes
+## Examples
 
-## Adding New Agents
+Concrete usage examples.
+```
 
-To add a new agent:
+### Registration
 
-1. **Create agent file**: `agents/your-agent.md`
-2. **Define capabilities**: Clear description of what the agent does
-3. **Implement logic**: Step-by-step instructions for the agent
-4. **Add to catalog**: Update this README
-5. **Test thoroughly**: Ensure agent works in isolation and with others
-
-**Template:**
-See [Subagent Template](../docs/templates/subagent-template.md) for standard structure.
-
-**Documentation:**
-- [Creating Agents Guide](../docs/development/guides/subagent-integration.md)
-- [Agent Patterns](../docs/architecture/patterns/agent-patterns.md)
+1. Create agent file in `agents/` directory
+2. Add to `.claude-plugin/plugin.json` agents array:
+   ```json
+   {
+     "agents": [
+       "./agents/existing-agent.md",
+       "./agents/new-agent.md"
+     ]
+   }
+   ```
+3. Optionally add to smart-agent-selector for auto-invocation
 
 ## Best Practices
 
-### For Agent Developers
+### For Agent Design
 
-- ✅ Keep agents focused on single responsibility
-- ✅ Use Linear subagent for all Linear operations
-- ✅ Implement proper error handling
-- ✅ Document all parameters and return values
-- ✅ Provide usage examples
-- ✅ Use shared helpers when appropriate
+- **Single responsibility**: Each agent handles one domain
+- **Clear contracts**: Define explicit input/output YAML schemas
+- **Implementation patterns**: Include code examples agents can follow
+- **Error handling**: Return structured errors with suggestions
+- **Examples**: Provide concrete usage examples
 
-### For Command Developers
+### For Agent Usage
 
-- ✅ Delegate to agents rather than direct MCP calls
-- ✅ Use Linear subagent for caching benefits
-- ✅ Handle agent errors gracefully
-- ✅ Provide context in agent invocations
-- ✅ Test agent integration thoroughly
+- **Use Linear subagent**: Route all Linear operations through linear-operations
+- **Delegate to specialists**: Use domain-specific agents rather than doing everything in main context
+- **Provide context**: Include issue ID, branch, and relevant technical context
+- **Handle errors**: Check result status and handle failures gracefully
 
-## Related Documentation
+### For Performance
 
-- [Agent Catalog](../docs/reference/agents/catalog.md) - Complete agent reference
-- [Usage Patterns](../docs/reference/agents/usage-patterns.md) - Common patterns
-- [Smart Agent Selection](../hooks/SMART_AGENT_SELECTION.md) - Automatic selection
-- [Architecture Decisions](../docs/architecture/decisions/) - Design rationale
+- **Cache operations**: Leverage agent caching for repeated lookups
+- **Background execution**: Use fire-and-forget for non-critical operations
+- **Parallel tasks**: Use parallel Task calls for independent operations
+- **Minimal context**: Keep prompts focused to reduce token usage
 
----
+## Agent Communication
 
-**Last updated:** 2025-12-28
-**Agent count:** 17 agents (7 core + 6 development + 1 specialized + 3 Claude Code/CCPM)
-**Documentation version:** 1.2.0
+```
+Commands
+    │
+    ├─> linear-operations (Linear API)
+    │
+    ├─> pm-operations-orchestrator
+    │       ├─> linear-operations
+    │       ├─> jira-operations
+    │       └─> confluence-operations
+    │
+    ├─> Development Agents
+    │       ├─> frontend-developer
+    │       ├─> backend-architect
+    │       ├─> tdd-orchestrator
+    │       └─> ...
+    │
+    └─> Project Agents
+            ├─> project-detector
+            ├─> project-config-loader
+            └─> project-context-manager
+```
+
+## Summary
+
+| Category | Agent Count | Purpose |
+|----------|-------------|---------|
+| Linear/PM Operations | 4 | API operations with caching |
+| Project Management | 3 | Project detection and context |
+| Development | 6 | Implementation across domains |
+| Design | 1 | UI/UX design assistance |
+| CCPM Support | 3 | Claude Code and CCPM help |
+| **Total** | **17** | |

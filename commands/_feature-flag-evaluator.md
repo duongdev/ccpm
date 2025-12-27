@@ -205,7 +205,6 @@ If result.enabled is true:
   - Use optimized implementation
 Else:
   - Use legacy implementation
-  - Show migration hint after completion
 ```
 
 ## Monitoring

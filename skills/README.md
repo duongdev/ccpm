@@ -1,326 +1,307 @@
 # CCPM Skills
 
-This directory contains all CCPM skills - modular capabilities that Claude automatically discovers and uses based on context.
+Skills extend Claude Code's capabilities with specialized knowledge, workflows, and domain expertise. They auto-activate based on context, providing intelligent guidance without requiring explicit invocation.
 
 ## What Are Skills?
 
-Skills are **model-invoked** capabilities that Claude activates automatically when relevant to your task. Unlike slash commands (which you explicitly invoke), skills work in the background to provide:
+Skills are markdown files that teach Claude specific patterns, workflows, and best practices. Unlike commands (which you invoke explicitly), skills activate automatically when Claude detects relevant context in your conversation.
 
-- Context-aware guidance
-- Workflow automation
-- Safety enforcement
-- Best practices
+**Key characteristics:**
+- **Auto-activation**: Trigger based on keywords, commands, or context
+- **Composable**: Multiple skills can activate together
+- **Extensible**: Create custom skills for team-specific workflows
+- **Token-efficient**: Load only when needed
 
 ## Available Skills
 
-### Core PM Skills (CCPM-Specific)
+### Code Quality & Review
 
-1. **external-system-safety** - Prevents accidental writes to Jira/Confluence/BitBucket/Slack
-2. **pm-workflow-guide** - Auto-suggests appropriate CCPM commands based on workflow phase (prioritizes natural commands)
-3. **natural-workflow** - Complete guide for 6-command workflow (plan/work/sync/commit/verify/done)
-4. **workflow-state-tracking** - State machine visualization and transition validation
-5. **figma-integration** - Guides design-to-code workflow using Figma designs
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **ccpm-code-review** | Enforces quality verification gates with four-step validation (tests pass, build succeeds, checklist complete, no blockers) | User says "done", "complete", "finished", or runs `/ccpm:verify` |
+| **ccpm-debugging** | Systematic debugging with defense-in-depth approach (symptoms -> immediate cause -> root cause -> prevention) | User mentions "error", "failing", "broken", "debug", "bug" |
 
-### Problem-Solving Skills
+### Workflow & Navigation
 
-6. **sequential-thinking** - Structured problem-solving through iterative reasoning
-7. **docs-seeker** - Documentation discovery and research
-8. **planning-strategy-guide** - Intelligent planning with 6 phases (complexity, scope, dependencies, risks, breakdown, estimation)
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **natural-workflow** | Guides through the 6-command workflow (plan/work/sync/commit/verify/done) | User asks about starting tasks, committing, or completing work |
+| **pm-workflow-guide** | Context-aware PM workflow guidance with automatic phase detection | User mentions planning, implementation, verification |
+| **workflow-state-tracking** | Tracks workflow state transitions (IDEA -> PLANNED -> IMPLEMENTING -> VERIFYING -> VERIFIED -> COMPLETE) | User asks "where am I", "what should I do next" |
 
-### Quality & Verification Skills
+### Planning & Strategy
 
-9. **ccpm-code-review** - Verification enforcement before completion (updated for /ccpm:verify and /ccpm:done)
-10. **ccpm-debugging** - Systematic debugging with Linear tracking (adapted from claudekit-skills)
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **planning-strategy-guide** | Intelligent planning with 6 phases (complexity assessment, scope definition, dependency analysis, risk identification, task breakdown, effort estimation) | User mentions epic breakdown, scope estimation, complexity assessment |
+| **sequential-thinking** | Structured problem-solving through iterative reasoning with revision and branching | Tackling multi-step problems, design planning, architecture decisions |
 
-### Infrastructure Skills
+### Project Management
 
-11. **ccpm-mcp-management** - MCP server discovery and troubleshooting (adapted from claudekit-skills)
-12. **hook-optimization** - Hook performance guidance and benchmarking
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **project-detection** | Automatic project context detection with priority-based resolution | Start of every CCPM command |
+| **project-operations** | Project setup and management with agent-based architecture | User mentions "add project", "configure project", "monorepo" |
 
-### Development Skills
+### Integration & Tools
 
-13. **ccpm-skill-creator** - Create custom CCPM skills with templates (adapted from claudekit-skills)
-14. **project-detection** - Automatic project context detection in monorepos
-15. **project-operations** - Project setup and management with monorepo best practices
-16. **commit-assistant** - Conventional commits guidance and auto-generation
-17. **linear-subagent-guide** - Linear operations optimization patterns
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **linear-subagent-guide** | Guides optimal Linear operations with caching, performance patterns, and error handling | Implementing CCPM commands that interact with Linear |
+| **ccpm-mcp-management** | Discovers, manages, and troubleshoots MCP servers | User asks "MCP server", "tools available", "Linear not working" |
+| **figma-integration** | Guides design-to-code workflow using Figma integration | User mentions Figma URLs, design implementation |
 
-## Skill Structure
+### Development Practices
 
-Every skill is a directory containing:
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **commit-assistant** | Conventional commits guidance with auto-generated messages | User asks about committing or commit message formats |
+| **docs-seeker** | Discovers authoritative documentation with version-specific search | User asks "find documentation", "API docs", "how to use" |
+| **external-system-safety** | Enforces confirmation workflow for external system writes (Jira, Confluence, Slack) | Detecting potential writes to external PM systems |
 
-```
-skill-name/
-├── SKILL.md              # Required: Skill definition with frontmatter
-└── supporting-docs/      # Optional: Referenced documentation
-```
+### Meta Skills
 
-### SKILL.md Format
+| Skill | Description | Auto-Activates When |
+|-------|-------------|---------------------|
+| **ccpm-skill-creator** | Creates custom CCPM skills with proper templates and safety guardrails | User mentions "create skill", "custom workflow", "extend CCPM" |
+| **hook-optimization** | Guidance on optimizing hooks for performance and token efficiency | Developing, debugging, or benchmarking hooks |
+
+## How Skills Work
+
+### Auto-Activation
+
+Skills define trigger conditions in their frontmatter:
 
 ```yaml
 ---
-name: skill-name-lowercase
-description: What the skill does and when Claude should use it (max 1024 chars)
-allowed-tools: optional, comma-separated, tool-list
+name: ccpm-debugging
+description: Systematic debugging with defense-in-depth approach...
+---
+```
+
+When Claude detects matching context (keywords, command execution, or workflow state), the skill activates and provides specialized guidance.
+
+### Skill Composition
+
+Multiple skills can activate simultaneously for complex scenarios:
+
+```
+User: "I'm done implementing AUTH-123, ready to ship"
+       |
+       v
+[ccpm-code-review activates]     - Verification gates
+[pm-workflow-guide activates]    - Suggests /ccpm:verify
+[external-system-safety activates] - Confirms external writes
+```
+
+### Integration with Commands
+
+Skills enhance CCPM commands with domain knowledge:
+
+- `/ccpm:plan` -> `planning-strategy-guide` provides 6-phase planning
+- `/ccpm:work` -> `workflow-state-tracking` shows progress
+- `/ccpm:verify` -> `ccpm-code-review` enforces quality gates
+- `/ccpm:commit` -> `commit-assistant` generates conventional messages
+- `/ccpm:done` -> `external-system-safety` confirms external writes
+
+## Installing Skills
+
+### Global Installation
+
+Skills in `~/.claude/skills/` are available across all projects:
+
+```bash
+# Copy skill to global location
+cp -r skills/my-skill ~/.claude/skills/
+```
+
+### Project Installation
+
+Skills in `.claude/skills/` are project-specific:
+
+```bash
+# Copy skill to project
+cp -r skills/my-skill .claude/skills/
+```
+
+### Plugin Skills
+
+CCPM includes 17 skills installed automatically with the plugin.
+
+## Creating Custom Skills
+
+Use the `ccpm-skill-creator` skill or follow this template:
+
+```yaml
+---
+name: my-custom-skill
+description: Brief description with trigger phrases (max 1024 chars)
+allowed-tools: [optional-tools-if-restricted]
 ---
 
 # Skill Display Name
 
+Brief overview of what this skill does.
+
+## When to Use
+
+Auto-activates when:
+- Trigger phrase 1
+- Trigger phrase 2
+- CCPM command execution
+
 ## Instructions
 
-Step-by-step guidance for Claude on how to use this skill.
+Step-by-step guidance for Claude.
 
 ## Examples
 
-Concrete usage scenarios.
+Concrete examples with CCPM context.
 ```
 
-## How Skills Activate
+### Skill Templates
 
-Skills activate automatically based on:
+**Team Workflow Skill**: Codify team-specific practices
 
-1. **Trigger phrases** in user messages
-2. **CCPM command execution**
-3. **Workflow phase detection**
-
-### Example: Planning Phase
-
-```
-User: "I need to plan the authentication feature"
-       ↓
-pm-workflow-guide activates → Suggests /ccpm:plan
-sequential-thinking activates → Guides task decomposition
-       ↓
-Claude suggests optimal workflow
+```yaml
+---
+name: team-deployment
+description: Team-specific deployment workflow...
+---
 ```
 
-## Skill Categories
+**Safety Enforcement Skill**: Add additional safety checks
 
-### Safety Skills
+```yaml
+---
+name: company-security
+description: Enforces security rules for sensitive operations...
+allowed-tools: [read-file, grep]
+---
+```
 
-Prevent accidental mistakes:
-- **external-system-safety** - Blocks unconfirmed external writes
+**Integration Skill**: Connect with custom tools
 
-### Workflow Skills
+```yaml
+---
+name: internal-tool-integration
+description: Integrates CCPM with internal systems...
+---
+```
 
-Guide optimal workflows:
-- **pm-workflow-guide** - Command suggestions
-- **sequential-thinking** - Problem decomposition
+## Skill Best Practices
 
-### Quality Skills
+### Do's
 
-Enforce best practices:
-- **ccpm-code-review** - Verification gates
-- **ccpm-debugging** - Systematic troubleshooting
+- Use clear, descriptive skill names
+- Include comprehensive trigger phrases in description
+- Reference CCPM commands explicitly
+- Follow CCPM safety rules
+- Add concrete examples
+- Document external system interactions
+- Test skill activation
 
-### Infrastructure Skills
+### Don'ts
 
-Help with setup:
-- **ccpm-mcp-management** - MCP troubleshooting
+- Create overly broad skills
+- Duplicate existing CCPM functionality
+- Skip safety considerations
+- Use vague descriptions
+- Hardcode environment-specific values
 
-### Meta Skills
+## Skill Directory Structure
 
-Create more skills:
-- **ccpm-skill-creator** - Skill development templates
+Each skill lives in its own directory:
 
-## Creating Custom Skills
-
-Use the `ccpm-skill-creator` skill to create team-specific or project-specific skills.
-
-### Quick Start
-
-1. Ask Claude: "Create a custom skill for [your workflow]"
-2. `ccpm-skill-creator` activates and guides you
-3. Customize the template
-4. Test activation
-
-### Skill Naming Conventions
-
-- **CCPM-specific skills**: Prefix with `ccpm-` (e.g., `ccpm-code-review`)
-- **General skills**: No prefix (e.g., `sequential-thinking`)
-- **Team skills**: Prefix with team name (e.g., `acme-deployment`)
-- **Project skills**: Store in `.claude/skills/` (project-local)
-
-## Skill Integration with CCPM
-
-### Skills Work With Commands
-
-| Skill | CCPM Commands | When Activated |
-|-------|---------------|----------------|
-| natural-workflow | `/ccpm:plan`<br>`/ccpm:work`<br>`/ccpm:sync`<br>`/ccpm:commit`<br>`/ccpm:verify`<br>`/ccpm:done` | "how do I start", "workflow", "walk me through" |
-| pm-workflow-guide | All commands | "which command should I use" |
-| workflow-state-tracking | `/ccpm:work`<br>`/ccpm:work` | "where am I", "what should I do next" |
-| sequential-thinking | `/ccpm:plan`<br>`/ccpm:plan` | "break down", "analyze" |
-| docs-seeker | `/ccpm:plan` | "documentation", "API docs" |
-| figma-integration | `/ccpm:plan`<br>`/ccpm:plan`<br>`/ccpm:plan`<br>`/ccpm:figma-refresh` | "Figma", "design-to-code", "component" |
-| commit-assistant | `/ccpm:commit` | "commit changes", "conventional commits" |
-| ccpm-code-review | `/ccpm:verify`<br>`/ccpm:done` | "done", "ready to merge" |
-| ccpm-debugging | `/ccpm:verify` | "error", "failing", "broken" |
-| linear-subagent-guide | All Linear operations | When implementing commands with Linear |
-| hook-optimization | Hook development | "optimize hook", "benchmark hook" |
-
-### Skills Work With Hooks
-
-| Skill | CCPM Hook | Relationship |
-|-------|-----------|--------------|
-| external-system-safety | - | Independent safety layer |
-| ccpm-code-review | `quality-gate` | Complements verification |
-| pm-workflow-guide | `smart-agent-selector` | Different phases (command vs agent) |
-
-### Skills Work Together
-
-| Skill A | Skill B | Synergy |
-|---------|---------|---------|
-| natural-workflow | workflow-state-tracking | Complete workflow + State validation |
-| natural-workflow | commit-assistant | Workflow steps + Git commits |
-| sequential-thinking | pm-workflow-guide | Reasoning + Command suggestions |
-| figma-integration | sequential-thinking | Design analysis + Task decomposition |
-| docs-seeker | figma-integration | Documentation + Design specs |
-| ccpm-code-review | external-system-safety | Verification + Confirmation |
-| ccpm-debugging | ccpm-code-review | Fix issues → Verify fixes |
-| linear-subagent-guide | pm-workflow-guide | Linear optimization + Command workflow |
-| hook-optimization | ccpm-skill-creator | Hook development + Skill creation |
-| docs-seeker | Context7 MCP | Search + Fetch documentation |
+```
+skills/
+├── ccpm-code-review/
+│   └── SKILL.md
+├── ccpm-debugging/
+│   └── SKILL.md
+├── planning-strategy-guide/
+│   ├── SKILL.md
+│   └── examples.md          # Optional supporting docs
+└── ...
+```
 
 ## Troubleshooting
 
 ### Skill Not Activating
 
-**Check**:
-1. Is the skill description clear with trigger phrases?
-2. Does your request match the skill's purpose?
-3. Try verbose mode: `claude --verbose`
+1. Check trigger phrases match your context
+2. Verify skill is in correct location (`~/.claude/skills/` or `.claude/skills/`)
+3. Check skill frontmatter is valid YAML
+4. Ensure description is under 1024 characters
 
-**Example**:
-```bash
-# Vague (skill might not activate)
-"Help me with this"
+### Multiple Skills Conflicting
 
-# Specific (skill will activate)
-"Break down this complex epic into tasks" → sequential-thinking
-"Find React documentation" → docs-seeker
-"I'm done, ready to merge" → ccpm-code-review
-```
+1. Skills with overlapping triggers may both activate
+2. Use more specific trigger phrases
+3. Consider combining related skills
 
-### Multiple Skills Activating
+### Skill Performance
 
-This is **expected and good**! Skills are designed to work together.
+1. Keep skills focused and concise
+2. Avoid large examples that bloat token usage
+3. Reference external files instead of embedding large content
 
-**Example**:
-```
-User: "Plan this complex feature"
-       ↓
-✓ pm-workflow-guide → Suggests /ccpm:plan
-✓ sequential-thinking → Guides decomposition
-✓ docs-seeker → Finds relevant docs
-       ↓
-Combined: Comprehensive planning workflow
-```
+## Quick Reference
 
-### Skill Conflicts
+### Common Activation Patterns
 
-Skills are designed to be **complementary**, not conflicting. If you notice conflicts:
+| Context | Skills That Activate |
+|---------|---------------------|
+| Planning a task | `pm-workflow-guide`, `planning-strategy-guide` |
+| Starting work | `workflow-state-tracking`, `natural-workflow` |
+| Debugging issues | `ccpm-debugging`, `sequential-thinking` |
+| Completing work | `ccpm-code-review`, `external-system-safety` |
+| Git commits | `commit-assistant` |
+| Linear operations | `linear-subagent-guide` |
+| Project setup | `project-detection`, `project-operations` |
 
-1. Review skill descriptions for overlapping triggers
-2. Check `SKILLS_COMPARISON_MATRIX.md` for documented interactions
-3. Report issue with specific scenario
+### Skill Categories
 
-## Skill Sources
-
-### CCPM-Original Skills (8)
-
-Created specifically for CCPM:
-- `external-system-safety` (v2.0)
-- `pm-workflow-guide` (v2.0, updated v2.2)
-- `figma-integration` (v2.2)
-- `natural-workflow` (v2.3)
-- `workflow-state-tracking` (v2.3)
-- `commit-assistant` (v2.3)
-- `linear-subagent-guide` (v2.3)
-- `hook-optimization` (v2.3)
-
-### ClaudeKit-Skills Adaptations (4)
-
-Adapted from [claudekit-skills](https://github.com/mrgoonie/claudekit-skills):
-- `ccpm-code-review` (from `code-review`, updated v2.3)
-- `ccpm-debugging` (from `debugging`)
-- `ccpm-mcp-management` (from `mcp-management`)
-- `ccpm-skill-creator` (from `skill-creator`)
-
-### ClaudeKit-Skills As-Is (2)
-
-Copied directly without modification:
-- `sequential-thinking`
-- `docs-seeker`
-
-### Project-Specific Skills (2)
-
-CCPM infrastructure skills:
-- `project-detection` (v2.0)
-- `project-operations` (v2.0, updated v2.3)
-
-## Best Practices
-
-### For Skill Users
-
-1. **Trust skill suggestions** - They activate based on context
-2. **Use specific language** - Clear requests activate right skills
-3. **Combine with commands** - Skills enhance, don't replace commands
-4. **Learn trigger phrases** - See individual SKILL.md files
-
-### For Skill Creators
-
-1. **Clear descriptions** - Include trigger phrases and use cases
-2. **CCPM integration** - Reference commands, hooks, Linear workflows
-3. **Safety first** - Add confirmation for external writes
-4. **Progressive disclosure** - Reference docs, don't inline everything
-5. **Test thoroughly** - Validate activation and integration
+- **Quality**: `ccpm-code-review`, `ccpm-debugging`
+- **Workflow**: `natural-workflow`, `pm-workflow-guide`, `workflow-state-tracking`
+- **Planning**: `planning-strategy-guide`, `sequential-thinking`
+- **Projects**: `project-detection`, `project-operations`
+- **Integration**: `linear-subagent-guide`, `ccpm-mcp-management`, `figma-integration`
+- **Development**: `commit-assistant`, `docs-seeker`, `external-system-safety`
+- **Meta**: `ccpm-skill-creator`, `hook-optimization`
 
 ## Safety Rules
 
-All CCPM skills must follow safety rules from `../commands/SAFETY_RULES.md`:
+All CCPM skills must follow safety rules:
 
-### ⛔ NEVER Without Confirmation
+### Never Without Confirmation
 
 - Jira: Creating issues, updating status, posting comments
 - Confluence: Creating/editing pages
-- BitBucket: Creating PRs, posting comments
 - Slack: Sending messages
+- Other external PM systems
 
-### ✅ Always Allowed
+### Always Allowed
 
 - Read operations from external systems
 - Linear operations (internal tracking)
 - Local file operations
+- Git operations (with standard workflow)
 
-### Enforcement
-
-The `external-system-safety` skill provides automatic enforcement even when other skills or agents are invoked.
-
-## References
-
-- **Comprehensive Integration Plan**: `../CLAUDEKIT_SKILLS_INTEGRATION_PLAN.md`
-- **Skills Comparison**: `../SKILLS_COMPARISON_MATRIX.md`
-- **Quick Reference**: `../SKILLS_QUICK_REFERENCE.md`
-- **Safety Rules**: `../commands/SAFETY_RULES.md`
-- **Plugin Config**: `../.claude-plugin/plugin.json`
+The `external-system-safety` skill provides automatic enforcement.
 
 ## Contributing
 
 To contribute a new skill:
 
-1. Use `ccpm-skill-creator` to generate template
-2. Follow CCPM skill conventions (this README)
-3. Test activation and integration
-4. Submit PR with:
-   - Skill directory with SKILL.md
-   - Update to this README
-   - Test scenarios
-   - Integration documentation
+1. Create skill directory: `skills/my-skill/`
+2. Add `SKILL.md` following the template above
+3. Test activation with relevant triggers
+4. Submit PR with skill documentation
 
----
+## Resources
 
-**Total Skills**: 17 (8 CCPM-original + 4 adapted + 3 as-is + 2 project-specific)
-**Philosophy**: Automatic activation, complementary design, safety-first
-**Version**: CCPM v2.3 (PSN-34: Phase 2 & 3 Complete)
-**Next**: See individual skill SKILL.md files for details
+- [Creating Custom Skills](./ccpm-skill-creator/SKILL.md)
+- [CCPM Commands](../commands/README.md)
+- [Hook System](../hooks/README.md)
+- [Agent Architecture](../agents/README.md)

@@ -5,10 +5,9 @@ This shared module detects and processes Figma links from Linear issues, externa
 ## When to Use
 
 Include this step in any command that needs to extract Figma design specifications:
-- `/ccpm:planning:plan` - Extract Figma links during planning phase
-- `/ccpm:planning:design-ui` - Replace ASCII wireframes with Figma designs
-- `/ccpm:implementation:start` - Load Figma context for implementation
-- `/ccpm:utils:context` - Include Figma designs in task context
+- `/ccpm:plan` - Extract Figma links during planning phase
+- `/ccpm:work` - Load Figma context for implementation
+- `/ccpm:figma-refresh` - Force refresh cached design data
 
 ## Workflow
 
@@ -85,8 +84,8 @@ Store extracted Figma context in Linear issue comments for future reference:
 - **Cached**: {timestamp}
 
 ---
-*Figma context extracted automatically by CCPM (PSN-25)*
-*Refresh with: `/ccpm:utils:figma-refresh {linear-issue-id}`*
+*Figma context extracted automatically by CCPM*
+*Refresh with: `/ccpm:figma-refresh {linear-issue-id}`*
 ```
 
 ### 5. Return Structured Data
@@ -163,7 +162,7 @@ Provide formatted output for use in planning/implementation:
 ## Integration Example
 
 ```bash
-# Step 0.6: Detect Figma Links (in planning:plan.md)
+# Detect Figma Links (in plan.md)
 
 # 1. Extract Linear description/comments
 LINEAR_DESC=$(linear_get_issue "$1" | jq -r '.description')
@@ -179,8 +178,7 @@ if [ "$FIGMA_COUNT" -gt 0 ]; then
   FIGMA_SERVER=$(./scripts/figma-server-manager.sh select "$PROJECT_ID")
   
   # 4. Format for Linear comment
-  # (MCP fetch implementation pending - Phase 2)
-  
+
   # 5. Add to planning context
   echo "$FIGMA_LINKS" > /tmp/figma-context.json
 else
@@ -188,24 +186,15 @@ else
 fi
 ```
 
-## Phase 1 Status ✅ COMPLETE
+## Available Features
 
-**Completed:**
-- ✅ Link detection utilities (`scripts/figma-utils.sh`)
-- ✅ MCP server manager (`scripts/figma-server-manager.sh`)
-- ✅ Configuration schema
-- ✅ Integration in planning workflow (detection only)
+### Core Detection
+- Link detection utilities (`scripts/figma-utils.sh`)
+- MCP server manager (`scripts/figma-server-manager.sh`)
+- Configuration schema
+- Integration in planning workflow
 
-## Phase 2 Status ✅ COMPLETE
-
-**Completed:**
-- ✅ MCP data extraction implementation (`scripts/figma-data-extractor.sh`)
-- ✅ Design analysis and token extraction (colors, fonts, spacing, frames)
-- ✅ Linear comment caching (`scripts/figma-cache-manager.sh`)
-- ✅ Rate limit tracking (`scripts/figma-rate-limiter.sh`)
-- ✅ Enhanced planning workflow integration (full extraction)
-
-**Phase 2 Capabilities:**
+### Data Extraction & Caching
 
 1. **Data Extraction** (`figma-data-extractor.sh`)
    - MCP gateway integration for all three server types
@@ -254,21 +243,19 @@ fi
 
 **Integration with Planning:**
 
-Phase 2 extraction is automatically triggered during `/ccpm:planning:plan` when:
+Figma extraction is automatically triggered during `/ccpm:plan` when:
 1. Figma links are detected
 2. MCP server is configured
 3. Rate limit allows extraction
 
 If rate limit is reached, cached data is used (even if stale) to avoid blocking the workflow.
 
-**Pending (Phase 3 - Future):**
-- ⏳ Design token mapping to Tailwind classes
-- ⏳ Component-to-code generation
-- ⏳ Multi-frame comparison and variant detection
-- ⏳ Change detection and design drift alerts
-- ⏳ Accessibility analysis (color contrast, ARIA labels)
-
-Phase 2 provides **full design extraction and caching** - Phase 3 will add advanced analysis and code generation.
+### Future Enhancements
+- Design token mapping to Tailwind classes
+- Component-to-code generation
+- Multi-frame comparison and variant detection
+- Change detection and design drift alerts
+- Accessibility analysis (color contrast, ARIA labels)
 
 ## Gemini-Enhanced Analysis
 

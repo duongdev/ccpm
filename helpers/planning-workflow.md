@@ -638,7 +638,7 @@ Provide a summary like:
 
 ✅ Checklist: [X] subtasks created/updated
 
-🚀 Ready for implementation! Run: /ccpm:implementation:start $LINEAR_ISSUE_ID
+🚀 Ready for implementation! Run: /ccpm:work $LINEAR_ISSUE_ID
 ```
 
 ## Notes
@@ -746,7 +746,7 @@ error:
     - "Use exact status name: 'In Progress', 'Done', etc."
     - "Use status type: 'started', 'completed', etc."
 suggestions:
-  - "Run /ccpm:utils:statuses to list available statuses"
+  - "Check available Linear statuses in team configuration"
 ```
 
 ### Migration Notes

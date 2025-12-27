@@ -1,22 +1,22 @@
 {
   "name": "duongdev-ccpm-marketplace",
   "owner": {
-    "name": "Dustin Do",
+    "name": "duongdev",
     "email": "dustin.do95@gmail.com",
     "url": "https://github.com/duongdev"
   },
   "metadata": {
     "description": "Official marketplace for CCPM (Claude Code Project Management) - Lean project management for solo developers",
-    "version": "1.0.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "ccpm",
       "source": "./",
-      "description": "Lean Project Management for solo developers managing multiple projects. v1.0: 12 optimized commands (82% simpler than v2.x), 50-60% token reduction via smart caching, natural workflow (plan → work → sync → commit → verify → done), tool-agnostic architecture supporting any PM system via MCP (Jira, Confluence, etc.), intelligent agent auto-invocation, interactive planning with deep research, monorepo support, safety-first design. Built for power users who value simplicity and extensibility.",
-      "version": "1.0.0",
+      "description": "Lean Project Management for solo developers managing multiple projects. 19 optimized commands, 50-60% token reduction via smart caching, natural workflow (plan, work, sync, commit, verify, done), tool-agnostic architecture supporting any PM system via MCP (Linear, Jira, Confluence, etc.), intelligent agent auto-invocation, interactive planning with deep research, monorepo support, safety-first design. Built for power users who value simplicity and extensibility.",
+      "version": "1.2.0",
       "author": {
-        "name": "Dustin Do",
+        "name": "duongdev",
         "email": "dustin.do95@gmail.com",
         "url": "https://github.com/duongdev"
       },

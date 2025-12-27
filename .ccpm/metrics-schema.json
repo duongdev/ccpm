@@ -1,14 +1,14 @@
 {
   "version": 1,
   "metadata": {
-    "description": "Phase 6 Metrics Collection Schema",
+    "description": "CCPM Metrics Collection Schema",
     "collection_start": "2025-12-09T00:00:00Z",
     "last_updated": "{{TIMESTAMP}}"
   },
   "metrics": {
     "adoption": {
-      "upgrade_rate": {
-        "description": "Percentage of users on v2.3.0+",
+      "active_users": {
+        "description": "Percentage of active users",
         "unit": "percentage",
         "target": 70,
         "threshold_warning": 50,
@@ -23,12 +23,9 @@
         "threshold_critical": 20,
         "data": []
       },
-      "command_usage_new_vs_old": {
-        "description": "Ratio of new commands (/ccpm:plan, etc) vs old commands",
-        "unit": "ratio",
-        "target": 0.8,
-        "threshold_warning": 0.5,
-        "threshold_critical": 0.2,
+      "command_usage": {
+        "description": "Command usage tracking (/ccpm:plan, etc)",
+        "unit": "count",
         "data": []
       },
       "daily_active_users": {
@@ -38,12 +35,9 @@
       }
     },
     "performance": {
-      "token_reduction": {
-        "description": "Average token reduction percentage compared to old commands",
-        "unit": "percentage",
-        "target": 50,
-        "threshold_warning": 30,
-        "threshold_critical": 15,
+      "token_usage": {
+        "description": "Average token usage per command execution",
+        "unit": "tokens",
         "data": []
       },
       "execution_time": {
@@ -82,7 +76,7 @@
         "data": []
       },
       "rollback_rate": {
-        "description": "Percentage of users disabling new features",
+        "description": "Percentage of users disabling features",
         "unit": "percentage",
         "target_max": 1,
         "threshold_warning": 5,
@@ -90,7 +84,7 @@
         "data": []
       },
       "feature_flag_opt_out": {
-        "description": "Percentage of users declining new features",
+        "description": "Percentage of users opting out of features",
         "unit": "percentage",
         "target_max": 1,
         "data": []

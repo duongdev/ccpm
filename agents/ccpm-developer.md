@@ -457,30 +457,30 @@ Test: /ccpm:quick-status PSN-123
 ### Example 2: Create New Agent
 
 ```
-Task: Create agent for database migrations
+Task: Create agent for code optimization
 
 Output:
-Created: agents/migration-manager.md
+Created: agents/performance-optimizer.md
 
 Content:
-# Migration Manager Agent
+# Performance Optimizer Agent
 
-**Specialized agent for database migration operations**
+**Specialized agent for code performance optimization**
 
 ## Purpose
 ...
 
 Registration:
 1. Add to .claude-plugin/plugin.json:
-   "./agents/migration-manager.md"
+   "./agents/performance-optimizer.md"
 
 2. Add to smart-agent-selector.sh:
-   if echo "$USER_MESSAGE" | grep -qE '(migration|schema|database)'; then
-       HINT="💡 Migration task → use \`ccpm:migration-manager\` agent"
+   if echo "$USER_MESSAGE" | grep -qE '(performance|optimize|slow|bottleneck)'; then
+       HINT="💡 Performance task → use \`ccpm:performance-optimizer\` agent"
    fi
 
 Test:
-Task({ subagent_type: "ccpm:migration-manager", prompt: "Create users table migration" })
+Task({ subagent_type: "ccpm:performance-optimizer", prompt: "Optimize database queries" })
 ```
 
 ### Example 3: Create New Skill

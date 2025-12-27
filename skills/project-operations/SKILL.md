@@ -922,28 +922,6 @@ Test with these scenarios:
 5. **No Config**: Fresh install, guide user to setup
 6. **Invalid Config**: Missing fields, show validation errors
 
-### Migration Guide
-
-**From inline logic to agents**:
-
-Before:
-```markdown
-# Read config file
-# Parse YAML
-# Validate project
-# Extract settings
-# 50+ lines of logic
-```
-
-After:
-```markdown
-Task(project-config-loader): `Load project: ${projectId}`
-
-# 1 line, agent handles everything
-```
-
-**Token savings**: ~80% reduction in command size
-
 ### Related Commands
 
 **Project Management**:

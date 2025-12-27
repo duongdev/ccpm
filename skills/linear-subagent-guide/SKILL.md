@@ -1104,5 +1104,4 @@ context:
 - **Subagent Location**: `agents/linear-operations.md`
 - **Shared Helpers**: `agents/_shared-linear-helpers.md`
 - **Architecture Guide**: `docs/architecture/linear-subagent-architecture.md`
-- **Migration Guide**: `docs/guides/migration/linear-subagent-migration.md`
 - **Linear MCP Docs**: Available via `search_documentation` tool

@@ -48,8 +48,7 @@ const STATE_MACHINE = {
     },
     allowed_commands: [
       "/ccpm:work",
-      "/ccpm:plan",  // Update plan
-      "/ccpm:utils:*"
+      "/ccpm:plan"  // Update plan
     ]
   },
 
@@ -66,9 +65,7 @@ const STATE_MACHINE = {
     allowed_commands: [
       "/ccpm:sync",
       "/ccpm:commit",
-      "/ccpm:verify",
-      "/ccpm:implementation:*",
-      "/ccpm:utils:*"
+      "/ccpm:verify"
     ]
   },
 
@@ -82,9 +79,8 @@ const STATE_MACHINE = {
       CANCELLED: 50      // Requires confirmation
     },
     allowed_commands: [
-      "/ccpm:verification:fix",
-      "/ccpm:utils:status",
-      "/ccpm:sync"
+      "/ccpm:sync",
+      "/ccpm:work"
     ]
   },
 
@@ -99,8 +95,7 @@ const STATE_MACHINE = {
     },
     allowed_commands: [
       "/ccpm:verify",
-      "/ccpm:verification:*",
-      "/ccpm:utils:*"
+      "/ccpm:sync"
     ]
   },
 
@@ -115,8 +110,7 @@ const STATE_MACHINE = {
     },
     allowed_commands: [
       "/ccpm:done",
-      "/ccpm:complete:finalize",
-      "/ccpm:utils:*"
+      "/ccpm:sync"
     ]
   },
 
@@ -126,10 +120,7 @@ const STATE_MACHINE = {
     phase: "complete",
     next_states: [],  // Terminal state
     confidence_to_transition: {},
-    allowed_commands: [
-      "/ccpm:utils:status",
-      "/ccpm:utils:report"
-    ]
+    allowed_commands: []  // Terminal state
   },
 
   CANCELLED: {
@@ -138,9 +129,7 @@ const STATE_MACHINE = {
     phase: "cancelled",
     next_states: [],  // Terminal state
     confidence_to_transition: {},
-    allowed_commands: [
-      "/ccpm:utils:status"
-    ]
+    allowed_commands: []  // Terminal state
   }
 };
 ```
@@ -678,7 +667,7 @@ function suggestNextAction(state) {
 
     case 'BLOCKED':
       return {
-        command: '/ccpm:verification:fix',
+        command: '/ccpm:work',
         description: 'Fix blocker',
         confidence: 80,
         reasoning: 'Address blocking issue to continue'
@@ -708,7 +697,7 @@ function suggestNextAction(state) {
 
     default:
       return {
-        command: '/ccpm:utils:status',
+        command: '/ccpm:status',
         description: 'Check task status',
         confidence: 60,
         reasoning: 'Unknown state, check status'
@@ -744,14 +733,8 @@ function isCommandAllowed(command, phase) {
 
   // Check if command matches any pattern
   const isAllowed = allowedPatterns.some(pattern => {
-    if (pattern.endsWith('*')) {
-      // Wildcard pattern (e.g., "/ccpm:utils:*")
-      const prefix = pattern.slice(0, -1);
-      return command.startsWith(prefix);
-    } else {
-      // Exact match
-      return command === pattern;
-    }
+    // Exact match
+    return command === pattern;
   });
 
   if (!isAllowed) {

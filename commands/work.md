@@ -70,7 +70,7 @@ This command uses:
 - **Respect CLAUDE.md rules** - Check all scopes for protected branches, prefixes, workflow rules
 - **Git branch safety** - Check protected branches before creating new branches
 - **Phase planning** - Ask which phases to do now vs later (multi-select support)
-- **Implementation choice** - AI implements now (auto-sync) OR manual (you code)
+- **Implementation choice** - Delegate to agents (recommended) OR quick inline edit
 - **Auto-sync after AI implementation** - Never lose context! Git changes → checklist update → progress comment
 - **Confidence-based decisions** - Use decision-helpers.md to ask when confidence < 80%
 - **Parallel implementation** - Detect and prioritize tasks that can run simultaneously
@@ -595,11 +595,9 @@ if (implementationConfidence.score < 80 || analysisResult.uncertainties.length >
   console.log('\n✅ Clarifications received. Proceeding with implementation.');
 }
 
-4A. Ask user: AI implementation or manual? (Context preservation):
+4A. Ask user: Implementation approach
 
-console.log('\n💡 Implementation Mode:');
-console.log('  Option 1: AI implements now (auto-sync progress to Linear)');
-console.log('  Option 2: Manual implementation (you code, sync later with /ccpm:sync)');
+console.log('\n💡 Implementation Approach:');
 
 AskUserQuestion({
   questions: [{
@@ -608,33 +606,38 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {
-        label: "AI implements now",
-        description: "AI makes changes, automatically syncs progress to Linear (never lose context)"
+        label: "Delegate to specialized agents (Recommended)",
+        description: "Uses frontend/backend/etc agents - protects main context, auto-syncs to Linear"
       },
       {
-        label: "I'll implement manually",
-        description: "You write code, use /ccpm:sync when ready"
+        label: "Quick inline edit",
+        description: "For trivial 1-2 file changes only - fills main context faster"
       }
     ]
   }]
 });
 
-const aiImplement = (answer === "AI implements now");
+const useAgents = (answer === "Delegate to specialized agents (Recommended)");
 
-**If AI implements (aiImplement === true):**
+**If using agents (useAgents === true):**
 
 4B. Chunked implementation via specialized agents (CONTEXT PROTECTION):
 
 ## ⛔ MANDATORY: Agent Delegation for ALL Implementation
 
-**ABSOLUTE RULES - VIOLATION = FAILURE:**
+**ABSOLUTE RULES - VIOLATION = COMMAND FAILURE:**
 
-| ⛔ FORBIDDEN | ✅ REQUIRED |
-|--------------|-------------|
-| Using Edit tool to write code | Task tool with subagent_type |
-| Using Write tool to create files | Task tool with subagent_type |
-| Reading files to understand code | Task tool with Explore agent |
-| Inline implementation in main context | Delegate to specialized agent |
+| 🚫 BLOCKED TOOL | ✅ USE INSTEAD |
+|-----------------|----------------|
+| `Edit` | `Task(subagent_type="{agent}")` |
+| `Write` | `Task(subagent_type="{agent}")` |
+| `Read` (for code understanding) | `Task(subagent_type="Explore")` |
+| Any inline implementation | Delegate to specialized agent |
+
+**ENFORCEMENT:**
+- PreToolUse hook monitors tool calls during `/ccpm:work`
+- Edit/Write calls trigger warning and suggestion to use Task
+- Repeated violations may block the tool call
 
 **WHY THIS MATTERS:**
 - Main context: ~200k token limit
@@ -833,6 +836,24 @@ Task #2:
 
 **Step 5: After all agents complete:**
 Display: "✅ All implementations complete"
+
+**Step 6: Deactivate Delegation-Only Mode**
+
+```javascript
+// Clean up delegation mode state file
+const fs = require('fs');
+try {
+  fs.unlinkSync('/tmp/ccpm-delegation-mode.json');
+  console.log('✅ Delegation mode deactivated');
+} catch (e) {
+  // File may not exist, ignore
+}
+```
+
+**Or via Bash:**
+```bash
+rm -f /tmp/ccpm-delegation-mode.json
+```
 
 ---
 
@@ -1133,22 +1154,20 @@ if (analysisResult.taskDependencies) {
 
 console.log('\n💡 Next Steps:');
 
-if (aiImplement) {
-  console.log('  ✅ AI implementation complete!');
-  console.log('  ✅ Progress auto-synced to Linear (never lose context!)');
+if (useAgents) {
+  console.log('  ✅ Implementation complete via specialized agents!');
+  console.log('  ✅ Progress auto-synced to Linear');
   console.log('');
-  console.log('  1. Review the changes made by AI');
+  console.log('  1. Review the changes made by agents');
   console.log('  2. Use /ccpm:commit to commit changes');
   console.log('  3. Use /ccpm:verify for quality checks');
-  console.log('  4. Use /ccpm:sync for additional progress updates (optional)');
 } else {
-  console.log('  1. Review the implementation plan above');
-  console.log('  2. Start coding (no auto-commit - you decide when)');
-  console.log('  3. ⭐ Use /ccpm:sync frequently to:');
-  console.log('     - Save progress updates');
-  console.log('     - Update checklist items automatically (AI-powered matching)');
-  console.log('     - Track file changes');
-  console.log('  4. Use /ccpm:commit when ready to commit');
+  // Quick inline edit mode
+  console.log('  ✅ Inline edits complete');
+  console.log('');
+  console.log('  1. Review your changes');
+  console.log('  2. Use /ccpm:sync to update Linear');
+  console.log('  3. Use /ccpm:commit when ready');
 }
 
 console.log('\n📌 Quick Commands:');
@@ -1290,9 +1309,9 @@ if (nextAction) {
 // Only offer AI continuation if there's remaining work
 if (progress < 100) {
   console.log('\n💡 Continue Implementation:');
-  console.log('  Option 1: AI continues now (auto-sync progress to Linear)');
-  console.log('  Option 2: I'll continue manually (you code, sync later)');
-  console.log('  Option 3: Just show menu (no implementation now)');
+  console.log('  Option 1: Continue with specialized agents (recommended)');
+  console.log('  Option 2: Quick inline edit (trivial changes only)');
+  console.log('  Option 3: Just show status');
 
   AskUserQuestion({
     questions: [{
@@ -1301,16 +1320,16 @@ if (progress < 100) {
       multiSelect: false,
       options: [
         {
-          label: "AI continues now",
-          description: "AI implements remaining items, auto-syncs progress (never lose context)"
+          label: "Continue with agents (Recommended)",
+          description: "Delegates remaining items to specialized agents, auto-syncs to Linear"
         },
         {
-          label: "I'll continue manually",
-          description: "You write code, use /ccpm:sync when ready"
+          label: "Quick inline edit",
+          description: "For trivial remaining changes only"
         },
         {
-          label: "Just show menu",
-          description: "Review options without implementing now"
+          label: "Just show status",
+          description: "Review progress without implementing now"
         }
       ]
     }]
@@ -1318,7 +1337,7 @@ if (progress < 100) {
 
   const continueMode = answer;
 
-  if (continueMode === "AI continues now") {
+  if (continueMode === "Continue with agents (Recommended)") {
     console.log('\n🤖 AI continuing implementation...');
 
     // Get remaining work context
@@ -1776,35 +1795,32 @@ Unit tests for all auth functions
 
 ## Notes
 
-### Workflow Options
+### Implementation Options
 
-**Option 1: AI Implementation (Auto-sync - Never Lose Context!)**
-- `/ccpm:work` → analyze → AI implements → **auto-sync** (git changes → update checklist → post progress) → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
-- ✅ **Best for**: Context preservation, complex tasks, learning from AI
-- ✅ **Benefit**: Progress automatically saved to Linear, never lose work if session ends
+**Option 1: Delegate to Specialized Agents (Recommended)**
+- `/ccpm:work` → analyze → **delegate to agents** → auto-sync → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
+- ✅ **Best for**: Complex tasks, multi-file changes, context preservation
+- ✅ **Benefit**: Agents use isolated context, main context stays lean (~50 tokens vs ~5000)
 
-**Option 2: Manual Implementation**
-- `/ccpm:work` → analyze → you code → `/ccpm:sync` → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
-- ✅ **Best for**: Learning by doing, custom implementation, pair programming with AI
+**Option 2: Quick Inline Edit**
+- `/ccpm:work` → analyze → direct Edit/Write → `/ccpm:sync` → `/ccpm:commit`
+- ✅ **Best for**: Trivial 1-2 file changes only
+- ⚠️ **Warning**: Fills main context faster, use sparingly
 
 ### Features
 
-- **Implementation choice**: Ask user whether AI implements or manual
-- **Auto-sync after AI implementation**: Detects git changes → updates checklist → posts progress comment
+- **Explicit delegation**: Options clearly show "agents" vs "inline" - no ambiguity
+- **Auto-sync after agents**: Git changes → update checklist → post progress comment
 - **Git branch safety**: Checks protected branches, requires confirmation
-- **Phase planning**: Interactive multi-select for large tasks (>5 items), skips completed items
-- **Decision helpers**: Confidence-based decisions with Always-Ask Policy (< 80% threshold)
-- **Parallel implementation**: Detects independent tasks, groups for simultaneous execution
-- **Checklist automation**: AI-powered matching of git changes to checklist items (score >= 50 = auto-complete)
-- **Uncertainty tracking**: Documented in issue description for visibility
-- **Collapsible comments**: Scannable summary + detailed context using `+++` syntax
-- **Smart agents**: Automatic selection based on task type (backend, frontend, mobile, etc.)
-- **Caching**: Linear subagent caches for 85-95% faster operations
-- **Visual context**: Loads UI mockups and Figma designs for pixel-perfect implementation
+- **Phase planning**: Interactive multi-select for large tasks (>5 items)
+- **Parallel agents**: Independent tasks delegated simultaneously for speed
+- **Checklist automation**: AI-powered matching of git changes to checklist items
+- **Smart agent selection**: Based on task type and hook hints
+- **Context protection**: Agents work in isolated context, main stays lean
 
-### Important
+### Key Points
 
-- 🚀 **Auto-sync**: If AI implements, progress is automatically saved to Linear (never lose context!)
-- 🎯 **AI Checklist Matching**: High-confidence items (score >= 50) are auto-completed based on git changes
-- 💡 **Manual workflow**: If you implement manually, use `/ccpm:sync` to update progress
-- 🔄 **Flexibility**: Choose AI or manual implementation each time based on your needs
+- 🎯 **Delegation is default**: First option is always "Delegate to agents (Recommended)"
+- 🚀 **Auto-sync**: After agent work, progress is automatically saved to Linear
+- ⚡ **Inline for trivial only**: Quick inline edit is for 1-2 file simple changes
+- 📊 **Context savings**: ~50 tokens per agent call vs ~5000 for inline implementation

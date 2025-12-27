@@ -658,19 +658,7 @@ Example: /ccpm:sync PSN-29
 6. ✅ **Concise comments** - 90% shorter (50 words vs 500+)
 7. ✅ **Batch updates** - Single subagent call for description + comment
 
-## v1.0 Linear Comment Strategy Benefits (Native Collapsible)
-
-**Before (verbose):**
-- 500-1000 words per sync comment
-- Hard to scan Linear timeline
-- Context mixed with summary
-- Lost details between sessions
-
-**After (native collapsible):**
-- 3-5 line summary (always visible)
-- Full context in collapsible section (click to expand)
-- Uses Linear's native `+++` syntax
-- Perfect for session resume
+## Linear Comment Strategy Benefits (Native Collapsible)
 
 **Benefits:**
 - ✅ **Scannable**: Summary always visible

@@ -40,6 +40,17 @@
         ]
       },
       {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/delegation-enforcer.cjs",
+            "timeout": 500,
+            "description": "Delegation enforcer: Warns when Edit/Write used during /ccpm:work AI mode"
+          }
+        ]
+      },
+      {
         "matcher": "Write|Edit|Task|Bash",
         "hooks": [
           {
@@ -160,6 +171,21 @@
         "Timestamp-prefixed entries for chronology",
         "Fail-open design (never blocks tool calls)"
       ]
+    },
+    "delegation_enforcer": {
+      "purpose": "Light reminder about agent delegation for implementation files",
+      "trigger": "PreToolUse (Edit, Write)",
+      "execution": "Before Edit or Write tool execution on implementation files",
+      "output": "Brief tip suggesting Task delegation for multi-file changes",
+      "problem_solved": "Gentle nudge towards agent delegation without blocking",
+      "features": [
+        "Only triggers on implementation files (*.ts, *.tsx, src/, etc.)",
+        "Skips config/doc files (*.md, *.json, package.json, etc.)",
+        "Suggests appropriate agent based on file type",
+        "Advisory only - never blocks",
+        "Brief one-line tip, not intrusive"
+      ],
+      "design": "Main enforcement is via explicit option labels in /ccpm:work ('Delegate to agents' vs 'Quick inline edit')"
     },
     "linear_param_fixer": {
       "purpose": "Catches and warns about common Linear MCP parameter mistakes",

@@ -1,161 +1,267 @@
-# Smart Agent Auto-Invocation System
+# CCPM Hook System
 
-**Automatically invoke specialized agents based on task context using Claude Code hooks.**
+CCPM uses Claude Code hooks to provide intelligent automation throughout the development workflow. Hooks intercept events at key points in the session lifecycle to inject context, validate operations, and prevent common mistakes.
 
-## 🎯 Overview (v1.2)
+## Hook Overview
 
-CCPM v1.2 uses a comprehensive 6-phase hook system:
+| Hook Phase | Script | Purpose |
+|------------|--------|---------|
+| **SessionStart** | `session-init.cjs` | Initialize session with project context |
+| **UserPromptSubmit** | `smart-agent-selector.sh` | Suggest optimal agents for tasks |
+| **PreToolUse** | `scout-block.cjs` | Block invalid tool operations |
+| **PreToolUse** | `delegation-enforcer.cjs` | Enforce agent delegation patterns |
+| **PreToolUse** | `context-capture.cjs` | Log session activity for subagents |
+| **PreToolUse** | `linear-param-fixer.sh` | Fix Linear MCP parameter mistakes |
+| **SubagentStart** | `subagent-context-injector.cjs` | Inject project context to subagents |
+| **Stop** | `guard-commit.cjs` | Warn about uncommitted changes |
 
-| Phase | Hook | Purpose |
-|-------|------|---------|
-| 1 | **SessionStart** | Inject full CCPM context once (~1.2K tokens) |
-| 2 | **UserPromptSubmit** | Lightweight task-specific hints (~15 tokens) |
-| 3 | **PreToolUse** | Scout block, context capture, Linear param fix |
-| 4 | **SubagentStart** | Inject ~10K context to subagents |
-| 5 | **Stop** | Guard commit - prevent work loss |
-
-**Key Features in v1.2:**
-- ✅ **94% token reduction** - Context injected once, not per-message
-- ✅ **Guard commit** - Warns about uncommitted changes on session end
-- ✅ **Hook logging** - All hooks log to `/tmp/ccpm-hooks.log`
-- ✅ **Subagent context** - Full CLAUDE.md + rules injected to agents
-
-## 📊 Architecture (v1.1)
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Session Starts                               │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Hook: SessionStart (session-init.cjs) - RUNS ONCE             │
-│  • Discovers all available agents (plugin + project)            │
-│  • Injects agent invocation rules table                         │
-│  • Injects CCPM slash command reference                         │
-│  • Detects project/issue from git branch                        │
-│  • ~1.2K tokens injected once per session                       │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     User Sends Message                           │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Hook: UserPromptSubmit (smart-agent-selector.sh) - MINIMAL    │
-│  • Detects task-specific keywords                               │
-│  • Outputs hint: "💡 Linear task → use ccpm:linear-operations" │
-│  • ~15 tokens max (or nothing if no match)                      │
-│  • 94% reduction vs per-message full injection                  │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Claude Starts Working                         │
-│  • Has full context from SessionStart                           │
-│  • Gets per-message hints for specific tasks                    │
-│  • Invokes agents based on injected rules                       │
-└─────────────────────────────────────────────────────────────────┘
+Session Lifecycle
+=================
+
+┌─────────────────────────────────────────────────────────────┐
+│                    SESSION STARTS                            │
+│  Hook: SessionStart (session-init.cjs)                      │
+│  - Detects project from git remote/directory                │
+│  - Extracts issue ID from branch name                       │
+│  - Discovers available agents                               │
+│  - Persists state to /tmp/ccpm-session-*.json              │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  USER SENDS MESSAGE                          │
+│  Hook: UserPromptSubmit (smart-agent-selector.sh)           │
+│  - Detects task-specific keywords                           │
+│  - Outputs minimal agent hint (~15 tokens)                  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  CLAUDE USES TOOLS                           │
+│  Hooks: PreToolUse (multiple scripts)                       │
+│  - scout-block: Validates Read/WebFetch/Task calls          │
+│  - delegation-enforcer: Warns on direct Edit/Write          │
+│  - context-capture: Logs activity for subagents             │
+│  - linear-param-fixer: Corrects MCP parameter errors        │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  SUBAGENT SPAWNED                            │
+│  Hook: SubagentStart (subagent-context-injector.cjs)        │
+│  - Injects CLAUDE.md files                                  │
+│  - Adds task context (issue, branch, progress)              │
+│  - Includes session activity log                            │
+│  - Provides agent-specific guidance                         │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    SESSION ENDS                              │
+│  Hook: Stop (guard-commit.cjs)                              │
+│  - Checks for uncommitted changes                           │
+│  - Warns if thresholds exceeded                             │
+│  - Suggests commit command                                  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## 📁 Files Structure
+## File Structure
 
 ```
 hooks/
-├── hooks.json                               # Hook configuration (6 phases)
-├── scripts/
-│   ├── session-init.cjs                    # SessionStart: project detection, context
-│   ├── smart-agent-selector.sh             # UserPromptSubmit: agent hints
-│   ├── scout-block.cjs                     # PreToolUse: block invalid operations
-│   ├── context-capture.cjs                 # PreToolUse: log session activity
-│   ├── linear-param-fixer.sh               # PreToolUse: fix Linear params
-│   ├── subagent-context-injector.cjs       # SubagentStart: inject ~10K context
-│   ├── guard-commit.cjs                    # Stop: warn about uncommitted changes
-│   └── lib/
-│       └── hook-logger.cjs                 # Shared logging utility
-├── SMART_AGENT_SELECTION.md                # Detailed documentation
-└── README.md                               # This file
+├── hooks.json                         # Hook configuration
+├── README.md                          # This documentation
+├── SMART_AGENT_SELECTION.md           # Agent selection algorithm details
+└── scripts/
+    ├── session-init.cjs               # SessionStart hook
+    ├── smart-agent-selector.sh        # UserPromptSubmit hook
+    ├── scout-block.cjs                # PreToolUse: block invalid operations
+    ├── delegation-enforcer.cjs        # PreToolUse: enforce agent patterns
+    ├── context-capture.cjs            # PreToolUse: log session activity
+    ├── linear-param-fixer.sh          # PreToolUse: fix Linear params
+    ├── subagent-context-injector.cjs  # SubagentStart hook
+    ├── guard-commit.cjs               # Stop hook
+    ├── statusline.cjs                 # CLI status bar display
+    └── lib/
+        ├── hook-logger.cjs            # Shared logging utility
+        └── session-utils.cjs          # Session state utilities
 ```
 
-## 🔧 Two-Phase Hook System
+## Hook Details
 
-### Phase 1: SessionStart (session-init.cjs)
+### SessionStart: Session Initialization
 
-**Purpose:** Inject full CCPM context once per session
-
+**Script:** `session-init.cjs`
 **Triggers:** startup, resume, clear, compact
+**Timeout:** 5000ms
 
-**What it does:**
-1. Detects project from git remote
-2. Extracts issue ID from branch name (e.g., `feature/WORK-26-...`)
-3. Discovers all available agents (plugin + project)
-4. Injects agent invocation rules table
-5. Injects CCPM slash command reference
-6. Persists session state to `/tmp/ccpm-session-*.json`
+Initializes the CCPM session with comprehensive project context. Runs once at session start rather than per-message, reducing token usage by 94%.
 
-**Output (~1.2K tokens, once):**
+**Features:**
+- Detects Linear issue from git branch (e.g., `feature/WORK-26-add-auth`)
+- Identifies project from git remote or directory name
+- Captures git state: uncommitted files, last commit
+- Discovers CLAUDE.md files in project hierarchy
+- Extracts key rules from CLAUDE.md
+- Discovers all available agents (plugin + project)
+- Persists state to `/tmp/ccpm-session-{sessionId}.json`
+- Exports environment variables: `CCPM_SESSION_ID`, `CCPM_ACTIVE_ISSUE`, `CCPM_ACTIVE_PROJECT`
+
+**Output (~1.2K tokens):**
 ```markdown
 ## CCPM Session Initialized
 
 **Project:** my-app | **Issue:** WORK-26 | **Branch:** feature/WORK-26
 
 ### Available Agents (18)
-ccpm:linear-operations, ccpm:frontend-developer, ccpm:backend-architect, ...
+ccpm:linear-operations, ccpm:frontend-developer, ccpm:backend-architect...
 
-### 🔴 Agent Invocation Rules (MANDATORY)
+### Agent Invocation Rules
 | Task Type | Agent | Triggers |
 |-----------|-------|----------|
-| Linear ops | ccpm:linear-operations | issue, linear, status, sync |
-| Frontend | ccpm:frontend-developer | component, UI, React, CSS |
+| Linear ops | ccpm:linear-operations | issue, linear, status |
+| Frontend | ccpm:frontend-developer | component, UI, React |
 ...
 ```
 
-### Phase 2: UserPromptSubmit (smart-agent-selector.sh)
+### UserPromptSubmit: Smart Agent Selector
 
-**Purpose:** Provide lightweight task-specific hints
-
+**Script:** `smart-agent-selector.sh`
 **Triggers:** Every user message
+**Timeout:** 5000ms
 
-**What it does:**
-1. Detects keywords in user message
-2. Outputs minimal hint if match found
-3. No agent discovery (already done in SessionStart)
+Provides lightweight task-specific agent hints. Since full context is injected at session start, this hook only adds minimal hints when specific keywords are detected.
 
-**Output (~15 tokens max, or nothing):**
+**Features:**
+- Keyword-based task detection
+- Minimal context injection (~15 tokens max)
+- Fast execution (<100ms)
+
+**Output (when keywords match):**
 ```
-💡 Linear task detected → use `ccpm:linear-operations` agent
+Hint: Linear task detected - use `ccpm:linear-operations` agent
 ```
 
-### Performance
+### PreToolUse: Scout Block
 
-| Metric | v1.0 | v1.1 |
-|--------|------|------|
-| Per-message injection | ~2.5K tokens | ~15 tokens |
-| 10-message session | ~25K tokens | ~1.35K tokens |
-| Token reduction | baseline | **94%** |
-| Execution time | <1s | <100ms |
+**Script:** `scout-block.cjs`
+**Triggers:** Read, WebFetch, Task tool calls
+**Timeout:** 1000ms
 
-### Phase 3: Stop (guard-commit.cjs)
+Pre-filters tool calls to prevent wasted tokens on operations that will fail. Provides 30-50% token savings by catching invalid operations before execution.
 
-**Purpose:** Prevent work loss when session ends unexpectedly
+**Validations:**
+- **Read:** File exists, size < 5MB, not binary
+- **WebFetch:** Valid URL format, blocks localhost/internal
+- **Task:** Subagent type and prompt are provided
 
+**Output (when blocked):**
+```
+Blocked: File does not exist: /path/to/missing.ts
+Suggestion: Use Glob to find similar files
+```
+
+### PreToolUse: Delegation Enforcer
+
+**Script:** `delegation-enforcer.cjs`
+**Triggers:** Edit, Write tool calls
+**Timeout:** 500ms
+
+Enforces agent delegation during `/ccpm:work` AI implementation mode. Warns when the main agent uses Edit/Write directly instead of delegating to specialized agents.
+
+**Features:**
+- Checks delegation mode state (set by `/ccpm:work`)
+- Warns on Edit/Write during active delegation mode
+- Suggests appropriate agent based on file type
+- Advisory mode (warns but doesn't block)
+- 1-hour timeout for delegation mode
+
+**State file:** `/tmp/ccpm-delegation-mode.json`
+
+### PreToolUse: Context Capture
+
+**Script:** `context-capture.cjs`
+**Triggers:** Write, Edit, Task, Bash tool calls
+**Timeout:** 500ms
+
+Auto-captures session activity for injection into subagents. Zero token cost to main agent (purely observational).
+
+**Captured Events:**
+- File creations and modifications
+- Task starts with agent type
+- Test runs and builds
+- Git commits
+- Decisions from task prompts
+
+**Output:** Appends to `/tmp/ccpm-context-{issueId}.log`
+
+### PreToolUse: Linear Parameter Fixer
+
+**Script:** `linear-param-fixer.sh`
+**Triggers:** `mcp__agent-mcp-gateway__execute_tool` calls
+**Timeout:** 2000ms
+
+Catches common Linear MCP parameter mistakes before they cause failures. The Linear API uses inconsistent parameter names (`id` vs `issueId`).
+
+**Parameter Corrections:**
+| Tool | Correct Parameter | Common Mistake |
+|------|------------------|----------------|
+| `get_issue` | `id` | `issueId` |
+| `update_issue` | `id` | `issueId` |
+| `create_comment` | `issueId` | `id` |
+| `list_comments` | `issueId` | `id` |
+
+### SubagentStart: Context Injector
+
+**Script:** `subagent-context-injector.cjs`
+**Triggers:** All subagent spawns (Task tool)
+**Timeout:** 3000ms
+
+Injects comprehensive CCPM context into all subagents (~10K tokens). Ensures subagents follow project instructions and have full context.
+
+**Context Sections:**
+1. **CLAUDE.md files** (~5K tokens) - Full project instructions
+2. **Task context** (~500 tokens) - Issue, branch, progress
+3. **Agent-specific rules** (~500 tokens) - Tailored guidance per agent type
+4. **Session context** (~500 tokens) - Recent decisions, completions
+5. **Git state** (~200 tokens) - Uncommitted files, recent commits
+6. **Global rules** (~200 tokens) - CCPM-wide rules
+
+**Agent-Specific Rules:**
+- `ccpm:frontend-developer` - Component patterns, styling, accessibility
+- `ccpm:backend-architect` - API patterns, database, auth, error handling
+- `ccpm:debugger` - Investigation, root cause, fixing, prevention
+- `ccpm:code-reviewer` - Security, code quality, testing
+- `ccpm:security-auditor` - Injection, auth, data protection
+- `ccpm:linear-operations` - Parameter names, caching, batching
+
+### Stop: Guard Commit
+
+**Script:** `guard-commit.cjs`
 **Triggers:** Session end, throttle, context full
+**Timeout:** 5000ms
 
-**What it does:**
-1. Checks for uncommitted git changes
-2. Compares against thresholds (default: 5 files, 100 lines)
-3. Outputs warning with file list and suggested commit
-4. Logs trigger to session state
+Prevents work loss by warning about uncommitted changes when the session ends unexpectedly.
 
-**Configuration (env vars):**
-- `CCPM_GUARD_COMMIT_MAX_FILES` - Trigger if more than N files (default: 5)
-- `CCPM_GUARD_COMMIT_MAX_LINES` - Trigger if more than N lines (default: 100)
+**Features:**
+- Detects uncommitted files (staged and unstaged)
+- Counts changed lines for threshold comparison
+- Suggests commit message based on file types
+- Extracts issue ID from branch name for commit scope
+
+**Configuration (environment variables):**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CCPM_GUARD_COMMIT_MAX_FILES` | 5 | Trigger if more than N files changed |
+| `CCPM_GUARD_COMMIT_MAX_LINES` | 100 | Trigger if more than N lines changed |
+| `CCPM_GUARD_COMMIT_AUTO` | false | If true, suggest auto-commit command |
 
 **Output (when thresholds exceeded):**
 ```markdown
-## ⚠️ Uncommitted Changes Detected
+## Uncommitted Changes Detected
 
 | Metric | Value | Threshold |
 |--------|-------|-----------|
@@ -163,10 +269,26 @@ ccpm:linear-operations, ccpm:frontend-developer, ccpm:backend-architect, ...
 | Lines changed | ~150 | 100 |
 
 ### Suggested Commit
-git add . && git commit -m "wip(work-42): work in progress"
+git add . && git commit -m "wip(WORK-42): work in progress"
 ```
 
-## 📋 Hook Logging
+## Status Line
+
+CCPM provides a CLI status bar that displays current session information.
+
+**Script:** `statusline.cjs`
+
+**Display Format:** `project | ISSUE-ID | progress% | branch`
+
+**Example:** `ccpm | WORK-26 | 75% | add-improvements`
+
+**Color Coding:**
+- Project name: cyan
+- Issue ID: green
+- Progress: red (<30%), yellow (30-70%), green (>70%)
+- Branch: magenta
+
+## Hook Logging
 
 All hooks log to `/tmp/ccpm-hooks.log` for debugging:
 
@@ -177,41 +299,22 @@ tail -f /tmp/ccpm-hooks.log
 
 **Example output:**
 ```
-19:15:45 [session-init] ✓ Project: ccpm | Branch: main | Issue: none
-19:16:02 [smart-agent-selector] ✓ Hint: 💡 Debug task → use `ccpm:debugger` agent
-19:30:00 [guard-commit] ⚠ 8 files, 150 lines UNCOMMITTED
+19:15:45 [session-init] Project: ccpm | Branch: main | Issue: none
+19:16:02 [smart-agent-selector] Hint: Debug task - use ccpm:debugger
+19:30:00 [guard-commit] 8 files, 150 lines UNCOMMITTED
 ```
 
 The log is cleared at the start of each session.
 
-## ⚙️ Configuration
+## Configuration
 
-### Installation
+### Automatic Installation
 
-The hook is automatically installed with the CCPM plugin. Configuration is in `hooks/hooks.json`:
+Hooks are automatically installed with the CCPM plugin. The configuration in `hooks/hooks.json` is applied when the plugin loads.
 
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/smart-agent-selector.sh",
-            "timeout": 5000,
-            "description": "Smart agent selector"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+### Disabling Hooks
 
-### Customization
-
-Users can disable the hook in their project's `.claude/settings.json`:
+Disable specific hooks in your project's `.claude/settings.json`:
 
 ```json
 {
@@ -221,17 +324,20 @@ Users can disable the hook in their project's `.claude/settings.json`:
 }
 ```
 
-Or adjust the timeout:
+### Adjusting Timeouts
+
+Override hook timeouts for slower environments:
 
 ```json
 {
   "hooks": {
-    "UserPromptSubmit": [
+    "SubagentStart": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/smart-agent-selector.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/subagent-context-injector.cjs",
             "timeout": 10000
           }
         ]
@@ -241,161 +347,74 @@ Or adjust the timeout:
 }
 ```
 
-## 🚀 Optimization
+## Performance
 
-### Caching Strategy
+| Metric | Value |
+|--------|-------|
+| Session initialization | ~1.2K tokens (once) |
+| Per-message hints | ~15 tokens |
+| 10-message session total | ~1.35K tokens |
+| Token reduction vs per-message injection | **94%** |
+| Hook execution time | <100ms typical |
 
-The smart agent selector uses aggressive caching:
-
-1. **Agent Discovery Cache** (~5 minutes TTL)
-   - Cached list of all available agents
-   - Invalidated when plugin structure changes
-   - Shared across all sessions
-
-2. **Scoring Cache** (session-level)
-   - Cached scoring results for similar requests
-   - Invalidated on context changes
-
-### Performance Tips
-
-1. **Keep plugins organized** - Faster discovery
-2. **Use project-specific agents** - Higher priority (+25 points)
-3. **Clear descriptions** - Better keyword matching
-4. **Avoid deep nesting** - Faster file system scans
-
-## 📖 Documentation
-
-For detailed information about the smart agent selection system:
-
-- **Algorithm Details**: See `SMART_AGENT_SELECTION.md`
-- **Agent Creation**: See `docs/guides/creating-agents.md`
-- **Hook Development**: See `docs/development/hooks.md`
-
-## 🔄 Migration from v2.x
-
-### What Changed
-
-**Removed Hooks:**
-
-1. **TDD Enforcer** (`PreToolUse` hook)
-   - **Reason**: Too opinionated, not all projects use TDD
-   - **Alternative**: Developers manage their own testing workflow
-   - **Benefit**: More flexibility, less overhead
-
-2. **Quality Gates** (`Stop` hook)
-   - **Reason**: Integrated into `/ccpm:verify` command
-   - **Alternative**: Run `/ccpm:verify` explicitly when needed
-   - **Benefit**: User controls when quality checks run
-
-**Kept Hook:**
-
-1. **Smart Agent Selector** (`UserPromptSubmit` hook)
-   - **Reason**: Core value proposition of CCPM
-   - **Improvement**: 81.7% token reduction in v1.0
-   - **Benefit**: Automatic optimal agent selection
-
-### Migration Steps
-
-If you were using the removed hooks:
-
-1. **For TDD Enforcement**:
-   - Remove reliance on automatic test enforcement
-   - Use `/ccpm:verify` to run tests before committing
-   - Consider adding `npm run test` to your git pre-commit hook
-
-2. **For Quality Gates**:
-   - Replace automatic quality checks with `/ccpm:verify`
-   - Run `/ccpm:verify` before `/ccpm:done` to ensure quality
-   - Quality checks now happen when YOU decide, not automatically
-
-### Benefits of v1.0 Hooks
-
-- ✅ **Simpler**: 1 hook instead of 3
-- ✅ **Faster**: 81.7% token reduction
-- ✅ **More control**: Quality checks on demand
-- ✅ **Still powerful**: Smart agent selection remains
-- ✅ **Less intrusive**: No blocking hooks
-- ✅ **Better UX**: Developers control their workflow
-
-## 🎯 Best Practices
-
-### When to Use Smart Agent Selection
-
-**Automatically invoked** - The hook runs on every user request. Best for:
-- Complex tasks requiring specialized knowledge
-- Multi-disciplinary work (backend + frontend + security)
-- Tasks where you're unsure which agent to use
-- New team members learning the system
-
-### When to Override
-
-**Manual agent invocation** - Use the Task tool directly when:
-- You know exactly which agent you need
-- Debugging agent behavior
-- Testing new agents
-- Performance-critical scenarios
-
-### Optimal Workflow
-
-1. **Let the hook work** - Trust the smart selection
-2. **Review suggestions** - Check which agents were selected
-3. **Override if needed** - Manual invocation for edge cases
-4. **Use `/ccpm:verify`** - Explicit quality checks before finalizing
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Hook Not Running
 
 ```bash
-# Check hook is registered
-cat ~/.claude/settings.json | grep -A 10 "UserPromptSubmit"
+# Verify scripts are executable
+chmod +x hooks/scripts/*.sh
+chmod +x hooks/scripts/*.cjs
 
-# Verify script exists
-ls -la ~/.claude/plugins/ccpm/hooks/scripts/smart-agent-selector.sh
+# Check hook registration
+cat hooks/hooks.json | jq '.hooks'
 
-# Check permissions
-chmod +x ~/.claude/plugins/ccpm/hooks/scripts/smart-agent-selector.sh
+# Test script manually
+./hooks/scripts/smart-agent-selector.sh "test message"
 ```
 
 ### Slow Performance
 
 ```bash
-# Clear agent discovery cache
-rm -rf /tmp/claude-agent-cache*
-
-# Reduce plugin count
-# Move unused plugins out of ~/.claude/plugins/
+# Clear caches
+rm -rf /tmp/ccpm-session-*
+rm -rf /tmp/ccpm-context-*
 
 # Check script execution time
-time ~/.claude/plugins/ccpm/hooks/scripts/smart-agent-selector.sh "test request"
+time ./hooks/scripts/session-init.cjs
 ```
 
-### Wrong Agents Selected
+### Session State Issues
 
 ```bash
-# Enable verbose logging (if available)
-export CLAUDE_HOOK_DEBUG=1
+# View current session state
+cat /tmp/ccpm-session-*.json | jq .
 
-# Check agent descriptions
-cat ~/.claude/plugins/*/agents/*.md | grep -A 5 "description:"
-
-# Review scoring algorithm
-cat ~/.claude/plugins/ccpm/hooks/SMART_AGENT_SELECTION.md
+# Clear session state
+rm /tmp/ccpm-session-*.json
 ```
 
-## 📚 Resources
+### Subagent Missing Context
 
-- [CCPM Documentation](../README.md)
-- [Smart Agent Selection Details](./SMART_AGENT_SELECTION.md)
-- [Creating Custom Agents](../docs/guides/creating-agents.md)
-- [Hook Development Guide](../docs/development/hooks.md)
-- [PM Tool Abstraction](../docs/architecture/pm-tool-abstraction.md)
+```bash
+# Check context log exists
+ls -la /tmp/ccpm-context-*.log
 
-## 🙏 Credits
+# View captured context
+cat /tmp/ccpm-context-*.log
+```
 
-CCPM v1.0 hooks are optimized based on:
-- PSN-23: Hook performance optimization (81.7% token reduction)
-- PSN-31: Linear subagent pattern (session-level caching)
-- PSN-39: v1.0 simplification (remove unused hooks)
+## Design Principles
 
-Built with Claude Code hooks system and best practices from the community.
+1. **Fail-open** - Hooks exit successfully even on errors to avoid blocking sessions
+2. **Minimal overhead** - Context injected once at session start, not per-message
+3. **Observational** - Context capture adds zero tokens to main agent
+4. **Advisory** - Delegation enforcer warns but doesn't block
+5. **Cacheable** - Session state persisted for fast retrieval
+
+## Resources
+
+- [Smart Agent Selection Algorithm](./SMART_AGENT_SELECTION.md)
+- [CCPM Main Documentation](../README.md)
+- [Agent Definitions](../agents/)
+- [Command Reference](../commands/README.md)

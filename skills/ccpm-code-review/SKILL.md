@@ -23,7 +23,7 @@ This skill auto-activates when:
 
 ## CCPM Verification Workflow
 
-CCPM v2.3+ provides a streamlined 3-step verification process:
+CCPM provides a streamlined 3-step verification process:
 
 ### Step 1: Quality Checks (Automated)
 Run linting, tests, and build checks to ensure technical correctness:
@@ -711,7 +711,7 @@ external-system-safety → Confirms Jira/Slack writes
 Complete! ✅
 ```
 
-## Natural Workflow Commands (v2.3+)
+## Natural Workflow Commands
 
 CCPM provides streamlined commands for the complete verification and finalization workflow:
 
@@ -744,7 +744,7 @@ This skill ensures:
 - ✅ Evidence required before "done"
 - ✅ Quality gates enforced (4-step validation)
 - ✅ Technical rigor over social comfort
-- ✅ Integration with CCPM v2.3+ natural workflow
+- ✅ Integration with CCPM natural workflow
 - ✅ Systematic debugging when failures occur
 
 **Philosophy**: Verification before completion, evidence over claims, quality over speed.
