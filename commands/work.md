@@ -39,6 +39,7 @@ mcp__agent-mcp-gateway__execute_tool({ server: "linear", tool: "get_issue", args
 This command uses:
 - `helpers/decision-helpers.md` - For confidence-based decision making (Always-Ask Policy)
 - `helpers/checklist.md` - For robust checklist parsing and progress tracking
+- `helpers/branching-strategy.md` - For type-based branch prefix mapping from multi-level CLAUDE.md
 - Git context detection - For repo labels from `git remote` or folder name
 - CLAUDE.md rules (all scopes) - For protected branches and workflow rules
 
@@ -101,91 +102,57 @@ This command uses:
 
 ## Implementation
 
-### Step 0: Check CLAUDE.md Workflow Rules (All Scopes)
+### Step 0: Load Branching Strategy from CLAUDE.md Hierarchy
 
-**CRITICAL: Check ALL CLAUDE.md files for workflow rules!**
+**CRITICAL: Use `helpers/branching-strategy.md` for type-based branch prefixes!**
 
-Claude Code loads CLAUDE.md files from multiple locations. This command must respect:
-- Protected branch rules
-- Branch naming conventions
-- Workflow restrictions
+Claude Code loads CLAUDE.md files from multiple locations. This command:
+- Loads type-based branch prefix mappings (feature/, fix/, docs/, etc.)
+- Respects protected branch rules from all CLAUDE.md levels
+- Determines prefix based on Linear issue type/labels
 
 ```javascript
-// Find all CLAUDE.md files in hierarchy
-const cwd = process.cwd();
-const gitRoot = await Bash('git rev-parse --show-toplevel 2>/dev/null || echo ""');
-const homeDir = process.env.HOME;
+// Use the branching-strategy helper to load configuration
+// See: helpers/branching-strategy.md for full implementation
 
-// Collect all potential CLAUDE.md locations (order: global → local)
-const claudeMdPaths = [];
+const strategy = await loadBranchingStrategy();
+// Returns:
+// {
+//   prefixes: { feature: 'feature/', fix: 'fix/', bug: 'bugfix/', ... },
+//   defaultPrefix: 'feature/',
+//   protectedBranches: ['main', 'master', 'develop', ...],
+//   format: '{prefix}{issue-id}-{title-slug}',
+//   sources: ['/path/to/CLAUDE.md', ...]
+// }
 
-// 1. User global
-claudeMdPaths.push(`${homeDir}/.claude/CLAUDE.md`);
-
-// 2. Walk up from git root to find parent CLAUDE.md files
-let searchDir = gitRoot.trim() || cwd;
-let prevDir = '';
-while (searchDir !== prevDir && searchDir !== '/') {
-  claudeMdPaths.push(`${searchDir}/CLAUDE.md`);
-  claudeMdPaths.push(`${searchDir}/.claude/CLAUDE.md`);
-  prevDir = searchDir;
-  searchDir = path.dirname(searchDir);
-}
-
-// 3. Current working directory (if different from git root)
-if (cwd !== gitRoot.trim()) {
-  claudeMdPaths.push(`${cwd}/CLAUDE.md`);
-  claudeMdPaths.push(`${cwd}/.claude/CLAUDE.md`);
-}
-
-// Default workflow rules
+// For backward compatibility, also track workflow rules
 let workflowRules = {
-  protectedBranches: ['main', 'master', 'develop', 'staging', 'production'],
-  branchPrefix: 'feature/',
+  protectedBranches: strategy.protectedBranches,
+  branchPrefix: strategy.defaultPrefix, // Used as fallback
+  branchingStrategy: strategy, // Full strategy for type-based prefix selection
   requireBranchForWork: true,
-  sources: []
+  sources: strategy.sources
 };
 
-// Read all existing CLAUDE.md files and extract workflow rules
-for (const claudePath of claudeMdPaths) {
+// Check for direct commit permissions from CLAUDE.md content
+for (const claudePath of strategy.sources) {
   const content = await Read(claudePath).catch(() => null);
   if (!content) continue;
 
-  // Check for workflow/branch-related rules
-  const hasWorkflowRules = content.match(/branch|protect|workflow/i);
-  if (!hasWorkflowRules) continue;
-
-  workflowRules.sources.push(claudePath);
-
-  // Extract protected branches (patterns like "protected branches: main, develop")
-  const protectedMatch = content.match(/protected.*branch(?:es)?[:\s]+([^\n]+)/i);
-  if (protectedMatch) {
-    const branches = protectedMatch[1].split(/[,\s]+/).filter(b => b.length > 0);
-    workflowRules.protectedBranches = [...new Set([...workflowRules.protectedBranches, ...branches])];
-  }
-
-  // Extract branch prefix requirement
-  const prefixMatch = content.match(/branch.*prefix[:\s]+([^\n\s]+)/i);
-  if (prefixMatch) {
-    workflowRules.branchPrefix = prefixMatch[1].trim();
-  }
-
-  // Check if direct commits to main are allowed
   if (content.match(/allow.*commit.*main|direct.*commit.*allowed/i)) {
     workflowRules.requireBranchForWork = false;
   }
-
-  // Check for stricter rules
   if (content.match(/never.*commit.*main|always.*feature.*branch/i)) {
     workflowRules.requireBranchForWork = true;
   }
 }
 
 // Display what was found
-if (workflowRules.sources.length > 0) {
-  console.log('📋 Found CLAUDE.md workflow rules from:');
-  workflowRules.sources.forEach(src => console.log(`   • ${src}`));
-  console.log(`   Protected: ${workflowRules.protectedBranches.join(', ')}`);
+if (strategy.sources.length > 0) {
+  console.log('📋 Branching strategy loaded from:');
+  strategy.sources.forEach(src => console.log(`   • ${src}`));
+  console.log(`   Default prefix: ${strategy.defaultPrefix}`);
+  console.log(`   Protected: ${strategy.protectedBranches.join(', ')}`);
 }
 ```
 
@@ -336,30 +303,45 @@ console.log(`📊 Status: ${status}\n`);
 ```yaml
 ## START Mode with v1.0 workflow
 
-1. Git branch safety check (uses CLAUDE.md rules from Step 0):
+1. Git branch safety check (uses branching strategy from Step 0):
 
 ```javascript
 const currentBranch = await Bash('git rev-parse --abbrev-ref HEAD');
 
-// Use protected branches from CLAUDE.md rules (Step 0)
-// Default: ['main', 'master', 'develop', 'staging', 'production']
-const protectedBranches = workflowRules.protectedBranches;
-const branchPrefix = workflowRules.branchPrefix || 'feature/';
+// Use branching strategy from Step 0 (helpers/branching-strategy.md)
+const strategy = workflowRules.branchingStrategy;
+const protectedBranches = strategy.protectedBranches;
 
-if (protectedBranches.includes(currentBranch)) {
+if (protectedBranches.includes(currentBranch.trim())) {
   console.log(`⚠️  You are on protected branch: ${currentBranch}`);
 
-  if (workflowRules.sources.length > 0) {
+  if (strategy.sources.length > 0) {
     console.log(`   (Protected by CLAUDE.md rules)`);
   }
 
-  console.log(`\nRecommended: Create a feature branch`);
-  console.log(`  git checkout -b ${branchPrefix}${issueId.toLowerCase()}-${issue.title.toLowerCase().replace(/\s+/g, '-').substring(0, 30)}`);
+  // Use type-based prefix selection from issue labels/type
+  // See: helpers/branching-strategy.md → determineBranchPrefix()
+  const branchPrefix = determineBranchPrefix(issue, strategy);
+  const suggestedBranch = generateBranchName(issue, strategy);
+
+  // Show reasoning for prefix selection
+  console.log(`\nRecommended: Create a ${branchPrefix.replace('/', '')} branch`);
+
+  // Explain why this prefix was chosen
+  if (issue.labels && issue.labels.length > 0) {
+    const matchingLabel = issue.labels.find(l =>
+      strategy.prefixes[(l.name || l).toLowerCase()]
+    );
+    if (matchingLabel) {
+      console.log(`   (Prefix '${branchPrefix}' based on label: ${matchingLabel.name || matchingLabel})`);
+    }
+  } else if (issue.title.match(/^(feat|fix|docs|chore|refactor)/i)) {
+    console.log(`   (Prefix '${branchPrefix}' based on title convention)`);
+  }
+
+  console.log(`\n  git checkout -b ${suggestedBranch}`);
   console.log(`\nProceed anyway? This will create commits on ${currentBranch}.`);
 ```
-
-  // Generate suggested branch name
-  const suggestedBranch = `${branchPrefix}${issueId.toLowerCase()}-${issue.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 30).replace(/-$/, '')}`;
 
   // Use AskUserQuestion for confirmation
   AskUserQuestion({
@@ -376,7 +358,7 @@ if (protectedBranches.includes(currentBranch)) {
   });
 
   if (answer === "Create branch for me") {
-    // Auto-create the feature branch
+    // Auto-create the type-appropriate branch
     console.log(`\n🌿 Creating branch: ${suggestedBranch}`);
     await Bash(`git checkout -b ${suggestedBranch}`);
     console.log(`✅ Switched to new branch: ${suggestedBranch}`);

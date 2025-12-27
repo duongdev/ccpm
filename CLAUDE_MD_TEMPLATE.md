@@ -131,6 +131,69 @@ CCPM follows strict safety rules:
 - ⚠️ **External PM tools** (Jira, Confluence, Slack): Requires explicit confirmation before writes
 - ⚠️ **Git commits/pushes**: Always asks for approval before executing
 
+### Branching Strategy
+
+Configure type-based branch prefixes for your project. CCPM will automatically select the right prefix based on Linear issue labels/type.
+
+**Basic Configuration (single prefix):**
+
+```markdown
+Branch prefix: feature/
+Protected branches: main, master, develop
+```
+
+**Type-Based Configuration (recommended):**
+
+```markdown
+## Branching Strategy
+
+Branch prefixes by type:
+- feature: feature/
+- feat: feature/
+- fix: fix/
+- bug: bugfix/
+- hotfix: hotfix/
+- docs: docs/
+- chore: chore/
+- refactor: refactor/
+- test: test/
+- ci: ci/
+
+Default prefix: feature/
+Protected branches: main, master, develop, staging, production
+```
+
+**How Prefix Selection Works:**
+
+1. **Labels first**: If Linear issue has a matching label (e.g., "bug"), uses that prefix (`bugfix/`)
+2. **Title convention**: If title starts with `fix:` or `feat:`, uses that prefix
+3. **Title keywords**: If title contains "fix", "bug", "refactor", etc., uses matching prefix
+4. **Default fallback**: Uses configured `defaultPrefix` (or `feature/`)
+
+**Example:**
+```bash
+# Issue PSN-45 with label "bug"
+/ccpm:work PSN-45
+# → Creates branch: bugfix/psn-45-login-not-working
+
+# Issue PSN-46 with title "feat: Add dark mode"
+/ccpm:work PSN-46
+# → Creates branch: feature/psn-46-add-dark-mode
+
+# Issue PSN-47 with title "Update README"
+/ccpm:work PSN-47
+# → Creates branch: docs/psn-47-update-readme (if "readme" detected)
+# → Or: feature/psn-47-update-readme (default fallback)
+```
+
+**Multi-Level CLAUDE.md:**
+
+CCPM reads branching strategy from all CLAUDE.md files in hierarchy (lower overrides higher):
+1. `~/.claude/CLAUDE.md` (global - lowest priority)
+2. Git repository root `CLAUDE.md`
+3. Parent directories' CLAUDE.md files
+4. Current working directory `CLAUDE.md` (highest priority)
+
 ### Resources
 
 - [CCPM User Guide](https://github.com/duongdev/ccpm/blob/main/USER_GUIDE.md)
