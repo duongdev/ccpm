@@ -7,6 +7,16 @@
 
 set -euo pipefail
 
+# Hook logging function
+HOOK_LOG_FILE="/tmp/ccpm-hooks.log"
+hook_log() {
+    local hook_name="$1"
+    local message="$2"
+    local timestamp=$(date +"%H:%M:%S")
+    echo "${timestamp} [${hook_name}] ${message}" >> "$HOOK_LOG_FILE"
+    echo "${timestamp} [${hook_name}] ${message}" >&2
+}
+
 # Read input
 INPUT=$(cat)
 USER_MESSAGE=$(echo "$INPUT" | jq -r '.userMessage // ""' | tr '[:upper:]' '[:lower:]')
@@ -41,6 +51,7 @@ fi
 # Output hint if detected (minimal context injection)
 if [ -n "$HINT" ]; then
     echo "$HINT"
+    hook_log "smart-agent-selector" "✓ Hint: ${HINT}"
 fi
 
 exit 0

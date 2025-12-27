@@ -9,8 +9,8 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-init.cjs",
-            "timeout": 3000,
-            "description": "Initializes CCPM session: detects project, issue from branch, persists state"
+            "timeout": 5000,
+            "description": "Initializes CCPM session: detects project, git state, CLAUDE.md files, persists state"
           }
         ]
       }
@@ -40,6 +40,17 @@
         ]
       },
       {
+        "matcher": "Write|Edit|Task|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/context-capture.cjs",
+            "timeout": 500,
+            "description": "Context capture: Auto-logs file changes, task completions, and decisions for subagent context"
+          }
+        ]
+      },
+      {
         "matcher": "mcp__agent-mcp-gateway__execute_tool",
         "hooks": [
           {
@@ -58,8 +69,20 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/subagent-context-injector.cjs",
-            "timeout": 2000,
-            "description": "Injects CCPM context (issue, project, rules) to all subagents"
+            "timeout": 3000,
+            "description": "Injects comprehensive CCPM context (CLAUDE.md, project, task, rules) to all subagents (~10k tokens)"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/guard-commit.cjs",
+            "timeout": 5000,
+            "description": "Guard commit: Warns about uncommitted changes when session ends to prevent work loss"
           }
         ]
       }
@@ -72,7 +95,7 @@
   },
   "notes": {
     "session_init": {
-      "purpose": "Initializes CCPM session and injects full context once per session",
+      "purpose": "Initializes CCPM session and gathers comprehensive project context",
       "trigger": "SessionStart (startup, resume, clear, compact)",
       "execution": "At the start of each session",
       "output": "Full CCPM context: agents, rules, commands (~1.2K tokens once)",
@@ -80,11 +103,15 @@
       "features": [
         "Detects Linear issue from git branch (e.g., WORK-26)",
         "Detects project name from git remote or directory",
+        "Captures git state: uncommitted files, last commit",
+        "Discovers all CLAUDE.md files in project hierarchy",
+        "Extracts key rules from CLAUDE.md files",
         "Discovers all available agents (plugin + project)",
         "Injects agent invocation rules table",
         "Injects CCPM slash command reference",
         "Persists state to /tmp/ccpm-session-{sessionId}.json",
-        "Exports env vars: CCPM_SESSION_ID, CCPM_ACTIVE_ISSUE, CCPM_ACTIVE_PROJECT",
+        "Initializes context log file for session activity",
+        "Exports env vars: CCPM_SESSION_ID, CCPM_ACTIVE_ISSUE, CCPM_ACTIVE_PROJECT, CCPM_CONTEXT_LOG",
         "Fail-open design (doesn't block session start on errors)"
       ]
     },
@@ -116,6 +143,24 @@
         "Provides helpful suggestions on block"
       ]
     },
+    "context_capture": {
+      "purpose": "Auto-captures session context from tool calls for subagent injection",
+      "trigger": "PreToolUse (Write, Edit, Task, Bash)",
+      "execution": "Before Write, Edit, Task, or Bash tool execution",
+      "output": "Appends entries to /tmp/ccpm-context-{issueId}.log",
+      "problem_solved": "Subagents don't know what happened earlier in the session",
+      "cost": "Zero tokens to main agent (purely observational)",
+      "features": [
+        "Captures file creations (Write tool)",
+        "Captures file modifications (Edit tool)",
+        "Captures task starts with agent type",
+        "Captures test runs and builds (Bash)",
+        "Captures git commits",
+        "Extracts decisions from task prompts",
+        "Timestamp-prefixed entries for chronology",
+        "Fail-open design (never blocks tool calls)"
+      ]
+    },
     "linear_param_fixer": {
       "purpose": "Catches and warns about common Linear MCP parameter mistakes",
       "trigger": "PreToolUse (mcp__agent-mcp-gateway__execute_tool)",
@@ -130,19 +175,64 @@
       ]
     },
     "subagent_context_injector": {
-      "purpose": "Injects CCPM context into all subagents automatically",
+      "purpose": "Injects comprehensive CCPM context into all subagents",
       "trigger": "SubagentStart",
       "execution": "When any subagent is spawned via Task tool",
-      "output": "Injects ~200 tokens of context (issue, project, rules)",
-      "problem_solved": "Subagents lose context about active Linear issue, project config, and CCPM rules",
+      "output": "Injects up to ~10k tokens of rich context",
+      "problem_solved": "Subagents don't follow project instructions or lose context",
       "features": [
-        "Reads session state from /tmp/ccpm-session-*.json",
-        "Reads CCPM_ACTIVE_ISSUE and CCPM_ACTIVE_PROJECT env vars",
-        "Injects Linear issue ID and title (if available)",
-        "Injects active project name",
-        "Injects key CCPM rules (Linear ops via agent, no auto-commit)",
+        "Injects full CLAUDE.md contents (up to 15k chars)",
+        "Project hierarchy: root + monorepo subdirectories",
+        "Agent-specific rules: tailored guidance per agent type",
+        "Task context: issue, branch, uncommitted files",
+        "Session context: recent activity from context log",
+        "Git state: uncommitted files, last commit",
+        "Global CCPM rules: Linear ops, git safety, etc.",
+        "Prioritized sections: CLAUDE.md first (most important)",
         "Fail-open design (exits 0 with minimal context on errors)"
+      ],
+      "context_sections": [
+        "1. CLAUDE.md files (~5k tokens) - Full project instructions",
+        "2. Task context (~500 tokens) - Issue, branch, progress",
+        "3. Agent-specific rules (~500 tokens) - Detailed agent guidance",
+        "4. Session context (~500 tokens) - Recent decisions, completions",
+        "5. Git state (~200 tokens) - Uncommitted files, recent commits",
+        "6. Global rules (~200 tokens) - CCPM-wide rules"
+      ],
+      "agent_rules": [
+        "ccpm:frontend-developer - Component patterns, styling, accessibility, state",
+        "ccpm:backend-architect - API patterns, database, auth, error handling",
+        "ccpm:debugger - Investigation, root cause, fixing, prevention",
+        "ccpm:code-reviewer - Security, code quality, testing, maintainability",
+        "ccpm:security-auditor - Injection, auth, authorization, data protection",
+        "ccpm:tdd-orchestrator - Red-green-refactor, test quality",
+        "ccpm:linear-operations - Parameter names, caching, batching, errors",
+        "Explore - Search strategy, efficiency, reporting",
+        "Plan - Analysis, task breakdown, dependencies"
       ]
+    },
+    "guard_commit": {
+      "purpose": "Prevents work loss by warning about uncommitted changes when session ends",
+      "trigger": "Stop",
+      "execution": "When Claude stops responding (session end, throttle, context full)",
+      "output": "Warning with file count, line count, and suggested commit command",
+      "problem_solved": "Work loss when session ends unexpectedly with uncommitted changes",
+      "features": [
+        "Detects uncommitted files (staged and unstaged)",
+        "Counts changed lines for threshold comparison",
+        "Configurable thresholds: CCPM_GUARD_COMMIT_MAX_FILES (default: 5)",
+        "Configurable thresholds: CCPM_GUARD_COMMIT_MAX_LINES (default: 100)",
+        "Suggests commit message based on file types",
+        "Extracts issue ID from branch name for commit scope",
+        "Updates session state with guard trigger info",
+        "Non-blocking: always exits 0"
+      ],
+      "configuration": {
+        "CCPM_GUARD_COMMIT_MAX_FILES": "Trigger if more than N files changed (default: 5)",
+        "CCPM_GUARD_COMMIT_MAX_LINES": "Trigger if more than N lines changed (default: 100)",
+        "CCPM_GUARD_COMMIT_AUTO": "If 'true', suggest auto-commit command (default: false)"
+      },
+      "inspired_by": "CCharness guard-commit pattern (https://github.com/elct9620/ccharness)"
     }
   },
   "statusline": {

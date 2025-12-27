@@ -19,6 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { hookLog } = require('./lib/hook-logger.cjs');
 
 // Read hook input from environment
 const toolName = process.env.CLAUDE_TOOL_NAME || '';
@@ -199,6 +200,7 @@ if (result.block) {
     reason: result.reason,
     suggestion: result.suggestion
   }));
+  hookLog('scout-block', `✗ Blocked ${toolName}: ${result.reason}`);
   process.exit(1); // Block the tool
 } else {
   process.exit(0); // Allow the tool
