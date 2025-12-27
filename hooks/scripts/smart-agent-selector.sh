@@ -24,16 +24,21 @@ USER_MESSAGE=$(echo "$INPUT" | jq -r '.userMessage // ""' | tr '[:upper:]' '[:lo
 # Quick keyword detection for task-specific hints
 HINT=""
 
+# Explore agent (codebase analysis) - ALWAYS suggest first for exploration tasks
+if echo "$USER_MESSAGE" | grep -qE '(find|search|where is|how does|what is|explore|understand|analyze|pattern|structure|architecture)'; then
+    HINT="💡 Codebase analysis → use \`Explore\` agent (core, always available)"
+fi
+
 # Linear-related keywords
 if echo "$USER_MESSAGE" | grep -qE '(issue|linear|status|sync|checklist|work-|psn-|rpt-)'; then
     HINT="💡 Linear task detected → use \`ccpm:linear-operations\` agent"
 fi
 
 # Implementation keywords
-if echo "$USER_MESSAGE" | grep -qE '(implement|build|create|add feature)'; then
-    if echo "$USER_MESSAGE" | grep -qE '(component|ui|react|frontend|css)'; then
+if echo "$USER_MESSAGE" | grep -qE '(implement|build|create|add|make|write)'; then
+    if echo "$USER_MESSAGE" | grep -qE '(component|ui|react|frontend|css|page|screen|layout)'; then
         HINT="💡 Frontend task → use \`ccpm:frontend-developer\` agent"
-    elif echo "$USER_MESSAGE" | grep -qE '(api|endpoint|backend|database|resolver)'; then
+    elif echo "$USER_MESSAGE" | grep -qE '(api|endpoint|backend|database|resolver|service|server)'; then
         HINT="💡 Backend task → use \`ccpm:backend-architect\` agent"
     fi
 fi

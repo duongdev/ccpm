@@ -53,14 +53,13 @@ This command uses:
 | Reading files inline for analysis | Task tool with Explore agent |
 | Writing code in main context | Delegate to specialized agent |
 
-**Quick Reference - Agent Selection:**
-- Frontend/UI → `frontend-mobile-development:frontend-developer`
-- Backend/API → `backend-development:backend-architect`
-- Mobile → `frontend-mobile-development:mobile-developer`
-- Testing → `backend-development:tdd-orchestrator`
-- Default → `general-purpose`
+**Agent Selection Strategy:**
+1. **Always use `Explore` agent first** for codebase analysis (core, always available)
+2. **Check smart-agent-selector hints** in system messages for task-specific suggestions
+3. **Use suggested agent** from hook (e.g., `ccpm:frontend-developer`, `ccpm:backend-architect`)
+4. **Fallback to `general-purpose`** if no specific agent suggested
 
-**See Section 4B for full Agent Selection Table and Subagent Prompt Template.**
+**See Section 4B for dynamic agent delegation patterns and Subagent Prompt Template.**
 
 ---
 
@@ -644,20 +643,64 @@ const aiImplement = (answer === "AI implements now");
 
 ---
 
-### Agent Selection Table (MUST USE)
+### Dynamic Agent Selection (MUST USE)
 
-**Match task content to agent. Use EXACT agent names:**
+**Agent selection is dynamic and project-aware. Follow this strategy:**
 
-| Task Contains | Agent (subagent_type) |
-|---------------|----------------------|
-| ui, component, react, css, tailwind, frontend, page, screen, layout, button, form, style | `frontend-mobile-development:frontend-developer` |
-| api, endpoint, database, auth, backend, server, graphql, rest, model, schema, migration | `backend-development:backend-architect` |
-| mobile, react native, flutter, ios, android, app store | `frontend-mobile-development:mobile-developer` |
-| test, spec, jest, vitest, cypress, playwright, coverage | `backend-development:tdd-orchestrator` |
-| security, vulnerability, auth, oauth, jwt, encryption | `full-stack-orchestration:security-auditor` |
-| performance, optimization, caching, latency | `full-stack-orchestration:performance-engineer` |
-| deploy, ci/cd, pipeline, docker, kubernetes | `full-stack-orchestration:deployment-engineer` |
-| (none match) | `general-purpose` |
+#### Step 1: Always Use Explore Agent First
+
+The `Explore` agent is a **core agent** available in all projects. Use it for:
+- Finding relevant files and patterns before implementation
+- Understanding existing code structure
+- Identifying dependencies and integration points
+
+```javascript
+// Explore is ALWAYS the first step (subagent_type = "Explore")
+Task(subagent_type="Explore", model="haiku"): `
+Find files and patterns for: ${task.description}
+Return: file_paths, patterns, dependencies, task_groups
+`
+```
+
+#### Step 2: Check Hook Suggestions
+
+The `smart-agent-selector.sh` hook runs on every message and injects hints like:
+- `💡 Frontend task → use \`ccpm:frontend-developer\` agent`
+- `💡 Backend task → use \`ccpm:backend-architect\` agent`
+- `💡 Debug task → use \`ccpm:debugger\` agent`
+
+**Trust these hints** - they're dynamically generated based on:
+- User message content
+- Task keywords
+- Project-specific agent availability
+
+#### Step 3: Use Suggested Agent or Fallback
+
+```javascript
+// If hook suggested an agent, use it
+const suggestedAgent = hookHint?.match(/use `([^`]+)` agent/)?.[1];
+
+// Use suggested agent or fallback to general-purpose
+const agent = suggestedAgent || 'general-purpose';
+
+Task(subagent_type=agent): `...implementation prompt...`
+```
+
+#### Common Agent Patterns (Reference Only)
+
+These are **examples** of agents that MAY be available. Check hook hints for actual availability:
+
+| Task Type | Typical Agent | Hint Pattern |
+|-----------|---------------|--------------|
+| Frontend/UI | `ccpm:frontend-developer` | "Frontend task →" |
+| Backend/API | `ccpm:backend-architect` | "Backend task →" |
+| Debugging | `ccpm:debugger` | "Debug task →" |
+| Code Review | `ccpm:code-reviewer` | "Review task →" |
+| Any task | `general-purpose` | (fallback) |
+| Codebase analysis | `Explore` | (always available) |
+
+**NOTE:** Agent names vary by project. The `ccpm:` namespace is for CCPM projects.
+Other projects may use different namespaces (e.g., `repeat:`, `myproject:`).
 
 ---
 
@@ -712,14 +755,19 @@ Display: "🤖 Implementing via specialized agents..."
 For sequential tasks (or if only one task):
 
 **YOU MUST invoke the Task tool with these EXACT parameters:**
+
 - **Tool**: Task
-- **subagent_type**: Select from Agent Selection Table above based on task content
+- **subagent_type**: Use agent from hook hint, or fallback to `general-purpose`
 - **prompt**: Use Subagent Prompt Template above, filling in all variables
 
-Example invocation for a frontend task:
-```
+Example invocation (using hook-suggested agent):
+
+```javascript
+// If hook hint was: "💡 Frontend task → use `ccpm:frontend-developer` agent"
+// Extract: suggestedAgent = "ccpm:frontend-developer"
+
 Task tool parameters:
-  subagent_type: "frontend-mobile-development:frontend-developer"
+  subagent_type: "{suggestedAgent}"  // e.g., "ccpm:frontend-developer"
   prompt: |
     ## Task
     Create login form component with validation
@@ -751,20 +799,32 @@ Task tool parameters:
 **Step 3: For PARALLEL tasks (independent items), invoke MULTIPLE Task tools in ONE message:**
 
 If `explorationResult.task_groups.parallel` contains multiple items, you MUST:
+
 1. Identify all independent tasks
 2. Send ONE message containing MULTIPLE Task tool calls
-3. Each Task call uses appropriate agent from selection table
+3. Each Task call uses appropriate agent from hook hints or `general-purpose` fallback
 
 Example: If parallel tasks are ["Create API endpoint", "Build UI component"]:
-```
-// In a SINGLE message, invoke BOTH:
+
+```javascript
+// In a SINGLE message, invoke BOTH agents simultaneously:
+// (Check hook hints for actual agent names in your project)
 
 Task #1:
-  subagent_type: "backend-development:backend-architect"
+  subagent_type: "{backend_agent}"  // e.g., "ccpm:backend-architect" from hook hint
   prompt: [Full template for API endpoint]
 
 Task #2:
-  subagent_type: "frontend-mobile-development:frontend-developer"
+  subagent_type: "{frontend_agent}"  // e.g., "ccpm:frontend-developer" from hook hint
+  prompt: [Full template for UI component]
+
+// If no specific hints, use general-purpose for both:
+Task #1:
+  subagent_type: "general-purpose"
+  prompt: [Full template for API endpoint]
+
+Task #2:
+  subagent_type: "general-purpose"
   prompt: [Full template for UI component]
 ```
 
