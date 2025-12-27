@@ -37,6 +37,14 @@ CCPM uses a set of specialized agents to handle different aspects of project man
 |-------|---------|-------|
 | [pm:ui-designer.md](./pm:ui-designer.md) | UI design and wireframe generation | `/ccpm:planning:design-ui` |
 
+### Claude Code & CCPM Agents (New in v1.2)
+
+| Agent | Purpose | Usage |
+|-------|---------|-------|
+| [claude-code-guide.md](./claude-code-guide.md) | Claude Code features, settings, CLI documentation | Via user questions about Claude Code |
+| [ccpm-developer.md](./ccpm-developer.md) | Extend CCPM with new commands, agents, skills, hooks | Via `/ccpm:work` for CCPM extension tasks |
+| [ccpm-troubleshooter.md](./ccpm-troubleshooter.md) | Debug and troubleshoot Claude Code and CCPM issues | Via user reports of issues |
+
 ## Agent Architecture
 
 ### Linear Operations Subagent
@@ -207,6 +215,6 @@ See [Subagent Template](../docs/templates/subagent-template.md) for standard str
 
 ---
 
-**Last updated:** 2025-12-23
-**Agent count:** 14 agents (7 core + 6 development + 1 specialized)
-**Documentation version:** 1.1.0
+**Last updated:** 2025-12-28
+**Agent count:** 17 agents (7 core + 6 development + 1 specialized + 3 Claude Code/CCPM)
+**Documentation version:** 1.2.0

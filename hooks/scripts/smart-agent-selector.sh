@@ -48,6 +48,21 @@ if echo "$USER_MESSAGE" | grep -qE '(review|check.*(code|quality))'; then
     HINT="💡 Review task → use \`ccpm:code-reviewer\` agent"
 fi
 
+# Claude Code guide keywords
+if echo "$USER_MESSAGE" | grep -qE '(how.*(hook|skill|mcp|claude code)|what is (mcp|hook)|claude code.*(setting|feature|config)|slash command)'; then
+    HINT="💡 Claude Code question → use \`ccpm:claude-code-guide\` agent"
+fi
+
+# CCPM developer keywords
+if echo "$USER_MESSAGE" | grep -qE '(create.*(command|agent|skill|hook)|add.*(ccpm|agent)|extend ccpm|new ccpm)'; then
+    HINT="💡 CCPM extension → use \`ccpm:ccpm-developer\` agent"
+fi
+
+# CCPM troubleshooter keywords
+if echo "$USER_MESSAGE" | grep -qE '(hook.*(not|fail|error)|agent.*(not|fail|error)|mcp.*(not|fail|error)|ccpm.*(broken|debug|issue))'; then
+    HINT="💡 CCPM troubleshooting → use \`ccpm:ccpm-troubleshooter\` agent"
+fi
+
 # Output hint if detected (minimal context injection)
 if [ -n "$HINT" ]; then
     echo "$HINT"
