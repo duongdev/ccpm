@@ -616,6 +616,52 @@ CCPM provides installable skills in `skills/`:
 
 ## Development
 
+### Local Plugin Installation (Development Setup)
+
+CCPM uses a symlink-based development setup so local changes are immediately available without reinstallation.
+
+**Plugin Cache Location:**
+```
+~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/
+├── 1.0.0 -> /Users/duongdev/personal/ccpm  (symlink)
+├── 1.0.0.bak                                (backup)
+├── 1.1.0                                    (old version)
+└── 1.2.0 -> /Users/duongdev/personal/ccpm  (symlink) ← ACTIVE
+```
+
+**Check Active Version:**
+```bash
+# See which version is active
+grep -A 10 "ccpm@duongdev-ccpm-marketplace" ~/.claude/plugins/installed_plugins.json
+
+# Verify symlink status
+ls -la ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/
+```
+
+**Create/Fix Symlink (if broken):**
+```bash
+# Replace version directory with symlink to local dev
+cd ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm
+rm -rf 1.2.0  # Remove existing directory
+ln -s /Users/duongdev/personal/ccpm 1.2.0  # Create symlink
+```
+
+**Verify Changes Are Visible:**
+```bash
+# Check if local changes are reflected
+grep "your-change" ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0/path/to/file
+```
+
+**Key Files to Verify:**
+- `commands/work.md` - Subagent prompt template
+- `hooks/scripts/session-init.cjs` - CLAUDE.md discovery
+- `hooks/scripts/subagent-context-injector.cjs` - Context injection
+
+**Troubleshooting Symlink Issues:**
+1. If plugin changes aren't reflected, check if active version is symlinked
+2. Claude Code may cache plugin data - restart Claude Code if needed
+3. Check `installed_plugins.json` for the active `installPath`
+
 ### Testing the Plugin
 
 ```bash

@@ -26,7 +26,7 @@ const { hookLog } = require('./lib/hook-logger.cjs');
 
 // Token budget per section (approximate)
 const TOKEN_BUDGET = {
-  claudeMd: 5000,      // Full CLAUDE.md contents
+  claudeMd: 8000,      // Full CLAUDE.md contents (increased for nested files)
   task: 500,           // Task context
   agentRules: 500,     // Agent-specific rules
   claudeMem: 500,      // Cross-session memory from claude-mem
@@ -506,8 +506,9 @@ function readEnvironment() {
 
 /**
  * Read full CLAUDE.md file contents (up to token limit)
+ * Increased limit to 25000 chars (~6k tokens) to accommodate nested CLAUDE.md files
  */
-function readClaudeMdFiles(files, maxChars = 15000) {
+function readClaudeMdFiles(files, maxChars = 25000) {
   const contents = [];
   let totalChars = 0;
 

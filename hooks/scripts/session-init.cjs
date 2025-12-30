@@ -227,8 +227,9 @@ function discoverClaudeMdFiles() {
     }
   }
 
-  // Also do a quick find for any CLAUDE.md files (limit depth for performance)
-  const findResult = execSafe(`find "${searchRoot}" -maxdepth 4 -name "CLAUDE.md" -type f 2>/dev/null | head -20`);
+  // Also do a quick find for any CLAUDE.md files (increased depth for monorepos)
+  // maxdepth 6 covers: root/apps/project/packages/module/CLAUDE.md
+  const findResult = execSafe(`find "${searchRoot}" -maxdepth 6 -name "CLAUDE.md" -type f 2>/dev/null | head -30`);
   if (findResult) {
     for (const file of findResult.split('\n').filter(f => f.trim())) {
       if (!claudeFiles.includes(file)) {
@@ -240,7 +241,8 @@ function discoverClaudeMdFiles() {
   // Sort by path depth (shallowest first = most important)
   claudeFiles.sort((a, b) => a.split('/').length - b.split('/').length);
 
-  return claudeFiles.slice(0, 10); // Limit to 10 files
+  // Limit to 20 files to cover deep monorepo structures
+  return claudeFiles.slice(0, 20);
 }
 
 /**

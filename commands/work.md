@@ -269,6 +269,36 @@ if (subagentResponse.error) {
 const issue = subagentResponse.issue;
 ```
 
+### Step 3.5: Fetch Issue Comments (for context)
+
+**Fetch recent comments to capture decisions and clarifications:**
+
+Invoke `ccpm:linear-operations`:
+
+```
+operation: list_comments
+params:
+  issueId: "{issue.identifier}"
+context:
+  cache: true
+  command: "work"
+```
+
+```javascript
+const comments = subagentResponse.comments || [];
+// Get last 5 comments for context (most recent decisions/clarifications)
+const recentComments = comments.slice(-5);
+
+// Store for subagent context
+issue.recentComments = recentComments;
+```
+
+**Why comments matter:**
+- Recent decisions from stakeholders
+- Clarifications on requirements
+- Blockers and their resolutions
+- Progress updates with implementation notes
+
 ### Step 4: Detect Mode
 
 ```javascript
@@ -717,8 +747,32 @@ Other projects may use different namespaces (e.g., `repeat:`, `myproject:`).
 
 ## Issue Context
 - Issue: {issueId} - {issue.title}
+- Labels: {issue.labels.map(l => l.name).join(', ')}
+- Priority: {issue.priority}
 - Branch: {currentBranch}
 - Checklist Item: {item.content}
+
+## Requirements & Specifications
+{issue.description}
+
+(Include FULL issue description - contains requirements, acceptance criteria,
+UI specs, typography, variable naming, copy text, and other task-specific details.
+This is the single source of truth for implementation requirements.)
+
+## Recent Comments (decisions & clarifications)
+{issue.recentComments formatted as:}
+- [{date}] {author}: {body truncated to 200 chars}
+
+(Include last 5 comments. These contain recent decisions, requirement
+clarifications, blockers, and implementation notes. Critical for context.)
+
+## Project Instructions (from CLAUDE.md files)
+{Include relevant CLAUDE.md content for the area being worked on}
+
+(The SubagentStart hook injects all discovered CLAUDE.md files automatically.
+If working in a subdirectory (e.g., apps/web/), include that subdirectory's
+CLAUDE.md if it exists. These contain project-specific patterns, conventions,
+and critical rules that MUST be followed.)
 
 ## Technical Context
 - Files to modify: {explorationResult.file_paths}
@@ -726,8 +780,13 @@ Other projects may use different namespaces (e.g., `repeat:`, `myproject:`).
 - Dependencies: {explorationResult.dependencies}
 
 ## Visual Context (if UI task)
+- Attachments: {issue.attachments.map(a => a.url).join(', ')}
+  (Include ALL image URLs from issue attachments - mockups, screenshots, diagrams)
 - Mockup: {visualContext.references[0].url if available}
-- Design system: {cached Figma data if available}
+- Design tokens: {figmaDesignTokens if extracted from Figma}
+  - Colors: {figmaDesignTokens.colors}
+  - Typography: {figmaDesignTokens.typography}
+  - Spacing: {figmaDesignTokens.spacing}
 - Target fidelity: 95-100%
 
 ## Quality Requirements
@@ -736,6 +795,9 @@ Other projects may use different namespaces (e.g., `repeat:`, `myproject:`).
 - Add necessary imports
 - Handle edge cases and errors
 - NO placeholder code - implement fully
+- Match exact copy/labels from Requirements section
+- Use exact variable names if specified
+- Follow typography specs (font sizes, weights, colors)
 
 ## Expected Output
 After making changes, return ONLY:
@@ -777,13 +839,66 @@ Task tool parameters:
 
     ## Issue Context
     - Issue: PSN-29 - Add user authentication
+    - Labels: frontend, auth, high-priority
+    - Priority: 1 (Urgent)
     - Branch: feature/psn-29-auth
     - Checklist Item: Implement login UI
+
+    ## Requirements & Specifications
+    ${issue.description}
+
+    // IMPORTANT: Pass the FULL issue.description here verbatim.
+    // This contains all requirements, acceptance criteria, UI specs,
+    // typography, variable naming, copy text, and implementation details.
+    // Nothing should be summarized or truncated.
+    //
+    // Example issue.description content:
+    // ## Requirements
+    // 1. Email/password login with validation
+    // 2. OAuth support (GitHub, Google)
+    //
+    // ## UI Specifications
+    // - Email input: placeholder "Enter your email"
+    // - Password input: placeholder "Enter your password"
+    // - Submit button: text "Sign In", bg-blue-600
+    // - Error message: text-red-500, 14px
+    //
+    // ## Typography
+    // - Form labels: 14px, weight 500, text-gray-700
+    // - Input text: 16px, weight 400
+    // - Button text: 16px, weight 600, white
+    //
+    // ## Variables
+    // - Component: LoginForm
+    // - Props: onSuccess, onError, redirectUrl
+
+    ## Recent Comments (decisions & clarifications)
+    ${issue.recentComments.map(c => `- [${c.createdAt}] ${c.user.name}: ${c.body}`).join('\n')}
+
+    // Example:
+    // - [2024-01-15] John: Remember to use the new design system colors
+    // - [2024-01-16] Sarah: 2FA should be optional, not required
+    // - [2024-01-16] PM: Approved - proceed with email-first, then OAuth
+
+    ## Project Instructions (from CLAUDE.md files)
+    // Automatically injected by SubagentStart hook. Contains:
+    // - Root CLAUDE.md (project-wide rules)
+    // - Subdirectory CLAUDE.md (e.g., apps/web/CLAUDE.md for frontend work)
+    // - All discovered CLAUDE.md files up to 6 levels deep
 
     ## Technical Context
     - Files to modify: src/components/auth/LoginForm.tsx
     - Existing patterns: Use existing Form component, Tailwind classes
     - Dependencies: react-hook-form, zod
+
+    ## Visual Context (if UI task)
+    - Attachments: ${issue.attachments.map(a => a.url).join(', ')}
+      // Include ALL attached images - mockups, screenshots, diagrams
+    - Mockup: {url from issue attachments}
+    - Design tokens: ${figmaDesignTokens}
+      - Colors: primary=#2563EB, error=#DC2626
+      - Typography: body=16px, label=14px
+      - Spacing: gap=16px, padding=24px
 
     ## Quality Requirements
     - Follow existing code patterns in the codebase
@@ -791,6 +906,9 @@ Task tool parameters:
     - Add necessary imports
     - Handle edge cases and errors
     - NO placeholder code - implement fully
+    - Match exact copy/labels from Requirements section
+    - Use exact variable names if specified
+    - Follow typography specs (font sizes, weights, colors)
 
     ## Expected Output
     After making changes, return ONLY:
@@ -798,6 +916,10 @@ Task tool parameters:
     2. Summary of changes (2-3 sentences)
     3. Any blockers encountered
 ```
+
+**CRITICAL: Never summarize or truncate `issue.description`.**
+The full description is the single source of truth containing UI specs, variable
+names, typography, copy text, and all task requirements. Pass it verbatim.
 
 **Step 3: For PARALLEL tasks (independent items), invoke MULTIPLE Task tools in ONE message:**
 
