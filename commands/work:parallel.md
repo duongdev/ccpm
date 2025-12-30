@@ -79,6 +79,23 @@ context:
 // Get last 5 comments for context
 issue.recentComments = (commentsResult.comments || []).slice(-5);
 
+// Cache full issue for subagent-context-injector hook
+// This allows ANY subagent to receive full issue context automatically
+const fs = require('fs');
+const issueCache = {
+  issueId: issue.identifier,
+  title: issue.title,
+  description: issue.description,
+  labels: issue.labels,
+  priority: issue.priority,
+  state: issue.state,
+  attachments: issue.attachments,
+  recentComments: issue.recentComments,
+  cachedAt: new Date().toISOString()
+};
+fs.writeFileSync(`/tmp/ccpm-issue-${issue.identifier}.json`, JSON.stringify(issueCache, null, 2));
+console.log(`📦 Issue context cached for subagents`);
+
 // Parse checklist
 const checklistMatch = issue.description.match(/## Implementation Checklist[\s\S]*?(?=\n##|$)/);
 const items = [];

@@ -291,6 +291,23 @@ const recentComments = comments.slice(-5);
 
 // Store for subagent context
 issue.recentComments = recentComments;
+
+// Cache full issue for subagent-context-injector hook
+// This allows ANY subagent to receive full issue context automatically
+const fs = require('fs');
+const issueCache = {
+  issueId: issue.identifier,
+  title: issue.title,
+  description: issue.description,
+  labels: issue.labels,
+  priority: issue.priority,
+  state: issue.state,
+  attachments: issue.attachments,
+  recentComments: recentComments,
+  cachedAt: new Date().toISOString()
+};
+fs.writeFileSync(`/tmp/ccpm-issue-${issue.identifier}.json`, JSON.stringify(issueCache, null, 2));
+console.log(`📦 Issue context cached for subagents`);
 ```
 
 **Why comments matter:**

@@ -505,6 +505,85 @@ function readEnvironment() {
 }
 
 /**
+ * Read cached issue data from /tmp/ccpm-issue-{issueId}.json
+ * This cache is populated by /ccpm:work and /ccpm:work:parallel commands
+ */
+function readCachedIssue(issueId) {
+  if (!issueId) return null;
+
+  try {
+    const cacheFile = `/tmp/ccpm-issue-${issueId}.json`;
+    if (!fs.existsSync(cacheFile)) return null;
+
+    const content = fs.readFileSync(cacheFile, 'utf8');
+    const cached = JSON.parse(content);
+
+    // Check if cache is fresh (less than 1 hour old)
+    const cachedAt = new Date(cached.cachedAt);
+    const ageMs = Date.now() - cachedAt.getTime();
+    const oneHour = 60 * 60 * 1000;
+
+    if (ageMs > oneHour) {
+      // Cache is stale, but still usable - just note it
+      cached._stale = true;
+    }
+
+    return cached;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Format cached issue for context injection
+ */
+function formatIssueContext(issue) {
+  if (!issue) return null;
+
+  let context = '# 📋 LINEAR ISSUE CONTEXT\n\n';
+  context += `**Issue:** ${issue.issueId} - ${issue.title}\n`;
+
+  if (issue.labels?.length > 0) {
+    context += `**Labels:** ${issue.labels.map(l => l.name || l).join(', ')}\n`;
+  }
+  if (issue.priority) {
+    context += `**Priority:** ${issue.priority}\n`;
+  }
+  if (issue.state?.name) {
+    context += `**Status:** ${issue.state.name}\n`;
+  }
+
+  context += '\n## Requirements & Specifications\n\n';
+  context += issue.description || '(No description)';
+  context += '\n\n';
+
+  if (issue.recentComments?.length > 0) {
+    context += '## Recent Comments (decisions & clarifications)\n\n';
+    for (const comment of issue.recentComments) {
+      const date = comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : '';
+      const author = comment.user?.name || 'Unknown';
+      const body = comment.body?.substring(0, 300) || '';
+      context += `- [${date}] **${author}**: ${body}\n`;
+    }
+    context += '\n';
+  }
+
+  if (issue.attachments?.length > 0) {
+    context += '## Attachments\n\n';
+    for (const att of issue.attachments) {
+      context += `- ${att.url || att}\n`;
+    }
+    context += '\n';
+  }
+
+  if (issue._stale) {
+    context += '> ⚠️ Issue cache is >1 hour old. Run /ccpm:work to refresh.\n\n';
+  }
+
+  return context;
+}
+
+/**
  * Read full CLAUDE.md file contents (up to token limit)
  * Increased limit to 25000 chars (~6k tokens) to accommodate nested CLAUDE.md files
  */
@@ -594,6 +673,9 @@ function buildContext(input, sessionState, envVars) {
   // Read full CLAUDE.md contents
   const claudeMdContents = readClaudeMdFiles(claudeMdFiles);
 
+  // Read cached issue data (populated by /ccpm:work commands)
+  const cachedIssue = readCachedIssue(issueId);
+
   // Read recent context
   const recentContext = readContextLog(contextLogFile);
 
@@ -613,6 +695,15 @@ function buildContext(input, sessionState, envVars) {
       context += file.content;
       context += '\n\n---\n\n';
     }
+  }
+
+  // ============================================================
+  // SECTION 1.5: Linear Issue Context (from cache)
+  // ============================================================
+  const issueContext = formatIssueContext(cachedIssue);
+  if (issueContext) {
+    context += issueContext;
+    context += '---\n\n';
   }
 
   // ============================================================
@@ -751,7 +842,9 @@ function main() {
       const tokenEstimate = (contextString.length / 4 / 1000).toFixed(1); // ~4 chars per token, convert to k
       const claudeMdCount = sessionState?.claudeMdFiles?.length || 0;
       const hasClaudeMem = isClaudeMemAvailable() ? 'mem✓' : 'mem✗';
-      hookLog('subagent-context-injector', `✓ Injected ~${tokenEstimate}k tokens to ${agentType} | CLAUDE.md: ${claudeMdCount} | ${hasClaudeMem}`);
+      const issueId = sessionState?.issueId || envVars.issueId;
+      const hasIssueCache = issueId && fs.existsSync(`/tmp/ccpm-issue-${issueId}.json`) ? 'issue✓' : 'issue✗';
+      hookLog('subagent-context-injector', `✓ Injected ~${tokenEstimate}k tokens to ${agentType} | CLAUDE.md: ${claudeMdCount} | ${hasIssueCache} | ${hasClaudeMem}`);
 
       process.exit(0);
     });
