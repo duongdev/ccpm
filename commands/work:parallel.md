@@ -64,6 +64,21 @@ context:
 `
 });
 
+// Fetch recent comments for context (decisions, clarifications)
+const commentsResult = await Task({
+  subagent_type: 'ccpm:linear-operations',
+  prompt: `operation: list_comments
+params:
+  issueId: "${issueId}"
+context:
+  cache: true
+  command: "work:parallel"
+`
+});
+
+// Get last 5 comments for context
+issue.recentComments = (commentsResult.comments || []).slice(-5);
+
 // Parse checklist
 const checklistMatch = issue.description.match(/## Implementation Checklist[\s\S]*?(?=\n##|$)/);
 const items = [];
@@ -177,7 +192,25 @@ ${task.item.content}
 
 ## Issue Context
 - Issue: ${issueId} - ${issue.title}
+- Labels: ${issue.labels?.map(l => l.name).join(', ') || 'none'}
+- Priority: ${issue.priority || 'none'}
 - Checklist Item: ${task.item.content}
+
+## Requirements & Specifications
+${issue.description}
+
+(This is the FULL issue description containing requirements, acceptance criteria,
+UI specs, typography, variable naming, copy text, and implementation details.
+This is the single source of truth - follow it exactly.)
+
+## Recent Comments (decisions & clarifications)
+${issue.recentComments?.map(c => \`- [\${c.createdAt}] \${c.user?.name}: \${c.body}\`).join('\\n') || 'No recent comments'}
+
+## Project Instructions (from CLAUDE.md files)
+// Automatically injected by SubagentStart hook
+
+## Visual Context (if UI task)
+- Attachments: ${issue.attachments?.map(a => a.url).join(', ') || 'none'}
 
 ## Quality Requirements
 - Follow existing code patterns
@@ -185,6 +218,9 @@ ${task.item.content}
 - Add necessary imports
 - Handle edge cases and errors
 - NO placeholder code - implement fully
+- Match exact copy/labels from Requirements section
+- Use exact variable names if specified
+- Follow typography specs (font sizes, weights, colors)
 
 ## Expected Output
 After making changes, return ONLY:
