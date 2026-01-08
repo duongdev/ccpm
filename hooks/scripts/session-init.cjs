@@ -171,25 +171,59 @@ function analyzeCommitPatterns(limit = 30) {
 }
 
 /**
- * Discover all CLAUDE.md files in project hierarchy
- * Searches from cwd up to git root, plus common subdirectories
+ * Discover ALL CLAUDE.md files in the hierarchy from global to current directory
+ *
+ * Order (most general to most specific):
+ * 1. ~/.claude/CLAUDE.md (global user instructions)
+ * 2. ~/CLAUDE.md (home directory)
+ * 3. ~/parent/CLAUDE.md (each parent directory)
+ * 4. ~/parent/project/CLAUDE.md (current project)
+ * 5. Nested CLAUDE.md within project (monorepo subprojects)
+ *
+ * Example for cwd=/Users/duongdev/repeat/repeat-web:
+ *   ~/.claude/CLAUDE.md -> ~/CLAUDE.md -> ~/repeat/CLAUDE.md -> ~/repeat/repeat-web/CLAUDE.md
  */
 function discoverClaudeMdFiles() {
   const claudeFiles = [];
+  const seen = new Set();
   const cwd = process.cwd();
+  const homeDir = process.env.HOME || '/tmp';
 
-  // Find git root
+  // Helper to add file if exists and not seen
+  const addIfExists = (filePath) => {
+    if (seen.has(filePath)) return;
+    seen.add(filePath);
+    if (fs.existsSync(filePath)) {
+      claudeFiles.push(filePath);
+    }
+  };
+
+  // 1. Global CLAUDE.md first (user's global instructions)
+  addIfExists(path.join(homeDir, '.claude', 'CLAUDE.md'));
+
+  // 2. Walk from HOME to CWD, collecting CLAUDE.md at each level
+  // This ensures we get: ~/CLAUDE.md -> ~/repeat/CLAUDE.md -> ~/repeat/repeat-web/CLAUDE.md
+  if (cwd.startsWith(homeDir)) {
+    const relativePath = cwd.slice(homeDir.length);
+    const parts = relativePath.split(path.sep).filter(p => p);
+
+    let currentPath = homeDir;
+    addIfExists(path.join(currentPath, 'CLAUDE.md')); // ~/CLAUDE.md
+
+    for (const part of parts) {
+      currentPath = path.join(currentPath, part);
+      addIfExists(path.join(currentPath, 'CLAUDE.md'));
+      // Also check .claude subdirectory at each level
+      addIfExists(path.join(currentPath, '.claude', 'CLAUDE.md'));
+    }
+  }
+
+  // 3. Find git root for nested file discovery
   const gitRoot = execSafe('git rev-parse --show-toplevel');
   const searchRoot = gitRoot || cwd;
 
-  // Search patterns for CLAUDE.md files
-  const searchDirs = [
-    searchRoot,                          // Project root
-    path.join(searchRoot, '.claude'),    // .claude directory
-  ];
-
-  // Add common monorepo patterns
-  const monorepoPatterns = ['apps', 'packages', 'libs', 'services'];
+  // 4. Search monorepo patterns for nested CLAUDE.md files
+  const monorepoPatterns = ['apps', 'packages', 'libs', 'services', 'modules'];
   for (const pattern of monorepoPatterns) {
     const dir = path.join(searchRoot, pattern);
     if (fs.existsSync(dir)) {
@@ -197,52 +231,27 @@ function discoverClaudeMdFiles() {
         const subdirs = fs.readdirSync(dir, { withFileTypes: true })
           .filter(d => d.isDirectory())
           .map(d => path.join(dir, d.name));
-        searchDirs.push(...subdirs);
+        for (const subdir of subdirs) {
+          addIfExists(path.join(subdir, 'CLAUDE.md'));
+        }
       } catch (e) {
         // Skip unreadable directories
       }
     }
   }
 
-  // Also check current directory if different from git root
-  if (cwd !== searchRoot) {
-    searchDirs.push(cwd);
-    // Check parent directories up to git root
-    let current = cwd;
-    while (current !== searchRoot && current !== path.dirname(current)) {
-      searchDirs.push(current);
-      current = path.dirname(current);
-    }
-  }
-
-  // Search for CLAUDE.md in each directory
-  const seen = new Set();
-  for (const dir of searchDirs) {
-    if (!fs.existsSync(dir) || seen.has(dir)) continue;
-    seen.add(dir);
-
-    const claudeMd = path.join(dir, 'CLAUDE.md');
-    if (fs.existsSync(claudeMd)) {
-      claudeFiles.push(claudeMd);
-    }
-  }
-
-  // Also do a quick find for any CLAUDE.md files (increased depth for monorepos)
-  // maxdepth 6 covers: root/apps/project/packages/module/CLAUDE.md
+  // 5. Do a find for any other CLAUDE.md files we might have missed
+  // (maxdepth 6 covers deep monorepo structures)
   const findResult = execSafe(`find "${searchRoot}" -maxdepth 6 -name "CLAUDE.md" -type f 2>/dev/null | head -30`);
   if (findResult) {
     for (const file of findResult.split('\n').filter(f => f.trim())) {
-      if (!claudeFiles.includes(file)) {
-        claudeFiles.push(file);
-      }
+      addIfExists(file);
     }
   }
 
-  // Sort by path depth (shallowest first = most important)
-  claudeFiles.sort((a, b) => a.split('/').length - b.split('/').length);
-
-  // Limit to 20 files to cover deep monorepo structures
-  return claudeFiles.slice(0, 20);
+  // Files are already in correct order (global -> parent -> project -> nested)
+  // because we added them in that order. Just limit to prevent token overflow.
+  return claudeFiles.slice(0, 30);
 }
 
 /**
