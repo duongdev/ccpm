@@ -40,6 +40,7 @@
     "./agents/backend-architect.md",
     "./agents/tdd-orchestrator.md",
     "./agents/code-reviewer.md",
+    "./agents/code-quality-enforcer.md",
     "./agents/debugger.md",
     "./agents/security-auditor.md",
     "./agents/claude-code-guide.md",

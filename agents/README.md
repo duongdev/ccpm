@@ -39,6 +39,7 @@ These agents handle implementation tasks across different technology domains.
 | [backend-architect](./backend-architect.md) | API design, NestJS implementation, database operations, and authentication |
 | [tdd-orchestrator](./tdd-orchestrator.md) | Test-driven development workflow orchestration with coverage requirements |
 | [code-reviewer](./code-reviewer.md) | Automated code review covering security, bugs, performance, and quality |
+| [code-quality-enforcer](./code-quality-enforcer.md) | Automated quality validation running lint/type/test checks on changed files |
 | [debugger](./debugger.md) | Systematic debugging and issue investigation with root cause analysis |
 | [security-auditor](./security-auditor.md) | Security vulnerability assessment covering OWASP Top 10 and compliance |
 
@@ -105,6 +106,7 @@ Commands delegate to agents internally based on task type:
 | API/Backend | backend-architect |
 | Testing | tdd-orchestrator |
 | Code Review | code-reviewer |
+| Quality Checks | code-quality-enforcer |
 | Debugging | debugger |
 | Security | security-auditor |
 | Design | pm:ui-designer |
@@ -285,7 +287,7 @@ Commands
 |----------|-------------|---------|
 | Linear/PM Operations | 4 | API operations with caching |
 | Project Management | 3 | Project detection and context |
-| Development | 6 | Implementation across domains |
+| Development | 7 | Implementation across domains |
 | Design | 1 | UI/UX design assistance |
 | CCPM Support | 3 | Claude Code and CCPM help |
-| **Total** | **17** | |
+| **Total** | **18** | |
