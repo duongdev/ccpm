@@ -240,9 +240,16 @@ function discoverClaudeMdFiles() {
     }
   }
 
-  // 5. Do a find for any other CLAUDE.md files we might have missed
-  // (maxdepth 6 covers deep monorepo structures)
-  const findResult = execSafe(`find "${searchRoot}" -maxdepth 6 -name "CLAUDE.md" -type f 2>/dev/null | head -30`);
+  // 5. Quick find for any other CLAUDE.md files in git root (with exclusions for speed)
+  // Exclude node_modules, .git, dist, build, vendor, .cache to avoid slow searches
+  const findResult = execSafe(`find "${searchRoot}" -maxdepth 4 -name "CLAUDE.md" -type f \\
+    -not -path "*/node_modules/*" \\
+    -not -path "*/.git/*" \\
+    -not -path "*/dist/*" \\
+    -not -path "*/build/*" \\
+    -not -path "*/vendor/*" \\
+    -not -path "*/.cache/*" \\
+    2>/dev/null | head -20`);
   if (findResult) {
     for (const file of findResult.split('\n').filter(f => f.trim())) {
       addIfExists(file);
