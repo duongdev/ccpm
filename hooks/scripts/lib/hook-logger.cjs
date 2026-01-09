@@ -15,7 +15,7 @@ const fs = require('fs');
 const HOOK_LOG_FILE = '/tmp/ccpm-hooks.log';
 
 /**
- * Log a hook event to file and stderr
+ * Log a hook event to file only (NOT stderr - Claude Code treats stderr as error)
  * @param {string} hookName - Name of the hook (e.g., 'session-init')
  * @param {string} message - Log message
  */
@@ -28,9 +28,7 @@ function hookLog(hookName, message) {
   } catch (e) {
     // Fail silently - logging should never break hooks
   }
-
-  // Also write to stderr for debugging
-  console.error(entry.trim());
+  // NOTE: Do NOT write to stderr - Claude Code interprets any stderr as hook error
 }
 
 /**
