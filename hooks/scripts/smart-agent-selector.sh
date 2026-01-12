@@ -7,14 +7,14 @@
 
 set -euo pipefail
 
-# Hook logging function
+# Hook logging function (file only - no stderr to avoid Claude Code error detection)
 HOOK_LOG_FILE="/tmp/ccpm-hooks.log"
 hook_log() {
     local hook_name="$1"
     local message="$2"
     local timestamp=$(date +"%H:%M:%S")
     echo "${timestamp} [${hook_name}] ${message}" >> "$HOOK_LOG_FILE"
-    echo "${timestamp} [${hook_name}] ${message}" >&2
+    # NOTE: Do NOT write to stderr - Claude Code treats any stderr as error
 }
 
 # Read input
