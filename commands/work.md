@@ -29,8 +29,28 @@ mcp__agent-mcp-gateway__execute_tool({ server: "linear", tool: "get_issue", args
 - ✅ Get/update issues → Just do it
 - ✅ Post comments → Just do it
 - ✅ Change status → Just do it
+- ✅ **Update checklist → MANDATORY after every implementation**
 
 **NEVER ask:** "Do you want me to update Linear?" - Just execute and report result.
+
+## ⛔ CRITICAL: Checklist Updates are MANDATORY
+
+**EVERY implementation session MUST update the Linear checklist:**
+
+1. **After agent implementation** → Auto-update completed items (Step 4E)
+2. **Before showing next actions** → Ensure checklist is synced (Step 4F)
+3. **On resume** → Show current checklist progress (Step 4B)
+
+**Implementation Flow:**
+```
+Agent implements → Git changes detected → Score items → Update checklist → Post comment
+```
+
+**NEVER skip checklist updates.** If git changes exist, ALWAYS:
+- Parse checklist from issue description
+- Score items based on file changes
+- Mark high-confidence items (score >= 50) as complete
+- Update Linear with `update_checklist_items` operation
 
 ---
 

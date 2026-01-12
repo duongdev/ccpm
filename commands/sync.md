@@ -32,6 +32,20 @@ mcp__agent-mcp-gateway__execute_tool({ server: "linear", ... })
 
 **NEVER ask user:** "Do you want me to sync?" or "Approve?"
 
+## ⛔ CRITICAL: Checklist Updates are MANDATORY
+
+**EVERY sync MUST update the Linear checklist when git changes exist:**
+
+1. **Parse checklist** from issue description (Step 5)
+2. **Score items** based on git file changes (Step 5)
+3. **Interactive selection** for user to confirm/add items (Step 6)
+4. **Update checklist** via `update_checklist_items` operation (Step 7A)
+5. **Post comment** with progress summary (Step 7B)
+
+**NEVER skip checklist updates.** The sync command's PRIMARY purpose is to keep the Linear checklist in sync with actual progress. A sync without checklist update is incomplete.
+
+**Sync = Checklist Update + Progress Comment**
+
 ---
 
 ## 🎯 v1.0 Linear Comment Strategy (Native Collapsible)

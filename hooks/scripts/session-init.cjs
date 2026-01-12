@@ -261,54 +261,6 @@ function discoverClaudeMdFiles() {
   return claudeFiles.slice(0, 30);
 }
 
-/**
- * Extract key instructions from CLAUDE.md files
- * Returns a summary of each file (first ~500 chars of important sections)
- */
-function summarizeClaudeMdFiles(files) {
-  const summaries = [];
-
-  for (const file of files.slice(0, 5)) { // Limit to 5 files for token efficiency
-    try {
-      const content = fs.readFileSync(file, 'utf8');
-      const relativePath = path.relative(process.cwd(), file) || file;
-
-      // Extract key sections
-      const lines = content.split('\n');
-      const keyLines = [];
-      let inImportantSection = false;
-
-      for (const line of lines) {
-        // Track important sections
-        if (line.match(/^#+\s*(critical|important|must|never|always|rule|convention)/i)) {
-          inImportantSection = true;
-        } else if (line.match(/^#+\s/)) {
-          inImportantSection = false;
-        }
-
-        // Capture critical keywords
-        if (line.match(/\b(NEVER|ALWAYS|MUST|CRITICAL|IMPORTANT|DO NOT|REQUIRED)\b/i) ||
-            inImportantSection) {
-          keyLines.push(line.trim());
-        }
-
-        // Stop if we have enough
-        if (keyLines.length >= 15) break;
-      }
-
-      if (keyLines.length > 0) {
-        summaries.push({
-          path: relativePath,
-          rules: keyLines.slice(0, 10).join('\n')
-        });
-      }
-    } catch (e) {
-      // Skip unreadable files
-    }
-  }
-
-  return summaries;
-}
 
 /**
  * Initialize context log file for the session
@@ -342,7 +294,8 @@ async function main() {
     const gitBranch = execSafe('git branch --show-current');
     const gitState = getGitState();
     const claudeMdFiles = discoverClaudeMdFiles();
-    const claudeMdSummaries = summarizeClaudeMdFiles(claudeMdFiles);
+    // Note: claudeMdSummaries removed - Claude Code natively injects CLAUDE.md content
+    // Subagents get full content via subagent-context-injector.cjs
     const claudeMemAvailable = isClaudeMemAvailable();
     const commitPatterns = analyzeCommitPatterns(30);
 
@@ -358,7 +311,6 @@ async function main() {
       gitBranch,
       gitState,
       claudeMdFiles,
-      claudeMdSummaries,
       claudeMemAvailable,
       commitPatterns,
       contextLogFile,
@@ -463,7 +415,14 @@ Skill(skill="ccpm:<command>", args="<args>")
 \`\`\`
 `;
 
-    console.log(output);
+    // Output as JSON (Claude Code expects JSON format for hooks)
+    const jsonOutput = JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'SessionStart',
+        additionalContext: output
+      }
+    });
+    console.log(jsonOutput);
 
     // Log hook completion
     const claudeMdCount = claudeMdFiles.length;

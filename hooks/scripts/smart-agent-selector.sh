@@ -68,6 +68,18 @@ if echo "$USER_MESSAGE" | grep -qE '(hook.*(not|fail|error)|agent.*(not|fail|err
     HINT="💡 CCPM troubleshooting → use \`ccpm:ccpm-troubleshooter\` agent"
 fi
 
+# Repeat.gg platform keywords - delegate to repeat-fullstack-engineer
+# Detects: RPT- tickets, repeat repositories, or ~/repeat paths
+if echo "$USER_MESSAGE" | grep -qE '(rpt-[0-9]+|repeat-web|repeat-mobile|repeat-notification|repeat-reward|repeat-payment|repeat-scheduler|jarvis\/|tournament\/|team-service\/|messaging\/|challenge\/)'; then
+    HINT="💡 Repeat.gg task → use \`repeat-fullstack-engineer\` subagent"
+fi
+
+# Path detection for ~/repeat directory
+CWD=$(pwd)
+if [[ "$CWD" == *"/repeat/"* ]] || [[ "$CWD" == *"/repeat" ]]; then
+    HINT="💡 In ~/repeat directory → use \`repeat-fullstack-engineer\` subagent"
+fi
+
 # Output hint if detected (minimal context injection)
 if [ -n "$HINT" ]; then
     echo "$HINT"
