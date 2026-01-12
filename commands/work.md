@@ -65,16 +65,47 @@ This command uses:
 
 ## 🎯 v1.0 Interactive Workflow Rules
 
+## ⛔ CRITICAL: FOLLOW THE PLAN - DO NOT RE-ANALYZE
+
+**The plan was created during `/ccpm:plan` with full context. `/ccpm:work` MUST:**
+
+1. **Use checklist item metadata directly** - Don't re-interpret or re-analyze
+2. **Pass item.metadata to agents** - Files, approach, pattern, tests, gotchas
+3. **Trust the plan** - Don't second-guess the approach or files
+4. **Only ask if blocked** - Don't ask clarifying questions that were answered during planning
+
+**WHY THIS MATTERS:**
+- Planning phase had full context and user input
+- Re-analyzing wastes tokens and introduces drift
+- Plan already specifies: what files, what approach, what patterns, what gotchas
+- Work mode is EXECUTION, not DISCOVERY
+
+**BAD (re-analyzing during work):**
+```
+🔍 Let me analyze the codebase to find the best approach...
+🔍 I see several options for implementing this...
+```
+
+**GOOD (following the plan):**
+```
+📋 Plan says: Files: src/components/LoginForm.tsx, Approach: react-hook-form
+🎯 Implementing exactly as planned...
+```
+
+---
+
 **WORK Mode Philosophy:**
+- **🎯 FOLLOW THE PLAN** - Use checklist item metadata as the source of truth
+- **⛔ NEVER re-analyze** - The plan already contains the analysis
 - **⛔ NEVER implement inline** - ALWAYS delegate to specialized agents via Task tool
 - **Respect CLAUDE.md rules** - Check all scopes for protected branches, prefixes, workflow rules
 - **Git branch safety** - Check protected branches before creating new branches
 - **Phase planning** - Ask which phases to do now vs later (multi-select support)
 - **Implementation choice** - Delegate to agents (recommended) OR quick inline edit
 - **Auto-sync after AI implementation** - Never lose context! Git changes → checklist update → progress comment
-- **Confidence-based decisions** - Use decision-helpers.md to ask when confidence < 80%
+- **Pass item metadata to agents** - Each checklist item has Files/Approach/Pattern/Tests/Gotchas
 - **Parallel implementation** - Detect and prioritize tasks that can run simultaneously
-- **Document uncertainties** - Immediately note questions/unknowns in Linear
+- **Document blockers immediately** - If something in the plan doesn't work, note it in Linear
 - **Robust checklist management** - Use checklist.md for automatic updates after changes
 - **Proactive subagents** - Invoke specialized agents as needed
 - **No auto-commit** - Only commit on explicit user request (use /ccpm:commit)
@@ -756,25 +787,38 @@ Other projects may use different namespaces (e.g., `repeat:`, `myproject:`).
 
 ### Subagent Prompt Template (MUST FOLLOW)
 
-**Every Task call MUST include this structured prompt:**
+**Every Task call MUST include this structured prompt with ITEM-SPECIFIC CONTEXT:**
+
+The enhanced checklist format (v2.0) embeds metadata with each item. Use `formatItemContext()` from `helpers/checklist.md` to extract and pass this context.
 
 ```
 ## Task
-{One-line description of what to implement}
+{item.content}
+
+## Task-Specific Context (FROM CHECKLIST ITEM METADATA)
+{item.metadata - extracted by parseChecklist() from helpers/checklist.md}
+
+**Files to modify**: {item.metadata.files.join(', ')}
+**Approach**: {item.metadata.approach}
+**Pattern to follow**: {item.metadata.pattern}
+**Testing requirements**: {item.metadata.tests}
+**Gotchas/Warnings**: {item.metadata.gotchas}
+
+(This is the MOST IMPORTANT section - it contains implementation details
+specific to THIS checklist item. Follow this exactly to maintain consistency
+with the original plan.)
 
 ## Issue Context
 - Issue: {issueId} - {issue.title}
 - Labels: {issue.labels.map(l => l.name).join(', ')}
 - Priority: {issue.priority}
 - Branch: {currentBranch}
-- Checklist Item: {item.content}
 
-## Requirements & Specifications
+## Overall Requirements (for reference)
 {issue.description}
 
-(Include FULL issue description - contains requirements, acceptance criteria,
-UI specs, typography, variable naming, copy text, and other task-specific details.
-This is the single source of truth for implementation requirements.)
+(Full issue description provides broader context. The Task-Specific Context
+above takes precedence for implementation details.)
 
 ## Recent Comments (decisions & clarifications)
 {issue.recentComments formatted as:}
@@ -791,11 +835,6 @@ If working in a subdirectory (e.g., apps/web/), include that subdirectory's
 CLAUDE.md if it exists. These contain project-specific patterns, conventions,
 and critical rules that MUST be followed.)
 
-## Technical Context
-- Files to modify: {explorationResult.file_paths}
-- Existing patterns: {explorationResult.patterns}
-- Dependencies: {explorationResult.dependencies}
-
 ## Visual Context (if UI task)
 - Attachments: {issue.attachments.map(a => a.url).join(', ')}
   (Include ALL image URLs from issue attachments - mockups, screenshots, diagrams)
@@ -807,14 +846,14 @@ and critical rules that MUST be followed.)
 - Target fidelity: 95-100%
 
 ## Quality Requirements
-- Follow existing code patterns in the codebase
+- **Follow the Approach specified above** - don't deviate from the plan
+- **Match the Pattern reference** - copy structure from the referenced file
+- **Watch for Gotchas** - avoid the pitfalls mentioned above
+- **Write the specified Tests** - cover what the plan requires
 - Use TypeScript strict mode if applicable
 - Add necessary imports
 - Handle edge cases and errors
 - NO placeholder code - implement fully
-- Match exact copy/labels from Requirements section
-- Use exact variable names if specified
-- Follow typography specs (font sizes, weights, colors)
 
 ## Expected Output
 After making changes, return ONLY:
@@ -822,6 +861,16 @@ After making changes, return ONLY:
 2. Summary of changes (2-3 sentences)
 3. Any blockers encountered
 ```
+
+**Why Item-Specific Context Matters:**
+
+The checklist item metadata was created during planning with full context.
+Passing it directly to agents ensures:
+- Implementation matches the original plan
+- No interpretation drift between planning and implementation
+- Agents know exactly which files to modify
+- Patterns are consistently followed
+- Known gotchas are avoided
 
 ---
 
@@ -842,90 +891,79 @@ For sequential tasks (or if only one task):
 - **subagent_type**: Use agent from hook hint, or fallback to `general-purpose`
 - **prompt**: Use Subagent Prompt Template above, filling in all variables
 
-Example invocation (using hook-suggested agent):
+Example invocation (using hook-suggested agent with ITEM METADATA):
 
 ```javascript
-// If hook hint was: "💡 Frontend task → use `ccpm:frontend-developer` agent"
-// Extract: suggestedAgent = "ccpm:frontend-developer"
+// 1. Parse checklist to get item with metadata
+const checklistData = parseChecklist(issue.description);
+const item = checklistData.items.find(i => !i.checked); // Get first incomplete item
+
+// 2. Extract: item.content = "**1. Create LoginForm component with email/password fields**"
+// 3. Extract: item.metadata = {
+//   files: ['src/components/auth/LoginForm.tsx'],
+//   approach: 'Use react-hook-form with zod schema, existing Button/Input components',
+//   pattern: 'Follow src/components/auth/SignupForm.tsx structure',
+//   tests: 'Unit tests for form submission, validation errors, loading state',
+//   gotchas: 'Handle async email validation, clear errors on input change'
+// }
+
+// 4. If hook hint was: "💡 Frontend task → use `ccpm:frontend-developer` agent"
+//    Extract: suggestedAgent = "ccpm:frontend-developer"
 
 Task tool parameters:
   subagent_type: "{suggestedAgent}"  // e.g., "ccpm:frontend-developer"
   prompt: |
     ## Task
-    Create login form component with validation
+    ${item.content}
+    // e.g., "**1. Create LoginForm component with email/password fields**"
+
+    ## Task-Specific Context (FROM CHECKLIST ITEM METADATA)
+    // This is the MOST IMPORTANT section - directly from the plan
+
+    **Files to modify**: ${item.metadata.files.join(', ')}
+    // e.g., "src/components/auth/LoginForm.tsx"
+
+    **Approach**: ${item.metadata.approach}
+    // e.g., "Use react-hook-form with zod schema, existing Button/Input components"
+
+    **Pattern to follow**: ${item.metadata.pattern}
+    // e.g., "Follow src/components/auth/SignupForm.tsx structure"
+
+    **Testing requirements**: ${item.metadata.tests}
+    // e.g., "Unit tests for form submission, validation errors, loading state"
+
+    **Gotchas/Warnings**: ${item.metadata.gotchas}
+    // e.g., "Handle async email validation, clear errors on input change"
 
     ## Issue Context
     - Issue: PSN-29 - Add user authentication
     - Labels: frontend, auth, high-priority
     - Priority: 1 (Urgent)
     - Branch: feature/psn-29-auth
-    - Checklist Item: Implement login UI
 
-    ## Requirements & Specifications
+    ## Overall Requirements (for reference)
     ${issue.description}
-
-    // IMPORTANT: Pass the FULL issue.description here verbatim.
-    // This contains all requirements, acceptance criteria, UI specs,
-    // typography, variable naming, copy text, and implementation details.
-    // Nothing should be summarized or truncated.
-    //
-    // Example issue.description content:
-    // ## Requirements
-    // 1. Email/password login with validation
-    // 2. OAuth support (GitHub, Google)
-    //
-    // ## UI Specifications
-    // - Email input: placeholder "Enter your email"
-    // - Password input: placeholder "Enter your password"
-    // - Submit button: text "Sign In", bg-blue-600
-    // - Error message: text-red-500, 14px
-    //
-    // ## Typography
-    // - Form labels: 14px, weight 500, text-gray-700
-    // - Input text: 16px, weight 400
-    // - Button text: 16px, weight 600, white
-    //
-    // ## Variables
-    // - Component: LoginForm
-    // - Props: onSuccess, onError, redirectUrl
+    // Full description for broader context
 
     ## Recent Comments (decisions & clarifications)
     ${issue.recentComments.map(c => `- [${c.createdAt}] ${c.user.name}: ${c.body}`).join('\n')}
 
-    // Example:
-    // - [2024-01-15] John: Remember to use the new design system colors
-    // - [2024-01-16] Sarah: 2FA should be optional, not required
-    // - [2024-01-16] PM: Approved - proceed with email-first, then OAuth
-
     ## Project Instructions (from CLAUDE.md files)
-    // Automatically injected by SubagentStart hook. Contains:
-    // - Root CLAUDE.md (project-wide rules)
-    // - Subdirectory CLAUDE.md (e.g., apps/web/CLAUDE.md for frontend work)
-    // - All discovered CLAUDE.md files up to 6 levels deep
-
-    ## Technical Context
-    - Files to modify: src/components/auth/LoginForm.tsx
-    - Existing patterns: Use existing Form component, Tailwind classes
-    - Dependencies: react-hook-form, zod
+    // Automatically injected by SubagentStart hook
 
     ## Visual Context (if UI task)
     - Attachments: ${issue.attachments.map(a => a.url).join(', ')}
-      // Include ALL attached images - mockups, screenshots, diagrams
-    - Mockup: {url from issue attachments}
     - Design tokens: ${figmaDesignTokens}
-      - Colors: primary=#2563EB, error=#DC2626
-      - Typography: body=16px, label=14px
-      - Spacing: gap=16px, padding=24px
 
     ## Quality Requirements
-    - Follow existing code patterns in the codebase
+    - **Follow the Approach above**: ${item.metadata.approach}
+    - **Match the Pattern**: ${item.metadata.pattern}
+    - **Avoid the Gotchas**: ${item.metadata.gotchas}
+    - **Write the Tests**: ${item.metadata.tests}
     - Use TypeScript strict mode
     - Add necessary imports
     - Handle edge cases and errors
     - NO placeholder code - implement fully
-    - Match exact copy/labels from Requirements section
-    - Use exact variable names if specified
-    - Follow typography specs (font sizes, weights, colors)
 
     ## Expected Output
     After making changes, return ONLY:
@@ -934,9 +972,9 @@ Task tool parameters:
     3. Any blockers encountered
 ```
 
-**CRITICAL: Never summarize or truncate `issue.description`.**
-The full description is the single source of truth containing UI specs, variable
-names, typography, copy text, and all task requirements. Pass it verbatim.
+**CRITICAL: Item metadata takes precedence over general description.**
+The item metadata was created during planning with full context. It specifies
+exactly what to do, how to do it, and what to avoid. Don't deviate from it.
 
 **Step 3: For PARALLEL tasks (independent items), invoke MULTIPLE Task tools in ONE message:**
 
@@ -1321,6 +1359,15 @@ console.log(`  /ccpm:verify                   # Quality checks`);
 ```yaml
 ## RESUME Mode with v1.0 workflow
 
+## ⛔ RESUME MUST PRESERVE FULL CONTEXT
+
+**Resume mode restores all context from the plan so work can continue seamlessly.**
+
+The checklist items contain embedded metadata (Files, Approach, Pattern, Tests, Gotchas).
+This metadata is the source of truth - use it directly, don't re-analyze.
+
+---
+
 1. Fetch recent comments for accurate progress (v1.0 fix):
 
 **Use the Task tool:**
@@ -1342,20 +1389,24 @@ Extract latest progress updates:
 - Current focus areas
 - Any blockers mentioned
 
-2. Calculate progress from checklist (using helpers/checklist.md):
+2. Parse checklist WITH METADATA (v2.0 enhanced):
 
-**Use parseChecklist and calculateProgress:**
+**Use parseChecklist to extract items WITH their metadata:**
 
 const checklistData = parseChecklist(issue.description);
 
 let progress = 0;
 let completedItems = 0;
 let totalItems = 0;
+let nextItem = null;
 
 if (checklistData) {
   progress = calculateProgress(checklistData);
   completedItems = checklistData.items.filter(item => item.checked).length;
   totalItems = checklistData.items.length;
+
+  // Find next incomplete item WITH its metadata
+  nextItem = checklistData.items.find(item => !item.checked);
 } else {
   console.log('\n⚠️  No implementation checklist found.');
 }
@@ -1369,7 +1420,7 @@ const uncertaintiesList = uncertaintiesMatch
   ? uncertaintiesMatch[0].match(/\d+\. .+/g) || []
   : [];
 
-4. Determine next action:
+4. Determine next action WITH FULL CONTEXT:
 
 let nextAction = null;
 let suggestion = null;
@@ -1380,22 +1431,20 @@ if (uncertaintiesList.length > 0) {
 } else if (progress === 100) {
   suggestion = 'All checklist items complete! Ready for verification.';
   nextAction = '/ccpm:verify';
-} else if (checklistData) {
-  const incompleteItem = checklistData.items.find(item => !item.checked);
-  if (incompleteItem) {
-    nextAction = `Continue work on: ${incompleteItem.content}`;
-  } else {
-    suggestion = 'All items checked. Ready for verification.';
-    nextAction = '/ccpm:verify';
+} else if (nextItem) {
+  // Include item metadata in the next action so context is preserved
+  nextAction = `Continue: ${nextItem.content}`;
+  if (nextItem.metadata.files.length > 0) {
+    nextAction += ` → Files: ${nextItem.metadata.files.join(', ')}`;
   }
 } else {
   suggestion = 'No checklist found. Continue implementation.';
 }
 
-5. Display progress and next action with recent activity (v1.0 enhancement):
+5. Display progress with FULL ITEM CONTEXT (v2.0 enhancement):
 
 console.log('\n═══════════════════════════════════════');
-console.log('📊 Work in Progress');
+console.log('📊 Work in Progress - RESUME');
 console.log('═══════════════════════════════════════\n');
 console.log(`📋 Issue: ${issue.identifier} - ${issue.title}`);
 console.log(`📊 Status: ${issue.state.name}`);
@@ -1426,12 +1475,50 @@ if (uncertaintiesList.length > 0) {
   console.log('');
 }
 
+// Display checklist WITH METADATA (v2.0)
 if (checklistData && checklistData.items.length > 0) {
-  console.log('📝 Checklist:\n');
+  console.log('📝 Checklist with Context:\n');
   checklistData.items.forEach(item => {
     const icon = item.checked ? '✅' : '⏳';
     console.log(`  ${icon} ${item.content}`);
+
+    // Show metadata for incomplete items (context for what's left)
+    if (!item.checked && item.metadata) {
+      if (item.metadata.files.length > 0) {
+        console.log(`      📁 Files: ${item.metadata.files.join(', ')}`);
+      }
+      if (item.metadata.approach) {
+        console.log(`      🎯 Approach: ${item.metadata.approach}`);
+      }
+      if (item.metadata.gotchas) {
+        console.log(`      ⚠️  Gotchas: ${item.metadata.gotchas}`);
+      }
+    }
   });
+  console.log('');
+}
+
+// Highlight NEXT ITEM with full context
+if (nextItem) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🎯 NEXT TASK (from plan):');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log(`  📋 ${nextItem.content}`);
+  if (nextItem.metadata.files.length > 0) {
+    console.log(`  📁 Files: ${nextItem.metadata.files.join(', ')}`);
+  }
+  if (nextItem.metadata.approach) {
+    console.log(`  🎯 Approach: ${nextItem.metadata.approach}`);
+  }
+  if (nextItem.metadata.pattern) {
+    console.log(`  📐 Pattern: ${nextItem.metadata.pattern}`);
+  }
+  if (nextItem.metadata.tests) {
+    console.log(`  🧪 Tests: ${nextItem.metadata.tests}`);
+  }
+  if (nextItem.metadata.gotchas) {
+    console.log(`  ⚠️  Gotchas: ${nextItem.metadata.gotchas}`);
+  }
   console.log('');
 }
 

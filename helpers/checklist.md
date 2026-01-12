@@ -37,6 +37,27 @@ Then use the functions as described below.
 
 Extracts checklist items from a Linear issue description, supporting both marker comment and header-based formats.
 
+**Enhanced Format Support (v2.0):**
+
+The parser now supports rich checklist items with embedded metadata:
+
+```markdown
+<!-- ccpm-checklist-start -->
+- [ ] **1. Create LoginForm component**
+  - Files: `src/components/auth/LoginForm.tsx`
+  - Approach: Use react-hook-form with existing Form wrapper
+  - Pattern: Follow `src/components/auth/SignupForm.tsx`
+  - Tests: Unit test for form submission, validation errors
+  - Gotchas: Handle async validation for email uniqueness
+
+- [ ] **2. Add validation schema**
+  - Files: `src/schemas/auth.ts`
+  - Approach: Use zod schema matching backend requirements
+<!-- ccpm-checklist-end -->
+```
+
+Each item can have optional metadata fields (Files, Approach, Pattern, Tests, Gotchas) that provide implementation-specific context. This keeps all relevant information with the checklist item it belongs to.
+
 ```javascript
 /**
  * Parse checklist from Linear issue description
@@ -46,6 +67,12 @@ Extracts checklist items from a Linear issue description, supporting both marker
  * @returns {number} items[].index - 0-based index
  * @returns {boolean} items[].checked - Checkbox state
  * @returns {string} items[].content - Item text (without checkbox)
+ * @returns {Object} items[].metadata - Item-specific context (v2.0)
+ * @returns {string[]} items[].metadata.files - Files to modify
+ * @returns {string} items[].metadata.approach - Implementation approach
+ * @returns {string} items[].metadata.pattern - Pattern to follow
+ * @returns {string} items[].metadata.tests - Testing requirements
+ * @returns {string} items[].metadata.gotchas - Technical gotchas/warnings
  * @returns {string} format - 'marker' or 'header'
  * @returns {number} startLine - Line number where checklist starts
  * @returns {number} endLine - Line number where checklist ends
@@ -138,22 +165,79 @@ function parseChecklist(description) {
     return null;
   }
 
-  // Extract checklist items
+  // Extract checklist items with metadata (v2.0 enhanced parsing)
   const items = [];
   const checkboxPattern = /^- \[([ x])\] (.+)$/;
+  const metadataPattern = /^\s{2,}- (Files|Approach|Pattern|Tests|Gotchas): (.+)$/i;
+
+  let currentItem = null;
 
   for (let i = startLine; i <= endLine; i++) {
-    const line = lines[i].trim();
-    const match = line.match(checkboxPattern);
+    const line = lines[i];
+    const trimmedLine = line.trim();
 
-    if (match) {
-      items.push({
-        index: items.length, // 0-based index
-        checked: match[1] === 'x',
-        content: match[2].trim(),
-        originalLine: i
-      });
+    // Check for new checkbox item
+    const checkboxMatch = trimmedLine.match(checkboxPattern);
+    if (checkboxMatch) {
+      // Save previous item if exists
+      if (currentItem) {
+        items.push(currentItem);
+      }
+
+      // Start new item
+      currentItem = {
+        index: items.length,
+        checked: checkboxMatch[1] === 'x',
+        content: checkboxMatch[2].trim(),
+        originalLine: i,
+        metadata: {
+          files: [],
+          approach: null,
+          pattern: null,
+          tests: null,
+          gotchas: null
+        },
+        metadataLines: [] // Track lines for this item's metadata
+      };
+      continue;
     }
+
+    // Check for metadata line (indented with "- Key: Value")
+    const metadataMatch = line.match(metadataPattern);
+    if (metadataMatch && currentItem) {
+      const key = metadataMatch[1].toLowerCase();
+      const value = metadataMatch[2].trim();
+
+      currentItem.metadataLines.push(i);
+
+      switch (key) {
+        case 'files':
+          // Parse comma-separated or backtick-wrapped file paths
+          const files = value
+            .split(/,\s*/)
+            .map(f => f.replace(/`/g, '').trim())
+            .filter(f => f.length > 0);
+          currentItem.metadata.files = files;
+          break;
+        case 'approach':
+          currentItem.metadata.approach = value;
+          break;
+        case 'pattern':
+          currentItem.metadata.pattern = value;
+          break;
+        case 'tests':
+          currentItem.metadata.tests = value;
+          break;
+        case 'gotchas':
+          currentItem.metadata.gotchas = value;
+          break;
+      }
+    }
+  }
+
+  // Don't forget last item
+  if (currentItem) {
+    items.push(currentItem);
   }
 
   // Return null if no items found
@@ -172,16 +256,27 @@ function parseChecklist(description) {
 }
 ```
 
-**Usage Example:**
+**Usage Example (v2.0 with metadata):**
 
 ```javascript
 const description = `
 ## ✅ Implementation Checklist
 
 <!-- ccpm-checklist-start -->
-- [ ] Task 1: First task
-- [x] Task 2: Second task
-- [ ] Task 3: Third task
+- [ ] **1. Create LoginForm component**
+  - Files: \`src/components/auth/LoginForm.tsx\`
+  - Approach: Use react-hook-form with existing Form wrapper
+  - Pattern: Follow \`src/components/auth/SignupForm.tsx\`
+  - Tests: Unit test for form submission, validation errors
+  - Gotchas: Handle async validation for email uniqueness
+
+- [x] **2. Add validation schema**
+  - Files: \`src/schemas/auth.ts\`
+  - Approach: Use zod schema matching backend requirements
+
+- [ ] **3. Create API endpoint**
+  - Files: \`src/api/auth/login.ts\`, \`src/api/auth/types.ts\`
+  - Approach: Follow existing auth patterns in codebase
 <!-- ccpm-checklist-end -->
 
 Progress: 33% (1/3 completed)
@@ -199,8 +294,38 @@ if (!checklist) {
 
   checklist.items.forEach(item => {
     console.log(`[${item.checked ? 'x' : ' '}] ${item.content}`);
+
+    // Access item-specific metadata (v2.0)
+    if (item.metadata.files.length > 0) {
+      console.log(`    Files: ${item.metadata.files.join(', ')}`);
+    }
+    if (item.metadata.approach) {
+      console.log(`    Approach: ${item.metadata.approach}`);
+    }
+    if (item.metadata.pattern) {
+      console.log(`    Pattern: ${item.metadata.pattern}`);
+    }
+    if (item.metadata.gotchas) {
+      console.log(`    Gotchas: ${item.metadata.gotchas}`);
+    }
   });
 }
+
+// Output:
+// Found 3 items
+// Format: marker
+// Progress: Progress: 33% (1/3 completed)
+// [ ] **1. Create LoginForm component**
+//     Files: src/components/auth/LoginForm.tsx
+//     Approach: Use react-hook-form with existing Form wrapper
+//     Pattern: Follow src/components/auth/SignupForm.tsx
+//     Gotchas: Handle async validation for email uniqueness
+// [x] **2. Add validation schema**
+//     Files: src/schemas/auth.ts
+//     Approach: Use zod schema matching backend requirements
+// [ ] **3. Create API endpoint**
+//     Files: src/api/auth/login.ts, src/api/auth/types.ts
+//     Approach: Follow existing auth patterns in codebase
 ```
 
 **Edge Cases Handled:**
@@ -597,6 +722,116 @@ validation.suggestions.forEach(s => console.log(`  ${s}`));
 //     Progress: 0% (0/N completed)
 //     Last updated: YYYY-MM-DD HH:MM UTC
 //   Review checklist for duplicate tasks
+```
+
+---
+
+### 6. formatItemContext (v2.0)
+
+Formats item metadata as a structured context block for agent prompts. This ensures agents receive all relevant information for the specific task they're implementing.
+
+```javascript
+/**
+ * Format checklist item with metadata as agent context
+ * @param {Object} item - Checklist item from parseChecklist()
+ * @param {Object} options - Formatting options
+ * @param {boolean} options.includeChecklist - Include checkbox state (default: false)
+ * @returns {string} Formatted context block for agent prompts
+ */
+function formatItemContext(item, options = {}) {
+  const includeChecklist = options.includeChecklist || false;
+
+  let context = '';
+
+  // Task header
+  if (includeChecklist) {
+    context += `- [${item.checked ? 'x' : ' '}] ${item.content}\n`;
+  } else {
+    context += `## Task\n${item.content}\n`;
+  }
+
+  // Only add metadata section if any metadata exists
+  const hasMetadata =
+    item.metadata.files.length > 0 ||
+    item.metadata.approach ||
+    item.metadata.pattern ||
+    item.metadata.tests ||
+    item.metadata.gotchas;
+
+  if (hasMetadata) {
+    context += '\n## Task-Specific Context\n';
+
+    if (item.metadata.files.length > 0) {
+      context += `**Files to modify**: ${item.metadata.files.map(f => '`' + f + '`').join(', ')}\n`;
+    }
+
+    if (item.metadata.approach) {
+      context += `**Approach**: ${item.metadata.approach}\n`;
+    }
+
+    if (item.metadata.pattern) {
+      context += `**Pattern to follow**: ${item.metadata.pattern}\n`;
+    }
+
+    if (item.metadata.tests) {
+      context += `**Testing requirements**: ${item.metadata.tests}\n`;
+    }
+
+    if (item.metadata.gotchas) {
+      context += `**Gotchas/Warnings**: ${item.metadata.gotchas}\n`;
+    }
+  }
+
+  return context;
+}
+```
+
+**Usage Example:**
+
+```javascript
+const checklist = parseChecklist(description);
+const item = checklist.items[0];
+
+// Format for agent prompt
+const context = formatItemContext(item);
+console.log(context);
+
+// Output:
+// ## Task
+// **1. Create LoginForm component**
+//
+// ## Task-Specific Context
+// **Files to modify**: `src/components/auth/LoginForm.tsx`
+// **Approach**: Use react-hook-form with existing Form wrapper
+// **Pattern to follow**: Follow `src/components/auth/SignupForm.tsx`
+// **Testing requirements**: Unit test for form submission, validation errors
+// **Gotchas/Warnings**: Handle async validation for email uniqueness
+```
+
+**Integration with `/ccpm:work`:**
+
+```javascript
+// When delegating to agents, include item-specific context
+for (const item of incompleteItems) {
+  const itemContext = formatItemContext(item);
+
+  Task({
+    subagent_type: selectAgent(item),
+    prompt: `
+${itemContext}
+
+## Issue Context
+- Issue: ${issueId} - ${issue.title}
+- Branch: ${currentBranch}
+
+## Quality Requirements
+- Follow the specified approach
+- Match the pattern reference if provided
+- Watch out for gotchas mentioned above
+- Write tests as specified
+    `
+  });
+}
 ```
 
 ---

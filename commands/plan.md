@@ -310,18 +310,56 @@ Context gathered:
 - Recent commits: [related work]
 
 Provide:
-1. **Implementation Checklist** (5-15 actionable items with marker comments)
-2. **Files to Modify** (specific paths with rationale)
-3. **Technical Considerations** (gotchas, edge cases)
-4. **Testing Strategy** (unit, integration, manual tests)
-5. **Complexity Assessment** (low/medium/high with reasoning)
-6. **Dependencies** (prerequisites, external factors)
+1. **Implementation Checklist** (5-15 actionable items with EMBEDDED METADATA)
+2. **Complexity Assessment** (low/medium/high with reasoning)
+3. **Dependencies** (prerequisites, external factors)
 
-**FORMAT CHECKLIST WITH MARKER COMMENTS**:
+**CRITICAL: FORMAT CHECKLIST WITH SELF-CONTAINED ITEMS**
+
+Each checklist item MUST include embedded metadata so agents know exactly:
+- WHAT files to modify
+- HOW to implement it (approach)
+- WHAT pattern to follow
+- WHAT tests to write
+- WHAT gotchas to avoid
+
+**FORMAT TEMPLATE** (use marker comments):
 <!-- ccpm-checklist-start -->
-- [ ] **Task 1**: Specific, actionable description
-- [ ] **Task 2**: Specific, actionable description
+- [ ] **1. [Action verb] [Component/Feature]**
+  - Files: \`path/to/file.ts\`, \`path/to/other.ts\`
+  - Approach: [Specific implementation approach - libraries, methods, patterns]
+  - Pattern: Follow \`path/to/reference/file.ts\` structure
+  - Tests: [Specific tests to write]
+  - Gotchas: [Technical warnings, edge cases, common mistakes]
+
+- [ ] **2. [Next task]**
+  - Files: \`path/to/file.ts\`
+  - Approach: [How to implement]
+  - Pattern: Follow existing [X] pattern in codebase
+  - Tests: [Required tests]
+  - Gotchas: [What to watch out for]
 <!-- ccpm-checklist-end -->
+
+**EXAMPLE OF GOOD vs BAD CHECKLIST ITEMS:**
+
+❌ BAD (vague - agent will interpret differently each time):
+- [ ] Create login form component
+- [ ] Add validation
+- [ ] Write tests
+
+✅ GOOD (self-contained - agent knows exactly what to do):
+- [ ] **1. Create LoginForm component with email/password fields**
+  - Files: \`src/components/auth/LoginForm.tsx\`
+  - Approach: Use react-hook-form with zod schema, existing Button/Input components
+  - Pattern: Follow \`src/components/auth/SignupForm.tsx\` structure
+  - Tests: Unit tests for form submission, validation errors, loading state
+  - Gotchas: Handle async email validation, clear errors on input change
+
+**WHY THIS MATTERS:**
+- Agents receive item-specific context, not just generic description
+- Implementation stays consistent with the original plan
+- Files, patterns, and gotchas are linked to specific tasks
+- No interpretation drift between planning and implementation
 
 **REMEMBER**: Stay within approved scope. No code implementation, planning only.
 `
@@ -385,7 +423,22 @@ Invoke the `ccpm:linear-operations` subagent:
       ## Implementation Checklist
 
       <!-- ccpm-checklist-start -->
-      {checklist from planning result - with marker comments}
+      {checklist with EMBEDDED METADATA - each item includes Files, Approach, Pattern, Tests, Gotchas}
+
+      Example format:
+      - [ ] **1. Create LoginForm component**
+        - Files: \`src/components/auth/LoginForm.tsx\`
+        - Approach: Use react-hook-form with existing Form wrapper
+        - Pattern: Follow \`src/components/auth/SignupForm.tsx\`
+        - Tests: Unit tests for form submission, validation
+        - Gotchas: Handle async email validation
+
+      - [ ] **2. Add validation schema**
+        - Files: \`src/schemas/auth.ts\`
+        - Approach: Use zod matching backend requirements
+        - Pattern: Follow \`src/schemas/user.ts\`
+        - Tests: Unit tests for valid/invalid inputs
+        - Gotchas: Email regex must match backend
       <!-- ccpm-checklist-end -->
 
       Progress: 0% (0/{N} completed)
@@ -437,33 +490,9 @@ Invoke the `ccpm:linear-operations` subagent:
 
       ---
 
-      ## 🤖 Engineer Analysis
-
-      **Agent**: {agent name from smart-agent-selector}
-
-      {Detailed implementation analysis from specialized agent}
-
-      ### Implementation Steps
-
-      {Step-by-step implementation details}
-
-      ### Files to Modify
-
-      {files list with rationale}
-
-      ### Technical Considerations
-
-      {gotchas, edge cases, best practices}
-
-      ### Dependencies
+      ## Dependencies
 
       {prerequisites, external factors}
-
-      ---
-
-      ## Testing Strategy
-
-      {testing approach from agent}
 
       ---
 
@@ -801,19 +830,57 @@ ${visualContext.figma.map(fig => `
 ` : ''}
 
 Provide:
-1. **Implementation Checklist** (5-15 actionable items with marker comments)
-2. **Files to Modify** (specific paths with rationale)
-3. **Technical Considerations** (gotchas, edge cases)
-4. **Testing Strategy** (unit, integration, manual tests)
-5. **Complexity Assessment** (low/medium/high with reasoning)
-6. **Dependencies** (prerequisites, external factors)
-${visualContext ? '7. **Visual Context Usage** - How to use mockups/designs for pixel-perfect implementation' : ''}
+1. **Implementation Checklist** (5-15 actionable items with EMBEDDED METADATA)
+2. **Complexity Assessment** (low/medium/high with reasoning)
+3. **Dependencies** (prerequisites, external factors)
+${visualContext ? '4. **Visual Context Usage** - How to use mockups/designs for pixel-perfect implementation' : ''}
 
-**FORMAT CHECKLIST WITH MARKER COMMENTS**:
+**CRITICAL: FORMAT CHECKLIST WITH SELF-CONTAINED ITEMS**
+
+Each checklist item MUST include embedded metadata so agents know exactly:
+- WHAT files to modify
+- HOW to implement it (approach)
+- WHAT pattern to follow
+- WHAT tests to write
+- WHAT gotchas to avoid
+
+**FORMAT TEMPLATE** (use marker comments):
 <!-- ccpm-checklist-start -->
-- [ ] **Task 1**: Specific, actionable description
-- [ ] **Task 2**: Specific, actionable description
+- [ ] **1. [Action verb] [Component/Feature]**
+  - Files: \`path/to/file.ts\`, \`path/to/other.ts\`
+  - Approach: [Specific implementation approach - libraries, methods, patterns]
+  - Pattern: Follow \`path/to/reference/file.ts\` structure
+  - Tests: [Specific tests to write]
+  - Gotchas: [Technical warnings, edge cases, common mistakes]
+
+- [ ] **2. [Next task]**
+  - Files: \`path/to/file.ts\`
+  - Approach: [How to implement]
+  - Pattern: Follow existing [X] pattern in codebase
+  - Tests: [Required tests]
+  - Gotchas: [What to watch out for]
 <!-- ccpm-checklist-end -->
+
+**EXAMPLE OF GOOD vs BAD CHECKLIST ITEMS:**
+
+❌ BAD (vague - agent will interpret differently each time):
+- [ ] Create login form component
+- [ ] Add validation
+- [ ] Write tests
+
+✅ GOOD (self-contained - agent knows exactly what to do):
+- [ ] **1. Create LoginForm component with email/password fields**
+  - Files: \`src/components/auth/LoginForm.tsx\`
+  - Approach: Use react-hook-form with zod schema, existing Button/Input components
+  - Pattern: Follow \`src/components/auth/SignupForm.tsx\` structure
+  - Tests: Unit tests for form submission, validation errors, loading state
+  - Gotchas: Handle async email validation, clear errors on input change
+
+**WHY THIS MATTERS:**
+- Agents receive item-specific context, not just generic description
+- Implementation stays consistent with the original plan
+- Files, patterns, and gotchas are linked to specific tasks
+- No interpretation drift between planning and implementation
 
 **REMEMBER**: Stay within approved scope. No code implementation, planning only.
 `
@@ -837,7 +904,22 @@ params:
     ## Implementation Checklist
 
     <!-- ccpm-checklist-start -->
-    {checklist from planning result - with marker comments}
+    {checklist with EMBEDDED METADATA - each item includes Files, Approach, Pattern, Tests, Gotchas}
+
+    Example format:
+    - [ ] **1. Create LoginForm component**
+      - Files: \`src/components/auth/LoginForm.tsx\`
+      - Approach: Use react-hook-form with existing Form wrapper
+      - Pattern: Follow \`src/components/auth/SignupForm.tsx\`
+      - Tests: Unit tests for form submission, validation
+      - Gotchas: Handle async email validation
+
+    - [ ] **2. Add validation schema**
+      - Files: \`src/schemas/auth.ts\`
+      - Approach: Use zod matching backend requirements
+      - Pattern: Follow \`src/schemas/user.ts\`
+      - Tests: Unit tests for valid/invalid inputs
+      - Gotchas: Email regex must match backend
     <!-- ccpm-checklist-end -->
 
     Progress: 0% (0/{N} completed)
@@ -885,33 +967,9 @@ params:
 
     ---
 
-    ## 🤖 Engineer Analysis
-
-    **Agent**: {agent name from smart-agent-selector}
-
-    {Detailed implementation analysis from specialized agent}
-
-    ### Implementation Steps
-
-    {Step-by-step implementation details}
-
-    ### Files to Modify
-
-    {files list with rationale}
-
-    ### Technical Considerations
-
-    {gotchas, edge cases, best practices}
-
-    ### Dependencies
+    ## Dependencies
 
     {prerequisites, external factors}
-
-    ---
-
-    ## Testing Strategy
-
-    {testing approach from agent}
 
     ---
 
