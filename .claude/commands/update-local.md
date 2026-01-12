@@ -21,7 +21,7 @@ ls -la ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/ 2>/dev/null || ec
 
 ```bash
 # Check if 1.2.0 is a symlink pointing to the dev directory
-LINK_TARGET=$(readlink ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0 2>/dev/null)
+LINK_TARGET=$(readlink ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1 2>/dev/null)
 DEV_DIR="/Users/duongdev/personal/ccpm"
 
 if [ -z "$LINK_TARGET" ]; then
@@ -40,8 +40,8 @@ If the symlink is missing or incorrect, recreate it:
 ```bash
 # Recreate plugin cache with symlink
 mkdir -p ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm
-rm -rf ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0
-ln -s /Users/duongdev/personal/ccpm ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0
+rm -rf ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1
+ln -s /Users/duongdev/personal/ccpm ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1
 echo "FIXED: Symlink recreated"
 ```
 
@@ -61,7 +61,7 @@ FILES=(
   "hooks/scripts/smart-agent-selector.sh"
 )
 
-CACHE_PATH=~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0
+CACHE_PATH=~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1
 
 for file in "${FILES[@]}"; do
   if [ -f "$CACHE_PATH/$file" ]; then
@@ -81,7 +81,7 @@ Display the final status:
 ✅ CCPM Plugin Installation Verified
 ═══════════════════════════════════════
 
-Symlink: ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0
+Symlink: ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1
 Target:  /Users/duongdev/personal/ccpm
 Status:  [OK/FIXED/ERROR]
 
@@ -96,7 +96,7 @@ To test: Start a new Claude Code session or run /compact
 For quick fixes, run this single command:
 
 ```bash
-mkdir -p ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm && rm -rf ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0 && ln -s /Users/duongdev/personal/ccpm ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.0 && echo "✅ CCPM plugin symlink updated"
+mkdir -p ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm && rm -rf ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1 && ln -s /Users/duongdev/personal/ccpm ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/1.2.1 && echo "✅ CCPM plugin symlink updated"
 ```
 
 ## When to Use

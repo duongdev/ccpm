@@ -1,6 +1,6 @@
 {
   "name": "ccpm",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Lean Project Management plugin for Claude Code. v1.2: Multi-perspective review, decisions log, guard commit hook, claude-mem integration. 19 commands, 14 agents, 6 hooks. Linear subagent (50-60% token reduction), smart agent auto-invocation, visual context for pixel-perfect UI.",
   "author": {
     "name": "duongdev",
