@@ -367,6 +367,85 @@ console.log(`📦 Issue context cached for subagents`);
 - Blockers and their resolutions
 - Progress updates with implementation notes
 
+### Step 3.6: Fetch Issue Hierarchy Context (for Subissues)
+
+**Check if this is a subissue and load parent/sibling context for implementation:**
+
+**Use the Task tool:**
+
+Invoke `ccpm:linear-operations`:
+```
+operation: get_issue_hierarchy
+params:
+  issueId: "{issue.identifier}"
+  includeParent: true
+  includeSiblings: true
+  siblingLimit: 10
+context:
+  cache: true
+  command: "work"
+```
+
+```javascript
+if (hierarchyData.hierarchy.isSubissue) {
+  console.log(`\n📊 Subissue of: ${hierarchyData.parent.identifier} - ${hierarchyData.parent.title}`);
+
+  // Show sibling summary
+  const completed = hierarchyData.siblings.filter(s =>
+    ['Done', 'Completed'].includes(s.state.name)
+  ).length;
+  console.log(`   Siblings: ${completed}/${hierarchyData.siblings.length} completed`);
+
+  // Show completed siblings for reference
+  const completedSiblings = hierarchyData.siblings.filter(s =>
+    ['Done', 'Completed'].includes(s.state.name)
+  );
+  if (completedSiblings.length > 0) {
+    console.log(`\n👥 Completed siblings (for reference):`);
+    completedSiblings.slice(0, 3).forEach(s => {
+      console.log(`   ✅ ${s.identifier}: ${s.title}`);
+    });
+    if (completedSiblings.length > 3) {
+      console.log(`   ... and ${completedSiblings.length - 3} more`);
+    }
+  }
+
+  // Cache hierarchy context for subagent-context-injector hook
+  issueCache.hierarchyContext = {
+    parent: {
+      identifier: hierarchyData.parent.identifier,
+      title: hierarchyData.parent.title,
+      description: hierarchyData.parent.description,
+      checklist: hierarchyData.parent.checklist,
+      attachments: hierarchyData.parent.attachments
+    },
+    siblings: hierarchyData.siblings.map(s => ({
+      identifier: s.identifier,
+      title: s.title,
+      state: s.state.name,
+      description: s.description?.substring(0, 200),
+      checklist: s.checklist
+    })),
+    position: hierarchyData.hierarchy.position,
+    siblingCount: hierarchyData.hierarchy.siblingCount
+  };
+
+  // Update the cached issue file
+  fs.writeFileSync(
+    `/tmp/ccpm-issue-${issue.identifier}.json`,
+    JSON.stringify(issueCache, null, 2)
+  );
+
+  console.log(`📦 Hierarchy context cached for subagents`);
+}
+```
+
+**Why hierarchy context matters:**
+- Parent issue provides overall goal and constraints
+- Completed siblings show patterns to follow
+- In-progress siblings help avoid conflicts
+- Position shows task sequence in the workflow
+
 ### Step 4: Detect Mode
 
 ```javascript
@@ -846,6 +925,32 @@ above takes precedence for implementation details.)
 
 (Include last 5 comments. These contain recent decisions, requirement
 clarifications, blockers, and implementation notes. Critical for context.)
+
+## Issue Hierarchy Context (if subissue)
+${issue.hierarchyContext ? `
+**This is a subissue of**: ${issue.hierarchyContext.parent.identifier} - ${issue.hierarchyContext.parent.title}
+**Position**: Subissue ${issue.hierarchyContext.position} of ${issue.hierarchyContext.siblingCount + 1}
+
+**Parent Goal**:
+${issue.hierarchyContext.parent.description?.substring(0, 500) || 'See parent issue'}
+
+**Completed Siblings** (reference for patterns):
+${issue.hierarchyContext.siblings
+  .filter(s => ['Done', 'Completed'].includes(s.state))
+  .map(s => '- ' + s.identifier + ': ' + s.title)
+  .join('\n') || 'None yet'}
+
+**In-Progress Siblings** (coordinate to avoid conflicts):
+${issue.hierarchyContext.siblings
+  .filter(s => s.state === 'In Progress')
+  .map(s => '- ' + s.identifier + ': ' + s.title)
+  .join('\n') || 'None'}
+
+**CONTEXT GUIDANCE**:
+- Follow patterns established by completed siblings
+- Ensure consistency with the parent issue's overall approach
+- Coordinate with in-progress siblings to avoid conflicts
+` : '(This is a standalone issue, no hierarchy context)'}
 
 ## Project Instructions (from CLAUDE.md files)
 {Include relevant CLAUDE.md content for the area being worked on}

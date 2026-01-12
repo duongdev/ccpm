@@ -309,6 +309,36 @@ Context gathered:
 - Codebase patterns: [found implementations]
 - Recent commits: [related work]
 
+${issue.hierarchyContext ? `
+## 📊 Parent Issue Context (IMPORTANT - This is a SUBISSUE)
+
+**This task is part of**: ${issue.hierarchyContext.parent.identifier} - ${issue.hierarchyContext.parent.title}
+
+**Parent Goal**:
+${issue.hierarchyContext.parent.description?.substring(0, 800) || 'No description'}
+
+**Parent Checklist** (overall progress ${issue.hierarchyContext.parent.checklist?.progress || 0}%):
+${issue.hierarchyContext.parent.checklist?.items.slice(0, 10).map(i => '- [' + (i.checked ? 'x' : ' ') + '] ' + i.content).join('\n') || 'No checklist'}
+
+## 👥 Sibling Subissues (${issue.hierarchyContext.siblings.length} total)
+
+**Completed** (reference for patterns):
+${issue.hierarchyContext.siblings.filter(s => ['Done', 'Completed'].includes(s.state.name)).map(s => '- ' + s.identifier + ': ' + s.title).join('\n') || '(none yet)'}
+
+**In Progress** (coordinate to avoid conflicts):
+${issue.hierarchyContext.siblings.filter(s => s.state.name === 'In Progress').map(s => '- ' + s.identifier + ': ' + s.title).join('\n') || '(none)'}
+
+**Pending**:
+${issue.hierarchyContext.siblings.filter(s => !['Done', 'Completed', 'In Progress'].includes(s.state.name)).map(s => '- ' + s.identifier + ': ' + s.title).join('\n') || '(none)'}
+
+**GUIDANCE FOR PLANNING THIS SUBISSUE**:
+- Consider how this task fits into the parent's overall goal
+- Look at completed siblings for established patterns and conventions
+- Avoid duplicating work already done in siblings
+- Ensure consistency with existing sibling implementations
+- Note any dependencies between this task and siblings
+` : ''}
+
 Provide:
 1. **Implementation Checklist** (5-15 actionable items with EMBEDDED METADATA)
 2. **Complexity Assessment** (low/medium/high with reasoning)
@@ -552,6 +582,45 @@ context:
 Store: issue details
 
 Display: "📋 Planning: ${issue.identifier} - ${issue.title}"
+
+1.5. Fetch issue hierarchy context (for subissues):
+
+**Check if this is a subissue and fetch parent/sibling context:**
+
+**Use the Task tool:**
+
+Invoke `ccpm:linear-operations`:
+```
+operation: get_issue_hierarchy
+params:
+  issueId: "{issue ID}"
+  includeParent: true
+  includeSiblings: true
+  siblingLimit: 10
+context:
+  cache: true
+  command: "plan"
+```
+
+```javascript
+if (hierarchyData.hierarchy.isSubissue) {
+  console.log(`\n📊 Subissue detected: Part of ${hierarchyData.hierarchy.parentIdentifier}`);
+  console.log(`   Parent: ${hierarchyData.parent.title}`);
+  console.log(`   Siblings: ${hierarchyData.hierarchy.siblingCount} other subissues`);
+
+  // Show sibling status summary
+  const completed = hierarchyData.siblings.filter(s =>
+    ['Done', 'Completed'].includes(s.state.name)
+  ).length;
+  const inProgress = hierarchyData.siblings.filter(s =>
+    ['In Progress'].includes(s.state.name)
+  ).length;
+  console.log(`   Status: ${completed} done, ${inProgress} in progress`);
+
+  // Store for agent prompts and display
+  issue.hierarchyContext = hierarchyData;
+}
+```
 
 2. Check if already planned:
 

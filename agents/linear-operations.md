@@ -558,6 +558,226 @@ context:
 
 ---
 
+### 1.7 get_issue_hierarchy
+
+**Purpose**: Retrieve an issue with its parent and sibling context if it's a subissue.
+
+**Input YAML**:
+```yaml
+operation: get_issue_hierarchy
+params:
+  issueId: "PSN-123"              # Required
+  includeParent: true              # Optional, default: true
+  includeSiblings: true            # Optional, default: true
+  siblingLimit: 10                 # Optional, default: 10
+context:
+  cache: true
+  command: "work"
+```
+
+**Output YAML**:
+```yaml
+success: true
+data:
+  issue:
+    id: "abc-123"
+    identifier: "PSN-123"
+    title: "Add login form validation"
+    description: "..."
+    state: { name: "In Progress", type: "started" }
+    labels: [...]
+    parentId: "parent-uuid"        # Present if subissue
+  parent:                          # Only if issue has parent
+    id: "parent-uuid"
+    identifier: "PSN-100"
+    title: "User Authentication Feature"
+    description: "## Overview\n..."
+    state: { name: "In Progress" }
+    labels: [...]
+    attachments: [...]
+    checklist:                     # Parsed checklist if present
+      items: [...]
+      progress: 40
+  siblings:                        # Other subissues of same parent
+    - identifier: "PSN-121"
+      title: "Add logout functionality"
+      state: { name: "Done" }
+      description: "..."
+      checklist: { items: [...], progress: 100 }
+    - identifier: "PSN-122"
+      title: "Add password reset"
+      state: { name: "Todo" }
+      description: "..."
+  hierarchy:
+    isSubissue: true
+    parentIdentifier: "PSN-100"
+    siblingCount: 3
+    position: 2                    # This issue's position among siblings
+metadata:
+  cached: false
+  duration_ms: 650
+  mcp_calls: 3                     # get_issue + get_parent + list_siblings
+```
+
+**Implementation**:
+
+```javascript
+// Step 1: Get the main issue
+mcp__agent-mcp-gateway__execute_tool({
+  server: "linear",
+  tool: "get_issue",
+  args: { id: params.issueId }  // ← "id" not "issueId"
+});
+
+// Step 2: Check if it's a subissue
+if (!issue.parentId) {
+  // Not a subissue - return issue only
+  return {
+    success: true,
+    data: {
+      issue,
+      parent: null,
+      siblings: [],
+      hierarchy: {
+        isSubissue: false,
+        parentIdentifier: null,
+        siblingCount: 0,
+        position: null
+      }
+    }
+  };
+}
+
+// Step 3: Fetch parent issue (if requested)
+let parent = null;
+if (params.includeParent !== false) {
+  parent = await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "get_issue",
+    args: { id: issue.parentId }
+  });
+
+  // Parse parent's checklist for context
+  parent.checklist = parseChecklist(parent.description);
+}
+
+// Step 4: Fetch sibling subissues (if requested)
+let siblings = [];
+if (params.includeSiblings !== false) {
+  const siblingResponse = await mcp__agent-mcp-gateway__execute_tool({
+    server: "linear",
+    tool: "list_issues",
+    args: {
+      filter: { parent: { id: { eq: issue.parentId } } },
+      first: params.siblingLimit || 10
+    }
+  });
+
+  // Filter out current issue, keep relevant fields
+  siblings = siblingResponse.nodes
+    .filter(s => s.identifier !== issue.identifier)
+    .map(s => ({
+      identifier: s.identifier,
+      title: s.title,
+      state: s.state,
+      description: s.description?.substring(0, 800), // Truncate for token efficiency
+      labels: s.labels,
+      checklist: parseChecklist(s.description)
+    }));
+}
+
+// Step 5: Calculate position among siblings
+const allSiblings = [...siblings, { identifier: issue.identifier, createdAt: issue.createdAt }]
+  .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+const position = allSiblings.findIndex(s => s.identifier === issue.identifier) + 1;
+
+return {
+  success: true,
+  data: {
+    issue,
+    parent,
+    siblings,
+    hierarchy: {
+      isSubissue: true,
+      parentIdentifier: parent?.identifier,
+      siblingCount: siblings.length,
+      position
+    }
+  },
+  metadata: {
+    cached: false,
+    duration_ms: executionTime,
+    mcp_calls: mcp_call_count
+  }
+};
+```
+
+**Helper: parseChecklist (inline)**:
+```javascript
+function parseChecklist(description) {
+  if (!description) return null;
+
+  const checklistRegex = /- \[([ x])\] (.+)/g;
+  const items = [...description.matchAll(checklistRegex)];
+
+  if (items.length === 0) return null;
+
+  const completed = items.filter(m => m[1] === 'x').length;
+  const total = items.length;
+  const progress = Math.round((completed / total) * 100);
+
+  return {
+    items: items.map((m, i) => ({
+      index: i,
+      checked: m[1] === 'x',
+      content: m[2]
+    })),
+    completed,
+    total,
+    progress
+  };
+}
+```
+
+**Usage Examples**:
+```javascript
+// Get full hierarchy for a subissue
+Task(ccpm:linear-operations): `
+operation: get_issue_hierarchy
+params:
+  issueId: PSN-123
+  includeParent: true
+  includeSiblings: true
+  siblingLimit: 10
+context:
+  cache: true
+  command: "work"
+`
+
+// Get issue with parent only (skip siblings for speed)
+Task(ccpm:linear-operations): `
+operation: get_issue_hierarchy
+params:
+  issueId: PSN-123
+  includeSiblings: false
+context:
+  cache: true
+  command: "plan"
+`
+```
+
+**Caching Strategy**:
+- Parent issues change infrequently - cache for 5 minutes
+- Sibling list - cache for 2 minutes (states may change)
+- Use `cache: true` for read operations
+
+**Performance**:
+- Standalone issue (no parent): ~400ms (1 MCP call)
+- Subissue with parent and siblings: ~800-1200ms (3 MCP calls)
+- With caching (subsequent calls): ~100ms
+
+---
+
 ## 2. Label Management
 
 ### 2.1 get_or_create_label

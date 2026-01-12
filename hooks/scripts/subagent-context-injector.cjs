@@ -580,6 +580,65 @@ function formatIssueContext(issue) {
     context += '> ⚠️ Issue cache is >1 hour old. Run /ccpm:work to refresh.\n\n';
   }
 
+  // Add hierarchy context if available (for subissues)
+  if (issue.hierarchyContext) {
+    const hierarchy = issue.hierarchyContext;
+
+    context += '## 📊 Issue Hierarchy Context\n\n';
+    context += `**Parent Issue**: ${hierarchy.parent.identifier} - ${hierarchy.parent.title}\n`;
+    context += `**Position**: Subissue ${hierarchy.position} of ${hierarchy.siblingCount + 1}\n\n`;
+
+    // Parent goal (truncated)
+    if (hierarchy.parent.description) {
+      const parentGoal = hierarchy.parent.description.substring(0, 500);
+      context += `**Parent Goal**:\n${parentGoal}${hierarchy.parent.description.length > 500 ? '...' : ''}\n\n`;
+    }
+
+    // Completed siblings (for pattern reference)
+    const completedSiblings = (hierarchy.siblings || []).filter(s =>
+      ['Done', 'Completed'].includes(s.state)
+    );
+    if (completedSiblings.length > 0) {
+      context += '**Completed Siblings** (reference for patterns):\n';
+      completedSiblings.forEach(s => {
+        context += `- ${s.identifier}: ${s.title}\n`;
+      });
+      context += '\n';
+    }
+
+    // In-progress siblings (avoid conflicts)
+    const inProgressSiblings = (hierarchy.siblings || []).filter(s =>
+      s.state === 'In Progress'
+    );
+    if (inProgressSiblings.length > 0) {
+      context += '**In-Progress Siblings** (coordinate to avoid conflicts):\n';
+      inProgressSiblings.forEach(s => {
+        context += `- ${s.identifier}: ${s.title}\n`;
+      });
+      context += '\n';
+    }
+
+    // Pending siblings (just for awareness)
+    const pendingSiblings = (hierarchy.siblings || []).filter(s =>
+      !['Done', 'Completed', 'In Progress'].includes(s.state)
+    );
+    if (pendingSiblings.length > 0) {
+      context += '**Pending Siblings**:\n';
+      pendingSiblings.slice(0, 5).forEach(s => {
+        context += `- ${s.identifier}: ${s.title}\n`;
+      });
+      if (pendingSiblings.length > 5) {
+        context += `- ... and ${pendingSiblings.length - 5} more\n`;
+      }
+      context += '\n';
+    }
+
+    context += '**CONTEXT GUIDANCE**:\n';
+    context += '- Follow patterns established by completed siblings\n';
+    context += '- Ensure consistency with the parent issue\'s overall approach\n';
+    context += '- Coordinate with in-progress siblings to avoid conflicts\n\n';
+  }
+
   return context;
 }
 
