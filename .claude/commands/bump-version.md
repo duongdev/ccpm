@@ -135,7 +135,49 @@ if [ -f "$INSTALLED_PLUGINS" ]; then
 fi
 ```
 
-### Step 7: Display Summary
+### Step 7: Run /update-local
+
+**Automatically verify and fix the plugin installation after version bump:**
+
+```bash
+# Verify symlink is correct
+PLUGIN_CACHE=~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm
+DEV_DIR="/Users/duongdev/personal/ccpm"
+
+echo "Verifying plugin installation..."
+
+# Check symlink target
+LINK_TARGET=$(readlink "$PLUGIN_CACHE/$NEW_VERSION" 2>/dev/null)
+
+if [ "$LINK_TARGET" = "$DEV_DIR" ]; then
+  echo "✓ Symlink verified: $NEW_VERSION -> $DEV_DIR"
+else
+  # Fix symlink
+  mkdir -p "$PLUGIN_CACHE"
+  rm -rf "$PLUGIN_CACHE/$NEW_VERSION"
+  ln -s "$DEV_DIR" "$PLUGIN_CACHE/$NEW_VERSION"
+  echo "✓ Symlink fixed: $NEW_VERSION -> $DEV_DIR"
+fi
+
+# Verify key files are accessible
+FILES=(
+  "commands/plan.md"
+  "commands/work.md"
+  "hooks/hooks.json"
+  "hooks/scripts/session-init.cjs"
+)
+
+echo "Verifying key files..."
+for file in "${FILES[@]}"; do
+  if [ -f "$PLUGIN_CACHE/$NEW_VERSION/$file" ]; then
+    echo "  ✓ $file"
+  else
+    echo "  ✗ $file MISSING"
+  fi
+done
+```
+
+### Step 8: Display Summary
 
 ```
 ═══════════════════════════════════════
@@ -150,8 +192,9 @@ Files Updated:
   ✓ .claude/commands/update-local.md
   ✓ ~/.claude/plugins/installed_plugins.json
 
-Symlink Updated:
-  ✓ ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/{new}
+Plugin Installation:
+  ✓ Symlink verified/fixed
+  ✓ Key files accessible
 
 ═══════════════════════════════════════
 📝 Next Steps
@@ -168,15 +211,17 @@ Symlink Updated:
 ## Quick One-Liner (Patch Bump)
 
 ```bash
-# Read current, calculate new, update all files
+# Read current, calculate new, update all files, verify installation
 OLD=$(jq -r '.version' .claude-plugin/plugin.json) && \
 NEW=$(echo $OLD | awk -F. '{print $1"."$2"."$3+1}') && \
 jq ".version = \"$NEW\"" .claude-plugin/plugin.json > tmp && mv tmp .claude-plugin/plugin.json && \
 jq ".metadata.version = \"$NEW\" | .plugins[0].version = \"$NEW\"" .claude-plugin/marketplace.json > tmp && mv tmp .claude-plugin/marketplace.json && \
 sed -i '' "s|ccpm/${OLD}|ccpm/${NEW}|g" .claude/commands/update-local.md && \
-rm -f ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/$OLD && \
+mkdir -p ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm && \
+rm -rf ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/$NEW && \
 ln -sf /Users/duongdev/personal/ccpm ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/$NEW && \
-echo "✅ Bumped: $OLD -> $NEW"
+[ -f ~/.claude/plugins/cache/duongdev-ccpm-marketplace/ccpm/$NEW/commands/work.md ] && \
+echo "✅ Bumped: $OLD -> $NEW (verified)"
 ```
 
 ## Notes
