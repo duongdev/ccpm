@@ -8,6 +8,31 @@ argument-hint: "[issue-id]"
 
 Intelligent command that detects whether to start new work or resume in-progress tasks.
 
+## ⛔ ABSOLUTE RULE: MAIN AGENT = COORDINATOR ONLY
+
+**The main agent MUST NOT implement code or run tests directly.**
+
+| Main Agent Role | Subagent Role |
+|-----------------|---------------|
+| Track progress | Implement code |
+| Coordinate tasks | Write tests |
+| Update Linear | Run test suites |
+| Final verification | Debug issues |
+| User communication | Code review |
+
+**Main agent ONLY does:**
+1. Parse arguments and detect mode
+2. Fetch issue from Linear (via `ccpm:linear-operations`)
+3. Coordinate which subagents to invoke
+4. Track progress and update Linear
+5. Final verification AFTER all subagent work complete
+
+**Main agent NEVER does:**
+- Read source files (use `Explore` agent)
+- Write/Edit any code files
+- Run tests directly (use `ccpm:tdd-orchestrator`)
+- Debug issues inline (use `ccpm:debugger`)
+
 ## ⛔ CRITICAL: Linear Operations
 
 **ALL Linear operations MUST use the Task tool with `ccpm:linear-operations` subagent.**
@@ -121,7 +146,7 @@ This command uses:
 - **Respect CLAUDE.md rules** - Check all scopes for protected branches, prefixes, workflow rules
 - **Git branch safety** - Check protected branches before creating new branches
 - **Phase planning** - Ask which phases to do now vs later (multi-select support)
-- **Implementation choice** - Delegate to agents (recommended) OR quick inline edit
+- **Implementation choice** - ALWAYS delegate to specialized agents (NO inline editing)
 - **Auto-sync after AI implementation** - Never lose context! Git changes → checklist update → progress comment
 - **Pass item metadata to agents** - Each checklist item has Files/Approach/Pattern/Tests/Gotchas
 - **Parallel implementation** - Detect and prioritize tasks that can run simultaneously
@@ -772,31 +797,14 @@ if (implementationConfidence.score < 80 || analysisResult.uncertainties.length >
   console.log('\n✅ Clarifications received. Proceeding with implementation.');
 }
 
-4A. Ask user: Implementation approach
+4A. Proceed with agent delegation (MANDATORY - no user choice)
 
-console.log('\n💡 Implementation Approach:');
+console.log('\n🤖 Implementation via specialized agents (mandatory)');
+console.log('   Main agent = coordinator only');
+console.log('   Subagents = implementation + testing');
 
-AskUserQuestion({
-  questions: [{
-    question: "How would you like to implement this?",
-    header: "Implementation",
-    multiSelect: false,
-    options: [
-      {
-        label: "Delegate to specialized agents (Recommended)",
-        description: "Uses frontend/backend/etc agents - protects main context, auto-syncs to Linear"
-      },
-      {
-        label: "Quick inline edit",
-        description: "For trivial 1-2 file changes only - fills main context faster"
-      }
-    ]
-  }]
-});
-
-const useAgents = (answer === "Delegate to specialized agents (Recommended)");
-
-**If using agents (useAgents === true):**
+// Agent delegation is ALWAYS used - no option for inline editing
+const useAgents = true;  // ALWAYS true - inline editing is forbidden
 
 4B. Chunked implementation via specialized agents (CONTEXT PROTECTION):
 
@@ -866,21 +874,60 @@ const agent = suggestedAgent || 'general-purpose';
 Task(subagent_type=agent): `...implementation prompt...`
 ```
 
-#### Common Agent Patterns (Reference Only)
+#### Agent Selection Table (MANDATORY)
 
-These are **examples** of agents that MAY be available. Check hook hints for actual availability:
-
-| Task Type | Typical Agent | Hint Pattern |
-|-----------|---------------|--------------|
-| Frontend/UI | `ccpm:frontend-developer` | "Frontend task →" |
-| Backend/API | `ccpm:backend-architect` | "Backend task →" |
-| Debugging | `ccpm:debugger` | "Debug task →" |
-| Code Review | `ccpm:code-reviewer` | "Review task →" |
-| Any task | `general-purpose` | (fallback) |
-| Codebase analysis | `Explore` | (always available) |
+| Task Type | Agent | When to Use |
+|-----------|-------|-------------|
+| Codebase analysis | `Explore` | Finding files, understanding patterns (ALWAYS available) |
+| Frontend/UI | `ccpm:frontend-developer` | Components, styling, React, CSS |
+| Backend/API | `ccpm:backend-architect` | APIs, databases, resolvers, auth |
+| **Testing** | `ccpm:tdd-orchestrator` | **Run tests AFTER every implementation** |
+| Debugging | `ccpm:debugger` | Fixing bugs, investigating issues |
+| Code Review | `ccpm:code-reviewer` | Quality checks, security review |
+| Security | `ccpm:security-auditor` | OWASP checks, vulnerability scanning |
+| Fallback | `general-purpose` | When no specific agent matches |
 
 **NOTE:** Agent names vary by project. The `ccpm:` namespace is for CCPM projects.
-Other projects may use different namespaces (e.g., `repeat:`, `myproject:`).
+
+---
+
+#### Testing Delegation Pattern (MANDATORY)
+
+**AFTER EVERY IMPLEMENTATION AGENT COMPLETES, invoke the testing agent:**
+
+```javascript
+// 1. Implementation agent completes
+Task(subagent_type="ccpm:frontend-developer"): `Implement {item.content}...`;
+
+// 2. MANDATORY: Run tests via tdd-orchestrator
+console.log('Running tests...');
+Task(subagent_type="ccpm:tdd-orchestrator"): `
+## Task
+Run tests for the changes just implemented.
+
+## Context
+- Issue: ${issueId}
+- Item completed: ${item.content}
+- Files modified: ${modifiedFiles.join(', ')}
+
+## Requirements
+1. Run relevant test suite (unit/integration)
+2. If tests fail, attempt to fix them
+3. Report final status
+
+## Expected Output
+1. Test results (pass/fail counts)
+2. Coverage report (if available)
+3. Any blockers or failures that need attention
+`;
+
+// 3. Only mark item complete if tests pass
+if (testsPassed) {
+  Task(subagent_type="ccpm:linear-operations"): `update_checklist_items...`;
+}
+```
+
+**Testing is NOT optional** - every code change must be tested before marking an item complete.
 
 ---
 
@@ -1456,21 +1503,13 @@ if (analysisResult.taskDependencies) {
 
 console.log('\n💡 Next Steps:');
 
-if (useAgents) {
-  console.log('  ✅ Implementation complete via specialized agents!');
-  console.log('  ✅ Progress auto-synced to Linear');
-  console.log('');
-  console.log('  1. Review the changes made by agents');
-  console.log('  2. Use /ccpm:commit to commit changes');
-  console.log('  3. Use /ccpm:verify for quality checks');
-} else {
-  // Quick inline edit mode
-  console.log('  ✅ Inline edits complete');
-  console.log('');
-  console.log('  1. Review your changes');
-  console.log('  2. Use /ccpm:sync to update Linear');
-  console.log('  3. Use /ccpm:commit when ready');
-}
+// Agent delegation is ALWAYS used - no inline editing
+console.log('  ✅ Implementation complete via specialized agents!');
+console.log('  ✅ Progress auto-synced to Linear');
+console.log('');
+console.log('  1. Review the changes made by agents');
+console.log('  2. Use /ccpm:verify to run tests and quality checks');
+console.log('  3. Use /ccpm:commit to commit changes');
 
 console.log('\n📌 Quick Commands:');
 console.log(`  /ccpm:sync                     # Interactive checklist update`);
@@ -1655,14 +1694,13 @@ if (nextAction) {
   console.log(`🎯 Next Action: ${nextAction}\n`);
 }
 
-5. Ask user: Continue with AI or manual? (Same as START mode):
+5. Continue implementation (agent delegation is MANDATORY):
 
-// Only offer AI continuation if there's remaining work
+// Only continue if there's remaining work
 if (progress < 100) {
   console.log('\n💡 Continue Implementation:');
-  console.log('  Option 1: Continue with specialized agents (recommended)');
-  console.log('  Option 2: Quick inline edit (trivial changes only)');
-  console.log('  Option 3: Just show status');
+  console.log('  Option 1: Continue with specialized agents (MANDATORY)');
+  console.log('  Option 2: Just show status');
 
   AskUserQuestion({
     questions: [{
@@ -1675,10 +1713,6 @@ if (progress < 100) {
           description: "Delegates remaining items to specialized agents, auto-syncs to Linear"
         },
         {
-          label: "Quick inline edit",
-          description: "For trivial remaining changes only"
-        },
-        {
           label: "Just show status",
           description: "Review progress without implementing now"
         }
@@ -1688,6 +1722,7 @@ if (progress < 100) {
 
   const continueMode = answer;
 
+  // Note: "Quick inline edit" option removed - agent delegation is mandatory
   if (continueMode === "Continue with agents (Recommended)") {
     console.log('\n🤖 AI continuing implementation...');
 
@@ -1842,11 +1877,8 @@ if (progress < 100) {
 
     // Skip interactive menu since AI already implemented
     const skipMenu = true;
-  } else if (continueMode === "I'll continue manually") {
-    console.log('\n📝 Manual implementation mode - use /ccpm:sync when ready');
-    const skipMenu = false;  // Show menu
   } else {
-    // Just show menu
+    // "Just show status" - show menu for manual actions
     const skipMenu = false;
   }
 }
@@ -2146,21 +2178,42 @@ Unit tests for all auth functions
 
 ## Notes
 
-### Implementation Options
+### Implementation Model: Main Agent = Coordinator Only
 
-**Option 1: Delegate to Specialized Agents (Recommended)**
-- `/ccpm:work` → analyze → **delegate to agents** → auto-sync → `/ccpm:commit` → `/ccpm:verify` → `/ccpm:done`
-- ✅ **Best for**: Complex tasks, multi-file changes, context preservation
-- ✅ **Benefit**: Agents use isolated context, main context stays lean (~50 tokens vs ~5000)
+**MANDATORY: All implementation via specialized agents**
 
-**Option 2: Quick Inline Edit**
-- `/ccpm:work` → analyze → direct Edit/Write → `/ccpm:sync` → `/ccpm:commit`
-- ✅ **Best for**: Trivial 1-2 file changes only
-- ⚠️ **Warning**: Fills main context faster, use sparingly
+```
+/ccpm:work → coordinate → delegate to agents → auto-sync → /ccpm:verify → /ccpm:commit → /ccpm:done
+```
+
+**Main Agent Responsibilities:**
+- Parse arguments and detect mode (START/RESUME)
+- Fetch issue from Linear (via `ccpm:linear-operations`)
+- Coordinate which subagents to invoke
+- Track progress and update Linear
+- Final verification AFTER all subagent work complete
+
+**Subagent Responsibilities:**
+- All code implementation (`ccpm:frontend-developer`, `ccpm:backend-architect`, etc.)
+- All testing (`ccpm:tdd-orchestrator`)
+- All debugging (`ccpm:debugger`)
+- Code review (`ccpm:code-reviewer`)
+
+### Agent Selection by Task Type
+
+| Task Type | Subagent | Keywords |
+|-----------|----------|----------|
+| Codebase analysis | `Explore` | find, search, where |
+| Frontend/UI | `ccpm:frontend-developer` | component, UI, React, CSS |
+| Backend/API | `ccpm:backend-architect` | API, endpoint, database |
+| Testing | `ccpm:tdd-orchestrator` | test, spec, coverage |
+| Debugging | `ccpm:debugger` | bug, error, fix |
+| Code Review | `ccpm:code-reviewer` | review, quality |
+| Security | `ccpm:security-auditor` | security, vulnerability |
 
 ### Features
 
-- **Explicit delegation**: Options clearly show "agents" vs "inline" - no ambiguity
+- **Mandatory delegation**: NO inline editing - all implementation via agents
 - **Auto-sync after agents**: Git changes → update checklist → post progress comment
 - **Git branch safety**: Checks protected branches, requires confirmation
 - **Phase planning**: Interactive multi-select for large tasks (>5 items)
@@ -2171,7 +2224,7 @@ Unit tests for all auth functions
 
 ### Key Points
 
-- 🎯 **Delegation is default**: First option is always "Delegate to agents (Recommended)"
+- 🎯 **Delegation is mandatory**: Main agent NEVER implements code
 - 🚀 **Auto-sync**: After agent work, progress is automatically saved to Linear
-- ⚡ **Inline for trivial only**: Quick inline edit is for 1-2 file simple changes
+- 🧪 **Testing via agents**: Use `ccpm:tdd-orchestrator` for all testing
 - 📊 **Context savings**: ~50 tokens per agent call vs ~5000 for inline implementation

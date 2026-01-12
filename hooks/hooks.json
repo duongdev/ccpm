@@ -91,6 +91,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/work-loop-stop-hook.sh",
+            "timeout": 3000,
+            "description": "Work loop: Intercepts exit to continue iterative implementation (ralph-wiggum pattern)"
+          },
+          {
+            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/guard-commit.cjs",
             "timeout": 5000,
             "description": "Guard commit: Warns about uncommitted changes when session ends to prevent work loss"
@@ -236,6 +242,35 @@
         "Explore - Search strategy, efficiency, reporting",
         "Plan - Analysis, task breakdown, dependencies"
       ]
+    },
+    "work_loop_stop_hook": {
+      "purpose": "Enables autonomous iterative work by intercepting session exit (ralph-wiggum pattern)",
+      "trigger": "Stop",
+      "execution": "When Claude attempts to exit/complete during active work loop",
+      "output": "Block decision with continuation prompt, or allow exit on completion/blocker",
+      "problem_solved": "Manual intervention needed between checklist items during autonomous work",
+      "features": [
+        "Detects active work loop via state file (.claude/ccpm-work-loop.local.md)",
+        "Checks for completion promise (<promise>ALL_ITEMS_COMPLETE</promise>)",
+        "Checks for blocker signal (Status: Blocked) to pause loop",
+        "Increments iteration counter and re-feeds continuation prompt",
+        "Max iterations safety limit (default: 30)",
+        "Clean state file removal on completion/max iterations",
+        "Portable sed syntax for macOS/Linux compatibility"
+      ],
+      "state_file_format": {
+        "location": ".claude/ccpm-work-loop.local.md",
+        "fields": [
+          "issue_id - Linear issue being worked on",
+          "iteration - Current iteration count",
+          "max_iterations - Safety limit",
+          "completion_promise - Signal for successful completion",
+          "branch - Git branch name",
+          "started_at - Loop start timestamp",
+          "last_sync_at - Last iteration timestamp"
+        ]
+      },
+      "inspired_by": "ralph-wiggum plugin (anthropics/claude-code)"
     },
     "guard_commit": {
       "purpose": "Prevents work loss by warning about uncommitted changes when session ends",

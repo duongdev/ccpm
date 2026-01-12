@@ -8,7 +8,7 @@ Complete reference for all CCPM slash commands.
 |----------|----------|---------|
 | **Core Workflow** | plan, work, sync, commit, verify, done | Main development cycle |
 | **Planning Variants** | plan:quick, plan:deep | Fast or thorough planning |
-| **Work Variants** | work:parallel | Parallel task execution |
+| **Work Variants** | work:parallel, work:loop, cancel-work-loop | Parallel and autonomous execution |
 | **Utility** | search, history, branch, review, rollback, chain | Discovery and management |
 | **Visual Context** | figma-refresh | Design system updates |
 | **Project Config** | project:add, list, show, set, update, delete | Multi-project management |
@@ -218,6 +218,79 @@ The six essential commands for the development lifecycle.
 - Parallel agent invocation
 - Progress aggregation
 - Conflict detection
+
+---
+
+### /ccpm:work:loop
+
+**Autonomous work loop - iterate through all checklist items automatically.**
+
+Based on the [ralph-wiggum pattern](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) for self-referential iterative development.
+
+```bash
+# Start loop (auto-detect issue from branch)
+/ccpm:work:loop
+
+# Start loop for specific issue
+/ccpm:work:loop WORK-26
+
+# Custom iteration limit
+/ccpm:work:loop WORK-26 --max-iterations 50
+
+# Resume paused loop (after blocker resolved)
+/ccpm:work:loop --resume
+```
+
+**How It Works:**
+1. Creates state file tracking loop progress
+2. Implements first uncompleted checklist item
+3. Stop hook intercepts exit and re-feeds prompt
+4. Loop continues through all items
+5. Ends when: completion promise output, max iterations, or blocker detected
+
+**Completion Signals:**
+| Signal | Effect |
+|--------|--------|
+| `<promise>ALL_ITEMS_COMPLETE</promise>` | Loop ends successfully |
+| `Status: Blocked` | Loop pauses for user input |
+| Max iterations reached | Loop ends with warning |
+
+**When to Use:**
+- Well-defined tasks with clear checklists
+- Unattended implementation sessions
+- Repetitive multi-item tasks
+
+**When NOT to Use:**
+- Tasks requiring design decisions
+- Complex tasks needing user judgment
+- Exploratory work
+
+---
+
+### /ccpm:cancel-work-loop
+
+**Cancel an active work loop.**
+
+```bash
+/ccpm:cancel-work-loop
+```
+
+**Output:**
+```
+Cancelling work loop...
+
+Loop Summary:
+  Issue: WORK-26
+  Iterations: 5 of 30
+  Started: 2026-01-12T10:00:00Z
+
+Work loop cancelled.
+
+Next Steps:
+  - Review uncommitted changes with: git status
+  - Sync progress manually with: /ccpm:sync
+  - Continue interactively with: /ccpm:work WORK-26
+```
 
 ---
 
